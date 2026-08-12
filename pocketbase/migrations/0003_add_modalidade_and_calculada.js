@@ -14,39 +14,18 @@ migrate(
 
     const statusField = col.fields.getByName('status')
     if (statusField) {
-      col.fields.remove(statusField)
+      statusField.values = ['rascunho', 'em_preenchimento', 'calculada', 'concluida', 'entregue']
     }
-    col.fields.add(
-      new SelectField({
-        name: 'status',
-        required: true,
-        values: ['rascunho', 'em_preenchimento', 'calculada', 'concluida', 'entregue'],
-        maxSelect: 1,
-      }),
-    )
 
     app.save(col)
   },
   (app) => {
     const col = app.findCollectionByNameOrId('declaracoes')
 
-    const modalidadeField = col.fields.getByName('modalidade')
-    if (modalidadeField) {
-      col.fields.remove(modalidadeField)
-    }
-
     const statusField = col.fields.getByName('status')
     if (statusField) {
-      col.fields.remove(statusField)
+      statusField.values = ['rascunho', 'em_preenchimento', 'concluida', 'entregue']
     }
-    col.fields.add(
-      new SelectField({
-        name: 'status',
-        required: true,
-        values: ['rascunho', 'em_preenchimento', 'concluida', 'entregue'],
-        maxSelect: 1,
-      }),
-    )
 
     app.save(col)
   },

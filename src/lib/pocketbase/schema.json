@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-12T23:11:01.811Z",
+  "generatedAt": "2026-08-12T23:18:36.922Z",
   "collections": [
     {
       "name": "users",
@@ -266,7 +266,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["rascunho", "em_preenchimento", "concluida", "entregue"]
+          "selectValues": ["rascunho", "em_preenchimento", "calculada", "concluida", "entregue"]
         },
         {
           "name": "progresso",
@@ -287,6 +287,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "modalidade",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["legal", "simplificada"]
         }
       ],
       "indexes": [

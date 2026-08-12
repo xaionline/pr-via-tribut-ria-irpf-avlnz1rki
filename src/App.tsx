@@ -3,26 +3,44 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { AuthProvider } from '@/hooks/use-auth'
 import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
-
-// ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
-// AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
+import Login from '@/pages/Login'
+import Registro from '@/pages/Registro'
+import Dashboard from '@/pages/Dashboard'
+import ClientesList from '@/pages/clientes/ClientesList'
+import ClienteForm from '@/pages/clientes/ClienteForm'
+import ClienteDetail from '@/pages/clientes/ClienteDetail'
+import DeclaracoesList from '@/pages/declaracoes/DeclaracoesList'
+import DeclaracaoForm from '@/pages/declaracoes/DeclaracaoForm'
+import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
 
 const App = () => (
   <BrowserRouter>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES MUST BE ADDED HERE */}
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/app/dashboard" element={<Dashboard />} />
+            <Route path="/app/clientes" element={<ClientesList />} />
+            <Route path="/app/clientes/novo" element={<ClienteForm />} />
+            <Route path="/app/clientes/:id" element={<ClienteDetail />} />
+            <Route path="/app/clientes/:id/editar" element={<ClienteForm />} />
+            <Route path="/app/declaracoes" element={<DeclaracoesList />} />
+            <Route path="/app/declaracoes/novo" element={<DeclaracaoForm />} />
+            <Route path="/app/declaracoes/:id" element={<DeclaracaoDetail />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </AuthProvider>
   </BrowserRouter>
 )
 

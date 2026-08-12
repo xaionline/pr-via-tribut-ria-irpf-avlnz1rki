@@ -4,6 +4,8 @@ export function getStatusLabel(status: string): string {
       return 'Rascunho'
     case 'em_preenchimento':
       return 'Em preenchimento'
+    case 'calculada':
+      return 'Calculada'
     case 'concluida':
       return 'Concluída'
     case 'entregue':
@@ -25,6 +27,7 @@ export function getStatusBadgeVariant(
   status: string,
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
+    case 'calculada':
     case 'concluida':
     case 'ativo':
       return 'default'

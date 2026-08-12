@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, FileText, Filter, MoreVertical, Eye, Calculator } from 'lucide-react'
+import { Plus, FileText, Filter, MoreVertical, Eye, Calculator, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -95,6 +95,7 @@ export default function DeclaracoesList() {
                 <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="rascunho">Rascunho</SelectItem>
                 <SelectItem value="em_preenchimento">Em preenchimento</SelectItem>
+                <SelectItem value="calculada">Calculada</SelectItem>
                 <SelectItem value="concluida">Concluída</SelectItem>
                 <SelectItem value="entregue">Entregue</SelectItem>
               </SelectContent>
@@ -102,6 +103,32 @@ export default function DeclaracoesList() {
           </div>
         </div>
       </Card>
+
+      {/* Resumption Banner */}
+      {!loading && declaracoes.some((d) => d.status === 'em_preenchimento') && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                Você tem uma declaração em andamento
+              </p>
+              <p className="text-xs text-amber-700">Continuar de onde parou?</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-amber-300 text-amber-700 hover:bg-amber-100 text-xs shrink-0"
+            onClick={() => {
+              const inProgress = declaracoes.find((d) => d.status === 'em_preenchimento')
+              if (inProgress) navigate(`/app/declaracoes/${inProgress.id}`)
+            }}
+          >
+            Continuar
+          </Button>
+        </div>
+      )}
 
       {/* Declarations Grid / Table */}
       {loading ? (

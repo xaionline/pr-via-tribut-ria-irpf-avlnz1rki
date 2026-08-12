@@ -8,6 +8,8 @@ import type {
   AtividadeRuralRecord,
   DestinacaoFiscalRecord,
   ResultadoRecord,
+  CalcularResponse,
+  SetModalidadeResponse,
 } from '@/types'
 
 export const getDeclaracoes = (clienteId?: string, ano?: number, status?: string) => {
@@ -35,12 +37,16 @@ export const updateDeclaracao = (id: string, data: Partial<DeclaracaoRecord>) =>
 export const deleteDeclaracao = (id: string) => pb.collection('declaracoes').delete(id)
 
 export const calcularDeclaracao = (id: string) =>
-  pb.send<{ success: boolean; resultado: ResultadoRecord }>(
-    `/backend/v1/declaracoes/${id}/calcular`,
-    {
-      method: 'POST',
-    },
-  )
+  pb.send<CalcularResponse>(`/backend/v1/declaracoes/${id}/calcular`, {
+    method: 'POST',
+  })
+
+export const setModalidade = (id: string, modalidade: 'legal' | 'simplificada') =>
+  pb.send<SetModalidadeResponse>(`/backend/v1/declaracoes/${id}/modalidade`, {
+    method: 'POST',
+    body: JSON.stringify({ modalidade }),
+    headers: { 'Content-Type': 'application/json' },
+  })
 
 export const getResultado = (declaracaoId: string) =>
   pb.collection('resultados').getFirstListItem<ResultadoRecord>(`declaracao_id = "${declaracaoId}"`)

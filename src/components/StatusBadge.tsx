@@ -9,6 +9,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   let colorClasses = 'bg-slate-100 text-slate-700 border-slate-200'
 
   switch (status) {
+    case 'calculada':
+      colorClasses = 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
+      break
     case 'concluida':
     case 'ativo':
       colorClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'

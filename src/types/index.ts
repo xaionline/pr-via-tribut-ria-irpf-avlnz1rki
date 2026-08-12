@@ -44,7 +44,14 @@ export interface ClienteRecord {
   }
 }
 
-export type StatusDeclaracao = 'rascunho' | 'em_preenchimento' | 'concluida' | 'entregue'
+export type StatusDeclaracao =
+  | 'rascunho'
+  | 'em_preenchimento'
+  | 'calculada'
+  | 'concluida'
+  | 'entregue'
+
+export type ModalidadeDeclaracao = 'legal' | 'simplificada'
 
 export interface DeclaracaoRecord {
   id: string
@@ -52,6 +59,7 @@ export interface DeclaracaoRecord {
   cliente_id: string
   ano_calendario: number
   status: StatusDeclaracao
+  modalidade?: ModalidadeDeclaracao
   progresso: number
   created: string
   updated: string
@@ -151,4 +159,47 @@ export interface TabelaProgressivaRecord {
   faixas: FaixaProgressiva[]
   created: string
   updated: string
+}
+
+export interface CenarioCalculo {
+  modalidade: 'legal' | 'simplificada'
+  base_calculo: number
+  total_deducoes: number
+  irrf_devido: number
+  irrf_retido: number
+  saldo_imposto: number
+  destinacoes_aplicadas: number
+}
+
+export interface CalcularResponse {
+  success: boolean
+  legal: CenarioCalculo
+  simplificada: CenarioCalculo
+  recomendada: 'legal' | 'simplificada'
+  resultado: {
+    id: string
+    base_calculo: number
+    irrf_devido: number
+    irrf_retido: number
+    saldo_imposto: number
+    destinacoes_aplicadas: number
+  }
+}
+
+export interface DemonstrativoData {
+  rendimento_tributavel: number
+  deducoes: number
+  base_calculo: number
+  irrf_devido: number
+  irrf_retido: number
+  destinacoes_aplicadas: number
+  saldo_imposto: number
+  modalidade: string
+}
+
+export interface SetModalidadeResponse {
+  success: boolean
+  modalidade: string
+  status: string
+  demonstrativo: DemonstrativoData
 }

@@ -12,7 +12,27 @@ routerAdd(
       return e.notFoundError('Declaração não encontrada')
     }
 
-    // Fetch Rendimentos
+    function calcIRPF(baseCalculo, faixas) {
+      let irrfDevido = 0
+      if (Array.isArray(faixas) && faixas.length > 0) {
+        for (let i = faixas.length - 1; i >= 0; i--) {
+          const f = faixas[i]
+          const limInfAnual = (f.limite_inferior || 0) * 12
+          if (baseCalculo > limInfAnual) {
+            const aliq = (f.aliquota || 0) / 100
+            const dedAnual = (f.deducao || 0) * 12
+            irrfDevido = Math.max(0, baseCalculo * aliq - dedAnual)
+            break
+          }
+        }
+      }
+      return irrfDevido
+    }
+
+    function round2(v) {
+      return Math.round(v * 100) / 100
+    }
+
     const rends = $app.findRecordsByFilter(
       'rendimentos',
       'declaracao_id = {:id}',
@@ -28,7 +48,6 @@ routerAdd(
       }
     }
 
-    // Fetch Despesas Dedutíveis
     const desps = $app.findRecordsByFilter(
       'despesas_dedutiveis',
       'declaracao_id = {:id}',
@@ -42,7 +61,6 @@ routerAdd(
       totalDeducoes += d.getNumber('valor') || 0
     }
 
-    // Fetch Dependentes (Standard deduction ~2275.08 per dependent)
     const deps = $app.findRecordsByFilter(
       'dependentes',
       'declaracao_id = {:id}',
@@ -53,7 +71,6 @@ routerAdd(
     )
     totalDeducoes += deps.length * 2275.08
 
-    // Fetch Atividades Rurais
     const ativs = $app.findRecordsByFilter(
       'atividades_rurais',
       'declaracao_id = {:id}',
@@ -67,63 +84,6 @@ routerAdd(
       if (resAtiv > 0) rendTributavel += resAtiv
     }
 
-    const baseCalculo = Math.max(0, rendTributavel - totalDeducoes)
-
-    // Fetch Progressive Table for year
-    const ano = dec.getNumber('ano_calendario')
-    let tabRecord
-    try {
-      tabRecord = $app.findFirstRecordByData('tabelas_progressivas', 'ano', ano)
-    } catch (_) {
-      tabRecord = null
-    }
-
-    let faixas = []
-    if (tabRecord) {
-      try {
-        faixas = tabRecord.get('faixas') || []
-      } catch (_) {}
-    }
-
-    // Calculate tax using annual faixas (monthly * 12)
-    let irrfDevido = 0
-    const faixasAplicadas = []
-    if (Array.isArray(faixas) && faixas.length > 0) {
-      for (let i = 0; i < faixas.length; i++) {
-        const f = faixas[i]
-        const limInfAnual = (f.limite_inferior || 0) * 12
-        const limSupAnual = (f.limite_superior || 999999) * 12
-        const aliq = (f.aliquota || 0) / 100
-        const dedAnual = (f.deducao || 0) * 12
-
-        if (baseCalculo > limInfAnual) {
-          const parcelaBase = Math.min(baseCalculo, limSupAnual) - limInfAnual
-          const impostoFaixa = Math.max(
-            0,
-            parcelaBase * aliq - (i === faixas.length - 1 ? dedAnual : 0),
-          )
-          faixasAplicadas.push({
-            faixa: i + 1,
-            aliquota: f.aliquota,
-            baseFaixa: parcelaBase,
-            imposto: impostoFaixa,
-          })
-        }
-      }
-      // Calculate total via standard formula: (Base * aliquota_topo) - deducao_topo
-      for (let i = faixas.length - 1; i >= 0; i--) {
-        const f = faixas[i]
-        const limInfAnual = (f.limite_inferior || 0) * 12
-        if (baseCalculo > limInfAnual) {
-          const aliq = (f.aliquota || 0) / 100
-          const dedAnual = (f.deducao || 0) * 12
-          irrfDevido = Math.max(0, baseCalculo * aliq - dedAnual)
-          break
-        }
-      }
-    }
-
-    // Destinações fiscais
     const dests = $app.findRecordsByFilter(
       'destinacoes_fiscais',
       'declaracao_id = {:id}',
@@ -137,11 +97,59 @@ routerAdd(
       totalDest += dst.getNumber('valor') || 0
     }
 
-    // Assuming withholding standard 15% estimated if not specified
-    const irrfRetido = rendTributavel * 0.12
-    const saldoImposto = irrfDevido - irrfRetido - totalDest
+    const ano = dec.getNumber('ano_calendario')
+    let tabRecord
+    try {
+      tabRecord = $app.findFirstRecordByData('tabelas_progressivas', 'ano', ano)
+    } catch (_) {
+      tabRecord = null
+    }
+    let faixas = []
+    if (tabRecord) {
+      try {
+        faixas = tabRecord.get('faixas') || []
+      } catch (_) {}
+    }
 
-    // Save/Update resultado
+    const irrfRetido = rendTributavel * 0.12
+
+    var legalScenario = {
+      modalidade: 'legal',
+      base_calculo: round2(Math.max(0, rendTributavel - totalDeducoes)),
+      total_deducoes: round2(totalDeducoes),
+      irrf_devido: round2(calcIRPF(Math.max(0, rendTributavel - totalDeducoes), faixas)),
+      irrf_retido: round2(irrfRetido),
+      saldo_imposto: round2(
+        calcIRPF(Math.max(0, rendTributavel - totalDeducoes), faixas) - irrfRetido - totalDest,
+      ),
+      destinacoes_aplicadas: round2(totalDest),
+    }
+
+    var deducaoSimplificada = Math.min(rendTributavel * 0.2, 16754.34)
+    var simpBase = Math.max(0, rendTributavel - deducaoSimplificada)
+    var simpScenario = {
+      modalidade: 'simplificada',
+      base_calculo: round2(simpBase),
+      total_deducoes: round2(deducaoSimplificada),
+      irrf_devido: round2(calcIRPF(simpBase, faixas)),
+      irrf_retido: round2(irrfRetido),
+      saldo_imposto: round2(calcIRPF(simpBase, faixas) - irrfRetido - totalDest),
+      destinacoes_aplicadas: round2(totalDest),
+    }
+
+    var recommended =
+      legalScenario.saldo_imposto <= simpScenario.saldo_imposto ? 'legal' : 'simplificada'
+
+    var modalidadeEscolhida = dec.getString('modalidade') || ''
+    var chosenScenario =
+      modalidadeEscolhida === 'simplificada'
+        ? simpScenario
+        : modalidadeEscolhida === 'legal'
+          ? legalScenario
+          : recommended === 'simplificada'
+            ? simpScenario
+            : legalScenario
+
     let resRecord
     try {
       resRecord = $app.findFirstRecordByData('resultados', 'declaracao_id', decId)
@@ -151,30 +159,35 @@ routerAdd(
       resRecord.set('declaracao_id', decId)
     }
 
-    resRecord.set('base_calculo', Math.round(baseCalculo * 100) / 100)
-    resRecord.set('irrf_devido', Math.round(irrfDevido * 100) / 100)
-    resRecord.set('irrf_retido', Math.round(irrfRetido * 100) / 100)
-    resRecord.set('saldo_imposto', Math.round(saldoImposto * 100) / 100)
-    resRecord.set('destinacoes_aplicadas', Math.round(totalDest * 100) / 100)
-    resRecord.set('detalhamento', { faixasAplicadas, rendTributavel, totalDeducoes })
+    resRecord.set('base_calculo', chosenScenario.base_calculo)
+    resRecord.set('irrf_devido', chosenScenario.irrf_devido)
+    resRecord.set('irrf_retido', chosenScenario.irrf_retido)
+    resRecord.set('saldo_imposto', chosenScenario.saldo_imposto)
+    resRecord.set('destinacoes_aplicadas', chosenScenario.destinacoes_aplicadas)
+    resRecord.set('detalhamento', {
+      legal: legalScenario,
+      simplificada: simpScenario,
+      recomendada: recommended,
+      modalidade_escolhida: modalidadeEscolhida,
+      rendimento_tributavel: round2(rendTributavel),
+    })
     $app.save(resRecord)
 
-    // Update declaration status & progress
     dec.set('progresso', 100)
-    if (dec.getString('status') === 'rascunho') {
-      dec.set('status', 'concluida')
-    }
     $app.save(dec)
 
     return e.json(200, {
       success: true,
+      legal: legalScenario,
+      simplificada: simpScenario,
+      recomendada: recommended,
       resultado: {
         id: resRecord.id,
-        base_calculo: Math.round(baseCalculo * 100) / 100,
-        irrf_devido: Math.round(irrfDevido * 100) / 100,
-        irrf_retido: Math.round(irrfRetido * 100) / 100,
-        saldo_imposto: Math.round(saldoImposto * 100) / 100,
-        destinacoes_aplicadas: Math.round(totalDest * 100) / 100,
+        base_calculo: chosenScenario.base_calculo,
+        irrf_devido: chosenScenario.irrf_devido,
+        irrf_retido: chosenScenario.irrf_retido,
+        saldo_imposto: chosenScenario.saldo_imposto,
+        destinacoes_aplicadas: chosenScenario.destinacoes_aplicadas,
       },
     })
   },

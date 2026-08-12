@@ -1,0 +1,47 @@
+export function formatCurrency(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) return 'R$ 0,00'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value)
+}
+
+export function formatDate(dateStr?: string): string {
+  if (!dateStr) return '-'
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(d)
+  } catch {
+    return dateStr
+  }
+}
+
+export function maskCpf(cpf?: string): string {
+  if (!cpf) return ''
+  const clean = cpf.replace(/\D/g, '')
+  if (clean.length !== 11) return cpf
+  return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+}
+
+export function maskCnpj(cnpj?: string): string {
+  if (!cnpj) return ''
+  const clean = cnpj.replace(/\D/g, '')
+  if (clean.length !== 14) return cnpj
+  return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+}
+
+export function validateCpf(cpf: string): boolean {
+  const clean = cpf.replace(/\D/g, '')
+  if (clean.length !== 11 || /^(\d)\1+$/.test(clean)) return false
+  let sum = 0
+  for (let i = 0; i < 9; i++) sum += parseInt(clean.charAt(i)) * (10 - i)
+  let rev = 11 - (sum % 11)
+  if (rev === 10 || rev === 11) rev = 0
+  if (rev !== parseInt(clean.charAt(9))) return false
+  sum = 0
+  for (let i = 0; i < 10; i++) sum += parseInt(clean.charAt(i)) * (11 - i)
+  rev = 11 - (sum % 11)
+  if (rev === 10 || rev === 11) rev = 0
+  return rev === parseInt(clean.charAt(10))
+}

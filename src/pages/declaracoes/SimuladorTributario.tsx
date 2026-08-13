@@ -193,7 +193,7 @@ export default function SimuladorTributario() {
       <div className="space-y-6">
         <div className="grid lg:grid-cols-5 gap-6">
           <Skeleton className="lg:col-span-2 h-96" />
-          <div className="lg:col-span-3 space-y-4">
+          <div className="md:col-span-3 space-y-4">
             <Skeleton className="h-64" />
             <Skeleton className="h-48" />
           </div>
@@ -236,8 +236,8 @@ export default function SimuladorTributario() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid md:grid-cols-5 gap-6">
+        <div className="md:col-span-2">
           <SimulationControls
             params={params}
             onParamsChange={setParams}

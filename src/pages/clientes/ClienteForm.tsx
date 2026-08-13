@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -134,8 +134,8 @@ export default function ClienteForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5 sm:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
                 <Label className="font-semibold">Nome Completo do Declarante *</Label>
                 <Input
                   placeholder="Nome do cliente"
@@ -212,7 +212,7 @@ export default function ClienteForm() {
                 </Select>
               </div>
 
-              <div className="space-y-1.5 sm:col-span-2">
+              <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
                 <Label className="font-semibold">Endereço Residencial</Label>
                 <Input
                   placeholder="Rua, número, bairro, cidade - UF"

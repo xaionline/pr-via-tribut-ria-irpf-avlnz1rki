@@ -137,7 +137,7 @@ export default function ClientesList() {
           )}
         </Card>
       ) : (
-        <Card className="border border-slate-200/80 shadow-subtle overflow-hidden">
+        <Card className="hidden md:block border border-slate-200/80 shadow-subtle overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
@@ -241,6 +241,65 @@ export default function ClientesList() {
             </div>
           </div>
         </Card>
+
+        <div className="md:hidden space-y-3">
+          {clientes.map((c) => {
+            const initials = c.nome ? c.nome.slice(0, 2).toUpperCase() : 'CL'
+            return (
+              <Card key={c.id} className="p-3 border border-slate-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <Avatar className="h-8 w-8 bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 shrink-0">
+                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      to={`/app/clientes/${c.id}`}
+                      className="font-semibold text-xs text-slate-900 hover:text-emerald-600 transition-colors block truncate"
+                    >
+                      {c.nome}
+                    </Link>
+                    <span className="text-[10px] text-slate-400 font-mono">{maskCpf(c.cpf)}</span>
+                  </div>
+                  <StatusBadge status={c.status} />
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 mb-2">
+                  <span>{c.tipo === 'pessoa_fisica' ? 'Pessoa Física' : 'Sócio'}</span>
+                  {c.email && <span className="truncate ml-2">{c.email}</span>}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9 text-xs touch-target"
+                    onClick={() => navigate(`/app/clientes/${c.id}`)}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" /> Ver
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9 text-xs touch-target"
+                    onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
+                  >
+                    <Edit className="w-3.5 h-3.5 mr-1" /> Editar
+                  </Button>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+
+        <div className="md:hidden flex items-center justify-between text-xs text-slate-500 mt-3">
+          <span>Pág. {page} de {totalPages}</span>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-9 text-xs touch-target">
+              Anterior
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-9 text-xs touch-target">
+              Próxima
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   )

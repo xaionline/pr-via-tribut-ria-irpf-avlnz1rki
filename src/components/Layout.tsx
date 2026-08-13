@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { SidebarNav } from '@/components/SidebarNav'
 import { Header } from '@/components/Header'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
+import { Fab } from '@/components/Fab'
 
 export default function Layout() {
   const { isAuthenticated, loading } = useAuth()
@@ -25,12 +26,13 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <SidebarNav />
-      <div className="flex-1 lg:pl-[264px] flex flex-col min-w-0 pb-16 lg:pb-0">
+      <div className="flex-1 md:pl-[68px] lg:pl-[250px] flex flex-col min-w-0 pb-20 lg:pb-0">
         <Header />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8 max-w-[1440px] w-full mx-auto animate-fade-in">
           <Outlet />
         </main>
       </div>
+      <Fab />
       <MobileBottomNav />
     </div>
   )

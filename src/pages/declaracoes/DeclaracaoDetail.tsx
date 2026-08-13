@@ -108,63 +108,63 @@ export default function DeclaracaoDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/editar`)}
-            className="text-xs gap-2 font-semibold"
+            className="text-xs gap-1.5 font-semibold h-9 touch-target"
           >
-            <Pencil className="w-4 h-4" />
-            <span>Editar</span>
+            <Pencil className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Editar</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/demonstrativo`)}
-            className="text-xs gap-2 font-semibold"
+            className="text-xs gap-1.5 font-semibold h-9 touch-target"
           >
-            <FileText className="w-4 h-4" />
-            <span>Demonstrativo</span>
+            <FileText className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Demonstrativo</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/simulador`)}
-            className="text-xs gap-2 font-semibold"
+            className="text-xs gap-1.5 font-semibold h-9 touch-target"
           >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>Simular</span>
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Simular</span>
           </Button>
           <Button
             onClick={handleCalcular}
             disabled={calculating || isVisualizador}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-50 h-9 touch-target"
           >
-            <Calculator className="w-4 h-4" />
-            <span>{calculating ? 'Calculando...' : 'Calcular Prévia'}</span>
+            <Calculator className="w-3.5 h-3.5" />
+            <span>{calculating ? 'Calculando...' : 'Calcular'}</span>
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-slate-100 p-1 border flex overflow-x-auto justify-start">
-          <TabsTrigger value="visao_geral" className="text-xs">
+        <TabsList className="bg-slate-100 p-1 border flex overflow-x-auto justify-start max-w-full no-scrollbar">
+          <TabsTrigger value="visao_geral" className="text-xs whitespace-nowrap">
             Visão Geral
           </TabsTrigger>
-          <TabsTrigger value="fontes" className="text-xs">
-            Fontes Pagadoras
+          <TabsTrigger value="fontes" className="text-xs whitespace-nowrap">
+            Fontes
           </TabsTrigger>
-          <TabsTrigger value="rendimentos" className="text-xs">
+          <TabsTrigger value="rendimentos" className="text-xs whitespace-nowrap">
             Rendimentos
           </TabsTrigger>
-          <TabsTrigger value="despesas" className="text-xs">
+          <TabsTrigger value="despesas" className="text-xs whitespace-nowrap">
             Despesas
           </TabsTrigger>
-          <TabsTrigger value="dependentes" className="text-xs">
+          <TabsTrigger value="dependentes" className="text-xs whitespace-nowrap">
             Dependentes
           </TabsTrigger>
-          <TabsTrigger value="rurais" className="text-xs">
-            Atividade Rural
+          <TabsTrigger value="rurais" className="text-xs whitespace-nowrap">
+            Rural
           </TabsTrigger>
-          <TabsTrigger value="destinacoes" className="text-xs">
+          <TabsTrigger value="destinacoes" className="text-xs whitespace-nowrap">
             Destinações
           </TabsTrigger>
         </TabsList>

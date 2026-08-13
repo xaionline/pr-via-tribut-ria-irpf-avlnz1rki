@@ -39,6 +39,8 @@ export function DeclarationsTable({
   onSimulate,
 }: Props) {
   const [activeFilter, setActiveFilter] = useState('all')
+  const [showAllCols, setShowAllCols] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -114,7 +116,15 @@ export function DeclarationsTable({
         ))}
       </div>
 
-      <Card className="hidden lg:block border border-slate-200 shadow-sm overflow-hidden">
+      <div className="hidden md:flex justify-end mb-1">
+        <button
+          onClick={() => setShowAllCols(!showAllCols)}
+          className="text-[11px] text-slate-500 hover:text-slate-700 font-medium"
+        >
+          {showAllCols ? 'Ocultar colunas' : 'Mostrar todas as colunas'}
+        </button>
+      </div>
+      <Card className="hidden md:block border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
@@ -123,8 +133,12 @@ export function DeclarationsTable({
                 <th className="py-2.5 px-3">Ano</th>
                 <th className="py-2.5 px-3">Status</th>
                 <th className="py-2.5 px-3">Imposto</th>
-                <th className="py-2.5 px-3">Modalidade</th>
-                <th className="py-2.5 px-3">Atualizado</th>
+                <th className={cn('py-2.5 px-3', !showAllCols && 'md:hidden lg:table-cell')}>
+                  Modalidade
+                </th>
+                <th className={cn('py-2.5 px-3', !showAllCols && 'md:hidden lg:table-cell')}>
+                  Atualizado
+                </th>
                 <th className="py-2.5 px-3 text-right">Acoes</th>
               </tr>
             </thead>
@@ -148,8 +162,22 @@ export function DeclarationsTable({
                     <td className="py-2.5 px-3 font-mono text-slate-700">
                       {formatCurrency(getImposto(d))}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-600">{getModalidadeLabel(d)}</td>
-                    <td className="py-2.5 px-3 text-slate-500">{relativeTime(d.updated)}</td>
+                    <td
+                      className={cn(
+                        'py-2.5 px-3 text-slate-600',
+                        !showAllCols && 'md:hidden lg:table-cell',
+                      )}
+                    >
+                      {getModalidadeLabel(d)}
+                    </td>
+                    <td
+                      className={cn(
+                        'py-2.5 px-3 text-slate-500',
+                        !showAllCols && 'md:hidden lg:table-cell',
+                      )}
+                    >
+                      {relativeTime(d.updated)}
+                    </td>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center justify-end gap-1">
                         <button
@@ -190,74 +218,86 @@ export function DeclarationsTable({
         </div>
       </Card>
 
-      <div className="lg:hidden space-y-3">
+      <div className="md:hidden space-y-3">
         {filtered.length === 0 ? (
           <Card className="p-6 text-center text-xs text-slate-400 border border-slate-200">
             Nenhuma declaracao pendente
           </Card>
         ) : (
-          filtered.map((d) => (
-            <Card key={d.id} className="p-3 border border-slate-200 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-900">
-                  {d.expand?.cliente_id?.nome || '—'}
-                </span>
-                <StatusBadge status={d.status} />
-              </div>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                <div>
-                  <span className="text-slate-400">Ano: </span>
-                  <span className="font-mono text-slate-700">{d.ano_calendario}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Imposto: </span>
-                  <span className="font-mono text-slate-700">{formatCurrency(getImposto(d))}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Mod.: </span>
-                  <span className="text-slate-700">{getModalidadeLabel(d)}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Atual.: </span>
-                  <span className="text-slate-700">{relativeTime(d.updated)}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 pt-1.5 border-t border-slate-100">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] gap-1"
-                  onClick={() => onEdit(d.id)}
+          filtered.map((d) => {
+            const isExpanded = expandedId === d.id
+            return (
+              <Card key={d.id} className="p-3 border border-slate-200 space-y-2">
+                <div
+                  className="flex items-center justify-between cursor-pointer"
+                  onClick={() => setExpandedId(isExpanded ? null : d.id)}
                 >
-                  <Eye className="w-3 h-3" /> Ver
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] gap-1 text-emerald-600"
-                  onClick={() => navigate(`/app/declaracoes/${d.id}/editar`)}
-                >
-                  <Pencil className="w-3 h-3" /> Editar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] gap-1"
-                  onClick={() => handleDuplicate(d.id)}
-                >
-                  <Copy className="w-3 h-3" /> Duplicar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] gap-1 text-blue-600"
-                  onClick={() => onSimulate(d.id)}
-                >
-                  <Calculator className="w-3 h-3" /> Simular
-                </Button>
-              </div>
-            </Card>
-          ))
+                  <span className="text-xs font-semibold text-slate-900 truncate">
+                    {d.expand?.cliente_id?.nome || '—'}
+                  </span>
+                  <StatusBadge status={d.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                  <div>
+                    <span className="text-slate-400">Ano: </span>
+                    <span className="font-mono text-slate-700">{d.ano_calendario}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Imposto: </span>
+                    <span className="font-mono text-slate-700">
+                      {formatCurrency(getImposto(d))}
+                    </span>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] pt-1 border-t border-slate-100">
+                    <div>
+                      <span className="text-slate-400">Mod.: </span>
+                      <span className="text-slate-700">{getModalidadeLabel(d)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Atual.: </span>
+                      <span className="text-slate-700">{relativeTime(d.updated)}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 pt-1.5 border-t border-slate-100">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 text-[11px] gap-1 touch-target"
+                    onClick={() => onEdit(d.id)}
+                  >
+                    <Eye className="w-3 h-3" /> Ver
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 text-[11px] gap-1 text-emerald-600 touch-target"
+                    onClick={() => navigate(`/app/declaracoes/${d.id}/editar`)}
+                  >
+                    <Pencil className="w-3 h-3" /> Editar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 text-[11px] gap-1 touch-target"
+                    onClick={() => handleDuplicate(d.id)}
+                  >
+                    <Copy className="w-3 h-3" /> Dup.
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 text-[11px] gap-1 text-blue-600 touch-target"
+                    onClick={() => onSimulate(d.id)}
+                  >
+                    <Calculator className="w-3 h-3" /> Sim.
+                  </Button>
+                </div>
+              </Card>
+            )
+          })
         )}
       </div>
     </div>

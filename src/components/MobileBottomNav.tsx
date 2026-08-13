@@ -34,7 +34,7 @@ export function MobileBottomNav() {
           <Link
             key={tab.path}
             to={tab.path}
-            className={`flex flex-col items-center py-1 px-3 rounded-lg text-[10px] font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-lg text-[10px] font-medium transition-colors touch-target ${
               isActive ? 'text-emerald-600 font-semibold' : 'text-slate-500'
             }`}
           >
@@ -49,7 +49,7 @@ export function MobileBottomNav() {
       {/* Drawer More Option */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetTrigger asChild>
-          <button className="flex flex-col items-center py-1 px-3 rounded-lg text-[10px] font-medium text-slate-500">
+          <button className="flex flex-col items-center justify-center py-1.5 px-3 rounded-lg text-[10px] font-medium text-slate-500 touch-target">
             <Menu className="w-5 h-5 mb-0.5 text-slate-400" />
             <span>Mais</span>
           </button>

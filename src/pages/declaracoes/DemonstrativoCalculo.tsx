@@ -112,7 +112,7 @@ export default function DemonstrativoCalculo() {
         <h1 className="text-sm font-bold text-slate-700">Demonstrativo de Cálculo</h1>
       </div>
 
-      <div className="demo-paper bg-white rounded-xl shadow-lg border border-slate-200/60 max-w-[820px] mx-auto p-6 sm:p-10">
+      <div className="demo-paper bg-white lg:rounded-xl lg:shadow-lg lg:border lg:border-slate-200/60 lg:max-w-[820px] mx-auto p-4 sm:p-6 lg:p-10">
         <DemonstrativoHeader
           declaracao={data.declaracao}
           escritorio={escritorioData}

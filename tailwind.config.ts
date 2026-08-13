@@ -13,15 +13,28 @@ export default {
   ],
   prefix: '',
   theme: {
+    screens: {
+      xs: '0px',
+      sm: '480px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1440px',
+      '2xl': '1920px',
+    },
     container: {
       center: true,
-      padding: '2rem',
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1.5rem',
+        lg: '2rem',
+      },
       screens: {
-        sm: '640px',
+        xs: '100%',
+        sm: '480px',
         md: '768px',
         lg: '1024px',
-        xl: '1280px',
-        '2xl': '1400px',
+        xl: '1440px',
+        '2xl': '1440px',
       },
     },
     extend: {

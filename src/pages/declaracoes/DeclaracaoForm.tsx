@@ -196,87 +196,91 @@ export default function DeclaracaoForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-            <div className="space-y-1.5">
-              <Label className="font-semibold">Cliente / Declarante *</Label>
-              <Select value={clienteId} onValueChange={setClienteId}>
-                <SelectTrigger className="h-10 text-xs">
-                  <SelectValue placeholder="Selecione um cliente..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome} ({c.cpf})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError message={fieldErrors.cliente_id} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="font-semibold">Cliente / Declarante *</Label>
+                <Select value={clienteId} onValueChange={setClienteId}>
+                  <SelectTrigger className="h-10 text-xs">
+                    <SelectValue placeholder="Selecione um cliente..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome} ({c.cpf})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError message={fieldErrors.cliente_id} />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="font-semibold">Ano-Calendário *</Label>
+                <Select value={ano} onValueChange={setAno}>
+                  <SelectTrigger className="h-10 text-xs">
+                    <SelectValue placeholder="Selecione o ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2025">2025 (Exercício 2026)</SelectItem>
+                    <SelectItem value="2024">2024 (Exercício 2025)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FieldError message={fieldErrors.ano_calendario} />
+              </div>
+
+              {isEditing && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="font-semibold">Status</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                      <SelectTrigger className="h-10 text-xs">
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FieldError message={fieldErrors.status} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="font-semibold">Progresso (%)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={progresso}
+                        onChange={(e) => setProgresso(e.target.value)}
+                        className="h-10 text-xs"
+                      />
+                      <FieldError message={fieldErrors.progresso} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="font-semibold">Modalidade</Label>
+                      <Select value={modalidade} onValueChange={setModalidade}>
+                        <SelectTrigger className="h-10 text-xs">
+                          <SelectValue placeholder="Selecione a modalidade (opcional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODALIDADE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FieldError message={fieldErrors.modalidade} />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="font-semibold">Ano-Calendário *</Label>
-              <Select value={ano} onValueChange={setAno}>
-                <SelectTrigger className="h-10 text-xs">
-                  <SelectValue placeholder="Selecione o ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2025">2025 (Exercício 2026)</SelectItem>
-                  <SelectItem value="2024">2024 (Exercício 2025)</SelectItem>
-                </SelectContent>
-              </Select>
-              <FieldError message={fieldErrors.ano_calendario} />
-            </div>
-
-            {isEditing && (
-              <>
-                <div className="space-y-1.5">
-                  <Label className="font-semibold">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="h-10 text-xs">
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError message={fieldErrors.status} />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="font-semibold">Progresso (%)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={progresso}
-                    onChange={(e) => setProgresso(e.target.value)}
-                    className="h-10 text-xs"
-                  />
-                  <FieldError message={fieldErrors.progresso} />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="font-semibold">Modalidade</Label>
-                  <Select value={modalidade} onValueChange={setModalidade}>
-                    <SelectTrigger className="h-10 text-xs">
-                      <SelectValue placeholder="Selecione a modalidade (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODALIDADE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FieldError message={fieldErrors.modalidade} />
-                </div>
-              </>
-            )}
 
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>

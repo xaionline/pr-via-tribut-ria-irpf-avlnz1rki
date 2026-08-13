@@ -149,60 +149,99 @@ export default function DeclaracoesList() {
           </Button>
         </Card>
       ) : (
-        <Card className="border border-slate-200/80 shadow-subtle overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-semibold tracking-wider">
-                  <th className="py-3 px-4">Cliente / Declarante</th>
-                  <th className="py-3 px-4">Ano-Calendário</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Progresso</th>
-                  <th className="py-3 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {declaracoes.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">
-                      {d.expand?.cliente_id?.nome || 'Cliente'}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-600">{d.ano_calendario}</td>
-                    <td className="py-3.5 px-4">
-                      <StatusBadge status={d.status} />
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className="bg-emerald-600 h-full rounded-full"
-                            style={{ width: `${d.progresso}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-mono">{d.progresso}%</span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="w-4 h-4 text-slate-500" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 text-xs">
-                          <DropdownMenuItem onClick={() => navigate(`/app/declaracoes/${d.id}`)}>
-                            <Eye className="w-3.5 h-3.5 mr-2" />
-                            <span>Abrir Declaração</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
+        <>
+          <Card className="hidden md:block border border-slate-200/80 shadow-subtle overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-semibold tracking-wider">
+                    <th className="py-3 px-4">Cliente / Declarante</th>
+                    <th className="py-3 px-4">Ano-Calendário</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Progresso</th>
+                    <th className="py-3 px-4 text-right">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {declaracoes.map((d) => (
+                    <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 font-semibold text-slate-900">
+                        {d.expand?.cliente_id?.nome || 'Cliente'}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-slate-600">{d.ano_calendario}</td>
+                      <td className="py-3.5 px-4">
+                        <StatusBadge status={d.status} />
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-emerald-600 h-full rounded-full"
+                              style={{ width: `${d.progresso}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            {d.progresso}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4 text-slate-500" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40 text-xs">
+                            <DropdownMenuItem onClick={() => navigate(`/app/declaracoes/${d.id}`)}>
+                              <Eye className="w-3.5 h-3.5 mr-2" />
+                              <span>Abrir Declaração</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          <div className="md:hidden space-y-3">
+            {declaracoes.map((d) => (
+              <Card key={d.id} className="p-3 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-900 truncate">
+                    {d.expand?.cliente_id?.nome || 'Cliente'}
+                  </span>
+                  <StatusBadge status={d.status} />
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">
+                    Ano: <span className="font-mono text-slate-700">{d.ano_calendario}</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-600 h-full rounded-full"
+                        style={{ width: `${d.progresso}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">{d.progresso}%</span>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-xs touch-target"
+                  onClick={() => navigate(`/app/declaracoes/${d.id}`)}
+                >
+                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Abrir Declaração
+                </Button>
+              </Card>
+            ))}
           </div>
-        </Card>
+        </>
       )}
     </div>
   )

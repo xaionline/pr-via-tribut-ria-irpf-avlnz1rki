@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calculator, CheckCircle2, FileText, SlidersHorizontal } from 'lucide-react'
+import {
+  ArrowLeft,
+  Calculator,
+  CheckCircle2,
+  FileText,
+  Pencil,
+  SlidersHorizontal,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -102,6 +109,14 @@ export default function DeclaracaoDetail() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/app/declaracoes/${declaracao.id}/editar`)}
+            className="text-xs gap-2 font-semibold"
+          >
+            <Pencil className="w-4 h-4" />
+            <span>Editar</span>
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/demonstrativo`)}

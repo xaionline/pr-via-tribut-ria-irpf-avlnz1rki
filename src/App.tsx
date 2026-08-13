@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/app/clientes/:id/editar" element={<ClienteForm />} />
             <Route path="/app/declaracoes" element={<DeclaracoesList />} />
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />
+            <Route path="/app/declaracoes/:id/editar" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id" element={<DeclaracaoDetail />} />
             <Route path="/app/declaracoes/:id/simulador" element={<SimuladorTributario />} />
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />

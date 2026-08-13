@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Eye, Copy, Calculator } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Eye, Copy, Calculator, Pencil } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -39,6 +40,7 @@ export function DeclarationsTable({
 }: Props) {
   const [activeFilter, setActiveFilter] = useState('all')
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const myClientIds = useMemo(
     () => new Set(clientes.filter((c) => c.responsaveis?.includes(userId || '')).map((c) => c.id)),
@@ -153,9 +155,16 @@ export function DeclarationsTable({
                         <button
                           onClick={() => onEdit(d.id)}
                           className="p-1.5 rounded hover:bg-slate-100"
-                          title="Editar"
+                          title="Visualizar"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-500" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/app/declaracoes/${d.id}/editar`)}
+                          className="p-1.5 rounded hover:bg-slate-100"
+                          title="Editar"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-emerald-600" />
                         </button>
                         <button
                           onClick={() => handleDuplicate(d.id)}
@@ -220,7 +229,15 @@ export function DeclarationsTable({
                   className="h-7 text-[11px] gap-1"
                   onClick={() => onEdit(d.id)}
                 >
-                  <Eye className="w-3 h-3" /> Editar
+                  <Eye className="w-3 h-3" /> Ver
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px] gap-1 text-emerald-600"
+                  onClick={() => navigate(`/app/declaracoes/${d.id}/editar`)}
+                >
+                  <Pencil className="w-3 h-3" /> Editar
                 </Button>
                 <Button
                   variant="ghost"

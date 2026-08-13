@@ -23,10 +23,10 @@ import { useToast } from '@/hooks/use-toast'
 
 const STATUS_OPTIONS = [
   { value: 'rascunho', label: 'Rascunho' },
-  { value: 'em_preenchimento', label: 'Em Preenchimento' },
   { value: 'calculada', label: 'Calculada' },
-  { value: 'concluida', label: 'Concluída' },
-  { value: 'entregue', label: 'Entregue' },
+  { value: 'revisada', label: 'Revisada' },
+  { value: 'apresentada', label: 'Apresentada' },
+  { value: 'retificada', label: 'Retificada' },
 ] as const
 
 const MODALIDADE_OPTIONS = [
@@ -72,8 +72,8 @@ export default function DeclaracaoForm() {
       })
       .catch(() => {
         toast({
-          title: 'Erro',
-          description: 'Não foi possível carregar a declaração.',
+          title: 'Falha ao carregar declaração',
+          description: 'Não foi possível carregar os dados',
           variant: 'destructive',
         })
         navigate('/app/declaracoes')
@@ -108,7 +108,7 @@ export default function DeclaracaoForm() {
         await updateDeclaracao(declaracaoId, payload)
         toast({
           title: 'Declaração atualizada',
-          description: 'Os dados da declaração foram salvos com sucesso.',
+          description: 'Os dados da declaração foram salvos',
         })
         navigate(`/app/declaracoes/${declaracaoId}`)
       } else {
@@ -119,7 +119,7 @@ export default function DeclaracaoForm() {
         } as any)
         toast({
           title: 'Declaração criada',
-          description: 'Você pode começar a lançar os dados fiscais.',
+          description: 'Você pode começar a lançar os dados fiscais',
         })
         navigate(`/app/declaracoes/${dec.id}`)
       }
@@ -129,8 +129,8 @@ export default function DeclaracaoForm() {
         setFieldErrors(fe)
       } else {
         toast({
-          title: 'Erro ao salvar',
-          description: err?.message || 'Verifique os dados informados.',
+          title: 'Falha ao salvar declaração',
+          description: 'Verifique os campos e tente novamente',
           variant: 'destructive',
         })
       }
@@ -299,7 +299,7 @@ export default function DeclaracaoForm() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span>{isEditing ? 'Salvar Alterações' : 'Iniciar Declaração'}</span>
+                    <span>{isEditing ? 'Salvar' : 'Salvar'}</span>
                   </>
                 )}
               </Button>

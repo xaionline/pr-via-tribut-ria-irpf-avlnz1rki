@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T01:59:24.811Z",
+  "generatedAt": "2026-08-13T02:17:49.804Z",
   "collections": [
     {
       "name": "users",
@@ -272,7 +272,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["rascunho", "em_preenchimento", "calculada", "concluida", "entregue"]
+          "selectValues": ["rascunho", "calculada", "revisada", "apresentada", "retificada"]
         },
         {
           "name": "progresso",

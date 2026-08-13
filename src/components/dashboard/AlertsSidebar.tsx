@@ -146,21 +146,21 @@ export function AlertsSidebar({ clientesSemDecl, oportunidades, variacoes, onIni
     <div className="lg:col-span-1">
       <div className="hidden lg:block space-y-3">
         <DesktopSection
-          title="Clientes sem declaracao 2024"
+          title="Clientes sem declaração 2024"
           icon={<UserPlus className="w-3.5 h-3.5 text-blue-600" />}
           count={clientesSemDecl.length}
         >
           <SemDeclContent items={clientesSemDecl} onIniciar={onIniciar} />
         </DesktopSection>
         <DesktopSection
-          title="Oportunidades de otimizacao"
+          title="Oportunidades de otimização"
           icon={<Lightbulb className="w-3.5 h-3.5 text-amber-500" />}
           count={oportunidades.length}
         >
           <OportContent items={oportunidades} />
         </DesktopSection>
         <DesktopSection
-          title="Variacoes anormais"
+          title="Variações anormais"
           icon={<AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
           count={variacoes.length}
         >
@@ -171,7 +171,7 @@ export function AlertsSidebar({ clientesSemDecl, oportunidades, variacoes, onIni
       <Accordion type="single" collapsible className="lg:hidden">
         <AccordionItem value="sem-decl">
           <AccordionTrigger className="text-xs font-bold">
-            Clientes sem declaracao 2024 ({clientesSemDecl.length})
+            Clientes sem declaração 2024 ({clientesSemDecl.length})
           </AccordionTrigger>
           <AccordionContent>
             <SemDeclContent items={clientesSemDecl} onIniciar={onIniciar} />
@@ -179,7 +179,7 @@ export function AlertsSidebar({ clientesSemDecl, oportunidades, variacoes, onIni
         </AccordionItem>
         <AccordionItem value="oportunidades">
           <AccordionTrigger className="text-xs font-bold">
-            Oportunidades de otimizacao ({oportunidades.length})
+            Oportunidades de otimização ({oportunidades.length})
           </AccordionTrigger>
           <AccordionContent>
             <OportContent items={oportunidades} />
@@ -187,7 +187,7 @@ export function AlertsSidebar({ clientesSemDecl, oportunidades, variacoes, onIni
         </AccordionItem>
         <AccordionItem value="variacoes">
           <AccordionTrigger className="text-xs font-bold">
-            Variacoes anormais ({variacoes.length})
+            Variações anormais ({variacoes.length})
           </AccordionTrigger>
           <AccordionContent>
             <VarContent items={variacoes} />

@@ -57,16 +57,22 @@ export default function DeclaracaoDetail() {
       const result = await calcularDeclaracao(declaracaoId)
       setCalcResult(result)
       toast({
-        title: 'Cálculo concluído!',
-        description: 'Comparativo disponível na aba Visão Geral.',
+        title: 'Declaração calculada',
+        description: 'Comparativo disponível na aba Visão Geral',
       })
       loadData()
       setActiveTab('visao_geral')
     } catch {
       toast({
-        title: 'Erro no cálculo',
-        description: 'Falha ao processar a prévia.',
+        title: 'Falha ao calcular a declaração',
+        description: 'Verifique os dados lançados e tente novamente',
         variant: 'destructive',
+        action: (
+          <Button size="sm" variant="outline" onClick={handleCalcular}>
+            Repetir
+          </Button>
+        ),
+        duration: 0,
       })
     } finally {
       setCalculating(false)

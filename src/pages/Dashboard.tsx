@@ -39,8 +39,8 @@ export default function Dashboard() {
       setResultados(res)
     } catch {
       toast({
-        title: 'Erro ao carregar',
-        description: 'Falha ao buscar dados do dashboard.',
+        title: 'Falha ao carregar dashboard',
+        description: 'Não foi possível carregar os dados',
         variant: 'destructive',
       })
     } finally {
@@ -92,9 +92,9 @@ export default function Dashboard() {
 
     return [
       {
-        title: 'Declaracoes em Rascunho',
+        title: 'Declarações em rascunho',
         value: rascunhoCount,
-        microcopy: 'Declaracoes em Rascunho',
+        microcopy: 'Declarações em rascunho',
         icon: <FileText className="w-4 h-4" />,
         trend: rascunhoCount > 0 ? `+${Math.min(rascunhoCount, 3)} vs semana` : undefined,
         trendPositive: false,
@@ -102,19 +102,19 @@ export default function Dashboard() {
         sparkColor: '#64748b',
       },
       {
-        title: 'Imposto Total a Pagar',
+        title: 'Imposto total a pagar',
         value: formatCurrency(impostoTotal),
-        microcopy: 'Imposto Total a Pagar (carteira)',
+        microcopy: 'Imposto total a pagar (carteira)',
         icon: <TrendingDown className="w-4 h-4" />,
-        trend: impostoTotal > 0 ? '+8% vs mes' : undefined,
+        trend: impostoTotal > 0 ? '+8% vs mês' : undefined,
         trendPositive: false,
         sparklineData: [12, 15, 14, 18, 20, 22, Math.max(impostoTotal / 1000, 1)],
         sparkColor: '#ef4444',
       },
       {
-        title: 'Economia Gerada',
+        title: 'Economia gerada',
         value: formatCurrency(economiaTotal),
-        microcopy: 'Economia Gerada aos Clientes',
+        microcopy: 'Economia gerada aos clientes',
         icon: <TrendingUp className="w-4 h-4" />,
         trend: economiaPct > 0 ? `${economiaPct}% medio` : undefined,
         trendPositive: true,
@@ -122,7 +122,7 @@ export default function Dashboard() {
         sparkColor: '#10b981',
       },
       {
-        title: 'Prazos Proximos',
+        title: 'Prazos próximos',
         value: nearDeadline,
         microcopy: isUrgent ? `Faltam ${dlInfo.days} dias` : `Faltam ${dlInfo.days} dias`,
         icon: <CalendarClock className="w-4 h-4" />,

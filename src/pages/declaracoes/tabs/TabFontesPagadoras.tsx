@@ -74,7 +74,7 @@ export default function TabFontesPagadoras({ declaracaoId }: { declaracaoId: str
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Adicionar Fonte</span>
+              <span>Adicionar fonte</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -112,7 +112,7 @@ export default function TabFontesPagadoras({ declaracaoId }: { declaracaoId: str
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
               >
-                Salvar Fonte
+                Salvar
               </Button>
             </form>
           </DialogContent>

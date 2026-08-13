@@ -76,7 +76,7 @@ function ScenarioCard({
           >
             {selecting
               ? 'Aplicando...'
-              : `Escolher ${scenario.modalidade === 'legal' ? 'Legal' : 'Simplificada'}`}
+              : `Escolher ${scenario.modalidade === 'legal' ? 'legal' : 'simplificada'}`}
           </Button>
         )}
       </CardContent>

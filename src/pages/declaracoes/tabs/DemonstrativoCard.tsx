@@ -81,7 +81,7 @@ export function DemonstrativoCard({
               onClick={() => window.print()}
             >
               <Printer className="w-3.5 h-3.5" />
-              Imprimir
+              Exportar PDF
             </Button>
           </div>
         )}

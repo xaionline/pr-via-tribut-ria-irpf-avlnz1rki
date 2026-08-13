@@ -63,7 +63,7 @@ export default function ClienteDetail() {
             className="text-xs gap-1.5"
           >
             <Edit className="w-3.5 h-3.5" />
-            <span>Editar Dados</span>
+            <span>Editar</span>
           </Button>
           <Button
             onClick={() => navigate(`/app/declaracoes/nova?clienteId=${cliente.id}`)}
@@ -71,7 +71,7 @@ export default function ClienteDetail() {
             className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
           >
             <Plus className="w-4 h-4" />
-            <span>Nova Declaração</span>
+            <span>Nova declaração</span>
           </Button>
         </div>
       </div>
@@ -85,11 +85,11 @@ export default function ClienteDetail() {
           </TabsTrigger>
           <TabsTrigger value="dados" className="text-xs gap-2">
             <User className="w-3.5 h-3.5" />
-            <span>Dados Cadastrais</span>
+            <span>Dados cadastrais</span>
           </TabsTrigger>
           <TabsTrigger value="fiscal" className="text-xs gap-2">
             <DollarSign className="w-3.5 h-3.5" />
-            <span>Resumo Fiscal</span>
+            <span>Resumo fiscal</span>
           </TabsTrigger>
         </TabsList>
 
@@ -176,7 +176,7 @@ export default function ClienteDetail() {
         <TabsContent value="fiscal">
           <Card className="border border-slate-200/80 p-6 text-center text-xs">
             <DollarSign className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
-            <h3 className="text-sm font-bold text-slate-900">Resumo Consolidado</h3>
+            <h3 className="text-sm font-bold text-slate-900">Resumo consolidado</h3>
             <p className="text-slate-500 mt-1">
               Acesse uma declaração ativa para simular e visualizar o saldo a pagar ou a restituir
               em detalhe.

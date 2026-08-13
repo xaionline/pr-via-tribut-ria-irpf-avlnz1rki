@@ -139,14 +139,14 @@ export function DeclarationsTable({
                 <th className={cn('py-2.5 px-3', !showAllCols && 'md:hidden lg:table-cell')}>
                   Atualizado
                 </th>
-                <th className="py-2.5 px-3 text-right">Acoes</th>
+                <th className="py-2.5 px-3 text-right">Ações</th>{' '}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-400">
-                    Nenhuma declaracao pendente
+                    Nenhuma declaração pendente
                   </td>
                 </tr>
               ) : (
@@ -221,7 +221,7 @@ export function DeclarationsTable({
       <div className="md:hidden space-y-3">
         {filtered.length === 0 ? (
           <Card className="p-6 text-center text-xs text-slate-400 border border-slate-200">
-            Nenhuma declaracao pendente
+            Nenhuma declaração pendente
           </Card>
         ) : (
           filtered.map((d) => {

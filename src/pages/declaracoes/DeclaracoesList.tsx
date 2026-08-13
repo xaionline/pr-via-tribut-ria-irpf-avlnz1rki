@@ -66,7 +66,7 @@ export default function DeclaracoesList() {
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1.5 text-xs shadow-sm"
         >
           <Plus className="w-4 h-4" />
-          <span>Nova Declaração</span>
+          <span>Nova declaração</span>
         </Button>
       </div>
 
@@ -94,10 +94,10 @@ export default function DeclaracoesList() {
               <SelectContent>
                 <SelectItem value="todos">Todos os status</SelectItem>
                 <SelectItem value="rascunho">Rascunho</SelectItem>
-                <SelectItem value="em_preenchimento">Em preenchimento</SelectItem>
                 <SelectItem value="calculada">Calculada</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
-                <SelectItem value="entregue">Entregue</SelectItem>
+                <SelectItem value="revisada">Revisada</SelectItem>
+                <SelectItem value="apresentada">Apresentada</SelectItem>
+                <SelectItem value="retificada">Retificada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -105,15 +105,15 @@ export default function DeclaracoesList() {
       </Card>
 
       {/* Resumption Banner */}
-      {!loading && declaracoes.some((d) => d.status === 'em_preenchimento') && (
+      {!loading && declaracoes.some((d) => d.status === 'revisada') && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-amber-900">
-                Você tem uma declaração em andamento
+                Há declarações em revisão aguardando conclusão
               </p>
-              <p className="text-xs text-amber-700">Continuar de onde parou?</p>
+              <p className="text-xs text-amber-700">Retome o preenchimento</p>
             </div>
           </div>
           <Button
@@ -121,7 +121,7 @@ export default function DeclaracoesList() {
             size="sm"
             className="border-amber-300 text-amber-700 hover:bg-amber-100 text-xs shrink-0"
             onClick={() => {
-              const inProgress = declaracoes.find((d) => d.status === 'em_preenchimento')
+              const inProgress = declaracoes.find((d) => d.status === 'revisada')
               if (inProgress) navigate(`/app/declaracoes/${inProgress.id}`)
             }}
           >
@@ -136,16 +136,20 @@ export default function DeclaracoesList() {
       ) : declaracoes.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-slate-300">
           <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800">Nenhuma declaração encontrada</h3>
+          <h3 className="text-base font-bold text-slate-800">
+            {anoFilter !== 'todos'
+              ? `Nenhuma declaração iniciada para ${anoFilter}`
+              : 'Nenhuma declaração encontrada'}
+          </h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-            Crie uma nova declaração vinculada a um cliente para apurar a prévia do imposto.
+            Crie a primeira declaração para começar o cálculo
           </p>
           <Button
             onClick={() => navigate('/app/declaracoes/nova')}
             className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
           >
             <Plus className="w-4 h-4" />
-            <span>Criar Nova Declaração</span>
+            <span>Nova declaração</span>
           </Button>
         </Card>
       ) : (
@@ -195,7 +199,7 @@ export default function DeclaracoesList() {
                           <DropdownMenuContent align="end" className="w-40 text-xs">
                             <DropdownMenuItem onClick={() => navigate(`/app/declaracoes/${d.id}`)}>
                               <Eye className="w-3.5 h-3.5 mr-2" />
-                              <span>Abrir Declaração</span>
+                              <span>Abrir declaração</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -236,7 +240,7 @@ export default function DeclaracoesList() {
                   className="w-full h-9 text-xs touch-target"
                   onClick={() => navigate(`/app/declaracoes/${d.id}`)}
                 >
-                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Abrir Declaração
+                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Abrir declaração
                 </Button>
               </Card>
             ))}

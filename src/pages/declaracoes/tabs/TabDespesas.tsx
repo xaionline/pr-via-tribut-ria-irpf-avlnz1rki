@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { getDespesas, createDespesa, deleteDespesa } from '@/services/declaracoes'
 import { formatCurrency } from '@/lib/formatters'
+import { InlineLimitAlerts } from '@/components/InlineLimitAlerts'
 import type { DespesaDedutivelRecord } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 
@@ -86,7 +87,7 @@ export default function TabDespesas({ declaracaoId }: { declaracaoId: string }) 
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Adicionar Despesa</span>
+              <span>Adicionar despesa</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -130,13 +131,14 @@ export default function TabDespesas({ declaracaoId }: { declaracaoId: string }) 
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
               >
-                Salvar Despesa
+                Salvar
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </CardHeader>
       <CardContent>
+        <InlineLimitAlerts declaracaoId={declaracaoId} refreshKey={despesas.length} />
         {despesas.length === 0 ? (
           <div className="text-center py-8 text-xs text-slate-500">
             Nenhuma despesa dedutível informada.

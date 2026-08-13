@@ -79,13 +79,13 @@ export default function TabVisaoGeral({
     setSelectingModalidade(true)
     try {
       await setModalidade(declaracao.id, modalidade)
-      toast({ title: 'Modalidade selecionada!', description: 'Status atualizado para Calculada.' })
+      toast({ title: 'Modalidade selecionada', description: 'Status atualizado para Calculada' })
       setTrocarModalidade(false)
       onRefresh()
     } catch {
       toast({
-        title: 'Erro',
-        description: 'Falha ao selecionar modalidade.',
+        title: 'Falha ao selecionar modalidade',
+        description: 'Tente novamente',
         variant: 'destructive',
       })
     } finally {
@@ -120,10 +120,10 @@ export default function TabVisaoGeral({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="rascunho">Rascunho</SelectItem>
-                <SelectItem value="em_preenchimento">Em preenchimento</SelectItem>
                 <SelectItem value="calculada">Calculada</SelectItem>
-                <SelectItem value="concluida">Concluída</SelectItem>
-                <SelectItem value="entregue">Entregue</SelectItem>
+                <SelectItem value="revisada">Revisada</SelectItem>
+                <SelectItem value="apresentada">Apresentada</SelectItem>
+                <SelectItem value="retificada">Retificada</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>

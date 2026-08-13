@@ -12,9 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { FieldError } from '@/components/ui/field-error'
 import { useAuth } from '@/hooks/use-auth'
 import { createCliente, getCliente, updateCliente } from '@/services/clientes'
 import { validateCpf } from '@/lib/formatters'
+import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 import { useToast } from '@/hooks/use-toast'
 
 export default function ClienteForm() {
@@ -33,6 +35,7 @@ export default function ClienteForm() {
   const [tipo, setTipo] = useState<'pessoa_fisica' | 'socio'>('pessoa_fisica')
   const [status, setStatus] = useState<'ativo' | 'inativo'>('ativo')
   const [loading, setLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
   useEffect(() => {
     if (!clienteId) return
@@ -50,21 +53,18 @@ export default function ClienteForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nome || !cpf) {
-      toast({
-        title: 'Atenção',
-        description: 'Nome e CPF são obrigatórios.',
-        variant: 'destructive',
-      })
+    setFieldErrors({})
+
+    const errors: FieldErrors = {}
+    if (!nome) errors.nome = 'Informe o nome do declarante'
+    if (!cpf) errors.cpf = 'Informe o CPF do declarante'
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
       return
     }
 
     if (!validateCpf(cpf)) {
-      toast({
-        title: 'CPF Inválido',
-        description: 'Por favor digite um CPF válido.',
-        variant: 'destructive',
-      })
+      setFieldErrors({ cpf: 'CPF com dígitos verificadores incorretos' })
       return
     }
 
@@ -81,7 +81,7 @@ export default function ClienteForm() {
           tipo,
           status,
         })
-        toast({ title: 'Sucesso', description: 'Cliente atualizado com sucesso.' })
+        toast({ title: 'Cliente atualizado' })
       } else {
         await createCliente({
           escritorio_id: escritorio?.id,
@@ -95,15 +95,20 @@ export default function ClienteForm() {
           status,
           responsaveis: user?.id ? [user.id] : [],
         })
-        toast({ title: 'Sucesso', description: 'Cliente cadastrado com sucesso.' })
+        toast({ title: 'Cliente cadastrado' })
       }
       navigate('/app/clientes')
     } catch (err: any) {
-      toast({
-        title: 'Erro ao salvar',
-        description: err?.message || 'Verifique os dados informados.',
-        variant: 'destructive',
-      })
+      const fe = extractFieldErrors(err)
+      if (Object.keys(fe).length > 0) {
+        setFieldErrors(fe)
+      } else {
+        toast({
+          title: 'Falha ao salvar cliente',
+          description: 'Verifique os campos e tente novamente',
+          variant: 'destructive',
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -127,7 +132,7 @@ export default function ClienteForm() {
 
       <Card className="border border-slate-200/80 shadow-subtle">
         <CardHeader>
-          <CardTitle className="text-base font-bold">Informações Fiscais</CardTitle>
+          <CardTitle className="text-base font-bold">Informações fiscais</CardTitle>
           <CardDescription className="text-xs">
             Dados necessários para identificação no IRPF
           </CardDescription>
@@ -140,9 +145,13 @@ export default function ClienteForm() {
                 <Input
                   placeholder="Nome do cliente"
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  onChange={(e) => {
+                    setNome(e.target.value)
+                    if (fieldErrors.nome) setFieldErrors({ ...fieldErrors, nome: undefined })
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.nome} />
               </div>
 
               <div className="space-y-1.5">
@@ -150,9 +159,13 @@ export default function ClienteForm() {
                 <Input
                   placeholder="000.000.000-00"
                   value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
+                  onChange={(e) => {
+                    setCpf(e.target.value)
+                    if (fieldErrors.cpf) setFieldErrors({ ...fieldErrors, cpf: undefined })
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.cpf} />
               </div>
 
               <div className="space-y-1.5">
@@ -233,7 +246,7 @@ export default function ClienteForm() {
                 className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{loading ? 'Salvando...' : 'Salvar Cliente'}</span>
+                <span>{loading ? 'Salvando...' : 'Salvar'}</span>
               </Button>
             </div>
           </form>

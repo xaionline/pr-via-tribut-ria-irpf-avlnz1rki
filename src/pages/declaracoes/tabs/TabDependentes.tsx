@@ -70,7 +70,7 @@ export default function TabDependentes({ declaracaoId }: { declaracaoId: string 
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Adicionar Dependente</span>
+              <span>Adicionar dependente</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -104,7 +104,7 @@ export default function TabDependentes({ declaracaoId }: { declaracaoId: string 
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white mt-2"
               >
-                Salvar Dependente
+                Salvar
               </Button>
             </form>
           </DialogContent>

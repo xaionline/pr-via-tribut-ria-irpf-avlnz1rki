@@ -42,8 +42,8 @@ export default function ClientesList() {
       setTotalItems(res.totalItems)
     } catch (_) {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os clientes.',
+        title: 'Falha ao carregar clientes',
+        description: 'Tente novamente em instantes',
         variant: 'destructive',
       })
     } finally {
@@ -61,10 +61,14 @@ export default function ClientesList() {
     if (!confirm(`Tem certeza que deseja excluir o cliente ${name}?`)) return
     try {
       await deleteCliente(id)
-      toast({ title: 'Cliente removido', description: `${name} foi excluído.` })
+      toast({ title: 'Cliente removido', description: `${name} foi excluído` })
       loadData()
     } catch (_) {
-      toast({ title: 'Erro', description: 'Falha ao excluir o cliente.', variant: 'destructive' })
+      toast({
+        title: 'Falha ao excluir cliente',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -86,7 +90,7 @@ export default function ClientesList() {
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1.5 shadow-sm text-xs"
         >
           <Plus className="w-4 h-4" />
-          <span>Novo Cliente</span>
+          <span>Adicionar cliente</span>
         </Button>
       </div>
 
@@ -109,6 +113,17 @@ export default function ClientesList() {
             <Filter className="w-4 h-4 text-slate-500" />
             <span>Filtros</span>
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs h-10"
+            onClick={() => {
+              setSearch('')
+              setSearchParams({})
+            }}
+          >
+            Limpar filtros
+          </Button>{' '}
         </div>
       </Card>
 
@@ -120,11 +135,13 @@ export default function ClientesList() {
       ) : clientes.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-slate-300">
           <User className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800">Nenhum cliente encontrado</h3>
+          <h3 className="text-base font-bold text-slate-800">
+            {search ? `Nenhum cliente encontrado para '${search}'` : 'Nenhum cliente cadastrado'}
+          </h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             {search
-              ? 'Tente ajustar os termos de pesquisa ou remover os filtros.'
-              : 'Cadastre o primeiro cliente para começar a apurar a prévia do imposto.'}
+              ? 'Verifique o termo ou limpe os filtros'
+              : 'Comece adicionando o primeiro cliente à sua carteira'}
           </p>
           {!search && (
             <Button
@@ -132,7 +149,7 @@ export default function ClientesList() {
               className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Adicionar Cliente</span>
+              <span>Adicionar cliente</span>
             </Button>
           )}
         </Card>

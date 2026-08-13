@@ -110,7 +110,9 @@ export default function SimuladorTributario() {
 
       setDeclaracao(dec)
       setCenarios(cens)
-      setIsCalculated(!!res && ['calculada', 'concluida', 'entregue'].includes(dec.status))
+      setIsCalculated(
+        !!res && ['calculada', 'revisada', 'apresentada', 'retificada'].includes(dec.status),
+      )
 
       const rendTributavel = rends
         .filter((r) => r.tipo === 'tributavel')
@@ -131,7 +133,11 @@ export default function SimuladorTributario() {
         faixas: tabela?.faixas || [],
       })
     } catch {
-      toast({ title: 'Erro', description: 'Falha ao carregar dados.', variant: 'destructive' })
+      toast({
+        title: 'Falha ao carregar dados',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -157,11 +163,15 @@ export default function SimuladorTributario() {
         params,
         resultados: simResult,
       })
-      toast({ title: 'Cenário salvo!' })
+      toast({ title: 'Cenário salvo' })
       setSaveOpen(false)
       getCenarios(id).then(setCenarios)
     } catch {
-      toast({ title: 'Erro', description: 'Falha ao salvar cenário.', variant: 'destructive' })
+      toast({
+        title: 'Falha ao salvar cenário',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -171,11 +181,15 @@ export default function SimuladorTributario() {
     try {
       await aplicarCenario(id, params)
       await calcularDeclaracao(id)
-      toast({ title: 'Cenário aplicado!', description: 'Declaração recalculada.' })
+      toast({ title: 'Cenário aplicado', description: 'Declaração recalculada' })
       setApplyOpen(false)
       loadData()
     } catch {
-      toast({ title: 'Erro', description: 'Falha ao aplicar cenário.', variant: 'destructive' })
+      toast({
+        title: 'Falha ao aplicar cenário',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      })
     } finally {
       setApplying(false)
     }
@@ -301,7 +315,7 @@ export default function SimuladorTributario() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={applying}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleApply} disabled={applying}>
-              {applying ? 'Aplicando...' : 'Confirmar e aplicar'}
+              {applying ? 'Aplicando...' : 'Aplicar à declaração'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

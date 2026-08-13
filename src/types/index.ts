@@ -45,12 +45,7 @@ export interface ClienteRecord {
   }
 }
 
-export type StatusDeclaracao =
-  | 'rascunho'
-  | 'em_preenchimento'
-  | 'calculada'
-  | 'concluida'
-  | 'entregue'
+export type StatusDeclaracao = 'rascunho' | 'calculada' | 'revisada' | 'apresentada' | 'retificada'
 
 export type ModalidadeDeclaracao = 'legal' | 'simplificada'
 

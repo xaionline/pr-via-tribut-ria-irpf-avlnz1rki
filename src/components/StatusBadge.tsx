@@ -11,10 +11,6 @@ const statusConfig: Record<string, { classes: string; label: string }> = {
     classes: 'bg-muted text-muted-foreground border-border',
     label: 'Rascunho',
   },
-  em_preenchimento: {
-    classes: 'bg-amber-50 text-amber-700 border-amber-200',
-    label: 'Em Preenchimento',
-  },
   calculada: {
     classes: 'bg-blue-50 text-blue-700 border-blue-200',
     label: 'Calculada',
@@ -23,20 +19,12 @@ const statusConfig: Record<string, { classes: string; label: string }> = {
     classes: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     label: 'Revisada',
   },
-  concluida: {
-    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    label: 'Concluída',
-  },
-  entregue: {
-    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    label: 'Entregue',
-  },
   apresentada: {
     classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     label: 'Apresentada',
   },
   retificada: {
-    classes: 'bg-red-50 text-red-700 border-red-200',
+    classes: 'bg-amber-50 text-amber-700 border-amber-200',
     label: 'Retificada',
   },
   ativo: {

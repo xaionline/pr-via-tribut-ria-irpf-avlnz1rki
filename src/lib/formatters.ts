@@ -31,6 +31,21 @@ export function maskCnpj(cnpj?: string): string {
   return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
+export function relativeTime(dateStr?: string): string {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHour = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHour / 24)
+  if (diffMin < 1) return 'agora'
+  if (diffMin < 60) return `ha ${diffMin} min`
+  if (diffHour < 24) return `ha ${diffHour}h`
+  if (diffDay < 30) return `ha ${diffDay}d`
+  return formatDate(dateStr)
+}
+
 export function validateCpf(cpf: string): boolean {
   const clean = cpf.replace(/\D/g, '')
   if (clean.length !== 11 || /^(\d)\1+$/.test(clean)) return false

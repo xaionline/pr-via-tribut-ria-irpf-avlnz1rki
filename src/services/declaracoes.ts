@@ -36,6 +36,20 @@ export const updateDeclaracao = (id: string, data: Partial<DeclaracaoRecord>) =>
 
 export const deleteDeclaracao = (id: string) => pb.collection('declaracoes').delete(id)
 
+export const getAllResultados = () =>
+  pb.collection('resultados').getFullList<ResultadoRecord>({ expand: 'declaracao_id' })
+
+export const duplicateDeclaracao = async (id: string) => {
+  const original = await getDeclaracao(id)
+  return createDeclaracao({
+    escritorio_id: original.escritorio_id,
+    cliente_id: original.cliente_id,
+    ano_calendario: original.ano_calendario,
+    status: 'rascunho',
+    progresso: 10,
+  })
+}
+
 export const calcularDeclaracao = (id: string) =>
   pb.send<CalcularResponse>(`/backend/v1/declaracoes/${id}/calcular`, {
     method: 'POST',

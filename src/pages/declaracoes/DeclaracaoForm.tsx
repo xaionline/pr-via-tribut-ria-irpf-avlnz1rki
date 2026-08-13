@@ -20,9 +20,10 @@ import { useToast } from '@/hooks/use-toast'
 export default function DeclaracaoForm() {
   const [searchParams] = useSearchParams()
   const preSelectedCliente = searchParams.get('clienteId') || ''
+  const preSelectedAno = searchParams.get('ano') || ''
 
   const [clienteId, setClienteId] = useState(preSelectedCliente)
-  const [ano, setAno] = useState('2025')
+  const [ano, setAno] = useState(preSelectedAno || '2025')
   const [clientes, setClientes] = useState<ClienteRecord[]>([])
   const [loading, setLoading] = useState(false)
 

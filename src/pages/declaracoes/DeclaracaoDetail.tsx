@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calculator, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Calculator, CheckCircle2, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -101,14 +101,24 @@ export default function DeclaracaoDetail() {
           </div>
         </div>
 
-        <Button
-          onClick={handleCalcular}
-          disabled={calculating || isVisualizador}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
-        >
-          <Calculator className="w-4 h-4" />
-          <span>{calculating ? 'Calculando...' : 'Calcular Prévia'}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/app/declaracoes/${declaracao.id}/simulador`)}
+            className="text-xs gap-2 font-semibold"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>Simular</span>
+          </Button>
+          <Button
+            onClick={handleCalcular}
+            disabled={calculating || isVisualizador}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50"
+          >
+            <Calculator className="w-4 h-4" />
+            <span>{calculating ? 'Calculando...' : 'Calcular Prévia'}</span>
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

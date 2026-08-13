@@ -234,7 +234,7 @@ export default function Dashboard() {
           clientes={clientes}
           searchQuery={searchQuery}
           onEdit={(id) => navigate(`/app/declaracoes/${id}`)}
-          onSimulate={(id) => navigate(`/app/declaracoes/${id}`)}
+          onSimulate={(id) => navigate(`/app/declaracoes/${id}/simulador`)}
         />
         <AlertsSidebar
           clientesSemDecl={alertsData.clientesSemDecl}

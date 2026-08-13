@@ -203,3 +203,38 @@ export interface SetModalidadeResponse {
   status: string
   demonstrativo: DemonstrativoData
 }
+
+export interface SimulacaoParams {
+  pgbl_adicional: number
+  destinacao: number
+  dependentes: number
+  despesas_medicas: number
+  pensao_alimenticia: number
+}
+
+export interface SimulacaoBreakdownItem {
+  componente: string
+  reducao: number
+  percentual: number
+}
+
+export interface SimulacaoResultados {
+  imposto_atual: number
+  aliquota_atual: number
+  imposto_otimizado: number
+  aliquota_otimizada: number
+  economia: number
+  roi: number
+  breakdown: SimulacaoBreakdownItem[]
+  recomendacao: string
+}
+
+export interface CenarioSimulacaoRecord {
+  id: string
+  declaracao_id: string
+  nome: string
+  params: SimulacaoParams
+  resultados: SimulacaoResultados
+  created: string
+  updated: string
+}

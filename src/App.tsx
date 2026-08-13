@@ -16,6 +16,7 @@ import ClienteDetail from '@/pages/clientes/ClienteDetail'
 import DeclaracoesList from '@/pages/declaracoes/DeclaracoesList'
 import DeclaracaoForm from '@/pages/declaracoes/DeclaracaoForm'
 import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
+import SimuladorTributario from '@/pages/declaracoes/SimuladorTributario'
 
 const App = () => (
   <BrowserRouter>
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/app/declaracoes" element={<DeclaracoesList />} />
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id" element={<DeclaracaoDetail />} />
+            <Route path="/app/declaracoes/:id/simulador" element={<SimuladorTributario />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

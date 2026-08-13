@@ -19,6 +19,7 @@ export interface EscritorioRecord {
   email?: string
   telefone?: string
   endereco?: string
+  logo?: string
   plano: 'starter' | 'pro' | 'enterprise'
   limite_clientes: number
   created: string

@@ -288,3 +288,32 @@
     animation: spotlight 2s ease forwards;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .demo-paper {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+  .calc-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .demo-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  body {
+    background: white !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

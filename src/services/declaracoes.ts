@@ -41,13 +41,77 @@ export const getAllResultados = () =>
 
 export const duplicateDeclaracao = async (id: string) => {
   const original = await getDeclaracao(id)
-  return createDeclaracao({
+  const newDec = await createDeclaracao({
     escritorio_id: original.escritorio_id,
     cliente_id: original.cliente_id,
-    ano_calendario: original.ano_calendario,
+    ano_calendario: original.ano_calendario + 1,
     status: 'rascunho',
     progresso: 10,
   })
+
+  const fonteMap = new Map<string, string>()
+  const fontes = await getFontesPagadoras(id)
+  for (const f of fontes) {
+    const nf = await createFontePagadora({
+      declaracao_id: newDec.id,
+      nome: f.nome,
+      cnpj: f.cnpj,
+      tipo: f.tipo,
+    })
+    fonteMap.set(f.id, nf.id)
+  }
+
+  const rends = await getRendimentos(id)
+  for (const r of rends) {
+    await createRendimento({
+      declaracao_id: newDec.id,
+      fonte_pagadora_id: r.fonte_pagadora_id ? fonteMap.get(r.fonte_pagadora_id) : undefined,
+      descricao: r.descricao,
+      tipo: r.tipo,
+      valor: r.valor,
+    })
+  }
+
+  const desps = await getDespesas(id)
+  for (const d of desps) {
+    await createDespesa({
+      declaracao_id: newDec.id,
+      categoria: d.categoria,
+      descricao: d.descricao,
+      valor: d.valor,
+    })
+  }
+
+  const deps = await getDependentes(id)
+  for (const d of deps) {
+    await createDependente({
+      declaracao_id: newDec.id,
+      nome: d.nome,
+      cpf: d.cpf,
+      data_nascimento: d.data_nascimento,
+    })
+  }
+
+  const rurais = await getAtividadesRurais(id)
+  for (const a of rurais) {
+    await createAtividadeRural({
+      declaracao_id: newDec.id,
+      receita_bruta: a.receita_bruta,
+      despesas: a.despesas,
+      resultado: a.resultado,
+    })
+  }
+
+  const dests = await getDestinacoes(id)
+  for (const d of dests) {
+    await createDestinacao({
+      declaracao_id: newDec.id,
+      tipo: d.tipo,
+      valor: d.valor,
+    })
+  }
+
+  return newDec
 }
 
 export const calcularDeclaracao = (id: string) =>

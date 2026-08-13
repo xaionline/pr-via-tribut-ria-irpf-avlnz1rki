@@ -1,0 +1,149 @@
+import type {
+  ResultadoRecord,
+  RendimentoRecord,
+  DespesaDedutivelRecord,
+  AtividadeRuralRecord,
+  DestinacaoFiscalRecord,
+  TabelaProgressivaRecord,
+  FaixaProgressiva,
+} from '@/types'
+import { formatCurrency } from '@/lib/formatters'
+
+export interface CalcStep {
+  num: string
+  label: string
+  value: string
+  isPercent?: boolean
+  isResult?: boolean
+  isFinal?: boolean
+  breakdown?: Array<{ label: string; value: string }>
+}
+
+export interface CalcData {
+  resultado: ResultadoRecord
+  rendimentos: RendimentoRecord[]
+  despesas: DespesaDedutivelRecord[]
+  atividadesRurais: AtividadeRuralRecord[]
+  destinacoes: DestinacaoFiscalRecord[]
+  tabela?: TabelaProgressivaRecord
+}
+
+const catLabels: Record<string, string> = {
+  saude: 'Saúde',
+  educacao: 'Educação',
+  previdencia: 'Previdência',
+  pensao: 'Pensão Alimentícia',
+  dependentes: 'Dependentes',
+  outras: 'Outras',
+}
+
+function findMatchingFaixa(baseCalc: number, faixas: FaixaProgressiva[]): FaixaProgressiva | null {
+  if (!faixas || faixas.length === 0) return null
+  for (let i = faixas.length - 1; i >= 0; i--) {
+    const limInfAnual = (faixas[i].limite_inferior || 0) * 12
+    if (baseCalc > limInfAnual) return faixas[i]
+  }
+  return null
+}
+
+export function computeSteps(data: CalcData): CalcStep[] {
+  const { resultado, rendimentos, despesas, atividadesRurais, destinacoes, tabela } = data
+  const det = resultado?.detalhamento || {}
+  const legal = det.legal || {}
+  const demo = det.demonstrativo || {}
+
+  const rendTrib = demo.rendimento_tributavel ?? det.rendimento_tributavel ?? 0
+  const deducoes = legal.total_deducoes ?? demo.deducoes ?? 0
+  const baseCalc = legal.base_calculo ?? demo.base_calculo ?? 0
+  const irrfDevido = legal.irrf_devido ?? demo.irrf_devido ?? 0
+  const destAplic = legal.destinacoes_aplicadas ?? demo.destinacoes_aplicadas ?? 0
+  const irrfRetido = legal.irrf_retido ?? demo.irrf_retido ?? 0
+  const saldo = legal.saldo_imposto ?? demo.saldo_imposto ?? 0
+
+  const faixas = tabela?.faixas || []
+  const faixa = findMatchingFaixa(baseCalc, faixas)
+  const aliquota = faixa?.aliquota || 0
+  const parcelaDeduzir = (faixa?.deducao || 0) * 12
+  const faixaNum = faixa ? faixas.indexOf(faixa) + 1 : 0
+
+  const ativRuralResult = atividadesRurais.reduce((s, a) => s + (a.resultado || 0), 0)
+  const ativRural20 = ativRuralResult * 0.2
+
+  const rendTribBreakdown = rendimentos
+    .filter((r) => r.tipo === 'tributavel')
+    .map((r) => ({
+      label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
+      value: formatCurrency(r.valor),
+    }))
+
+  const despesaBreakdown = despesas.map((d) => ({
+    label: `${catLabels[d.categoria] || d.categoria} — ${d.descricao}`,
+    value: formatCurrency(d.valor),
+  }))
+
+  const ruralBreakdown = atividadesRurais.map((a) => ({
+    label: `Receita: ${formatCurrency(a.receita_bruta)} − Despesas: ${formatCurrency(a.despesas)}`,
+    value: formatCurrency(a.resultado),
+  }))
+
+  const destBreakdown = destinacoes.map((d) => ({
+    label: d.tipo.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    value: formatCurrency(d.valor),
+  }))
+
+  const irrfBreakdown = rendimentos
+    .filter((r) => r.tipo === 'tributavel')
+    .map((r) => ({
+      label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
+      value: formatCurrency(r.valor),
+    }))
+
+  return [
+    {
+      num: '01',
+      label: 'Total de Rendimentos Tributáveis',
+      value: formatCurrency(rendTrib),
+      breakdown: rendTribBreakdown,
+    },
+    {
+      num: '02',
+      label: '(−) Despesas Dedutíveis (modalidade legal)',
+      value: formatCurrency(deducoes),
+      breakdown: despesaBreakdown,
+    },
+    {
+      num: '03',
+      label: '(−) Base Atividade Rural (20%)',
+      value: formatCurrency(ativRural20),
+      breakdown: ruralBreakdown,
+    },
+    { num: '04', label: '(=) Base de Cálculo', value: formatCurrency(baseCalc), isResult: true },
+    {
+      num: '05',
+      label: `(×) Alíquota aplicável${faixaNum ? ` (faixa ${faixaNum})` : ''}`,
+      value: `${aliquota.toFixed(1).replace('.', ',')}%`,
+      isPercent: true,
+    },
+    { num: '06', label: '(−) Parcela a Deduzir da faixa', value: formatCurrency(parcelaDeduzir) },
+    { num: '07', label: '(=) Imposto Devido', value: formatCurrency(irrfDevido), isResult: true },
+    {
+      num: '08',
+      label: '(−) Destinações (limitadas a 6%)',
+      value: formatCurrency(destAplic),
+      breakdown: destBreakdown,
+    },
+    {
+      num: '09',
+      label: '(=) IR Devido após destinações',
+      value: formatCurrency(irrfDevido - destAplic),
+      isResult: true,
+    },
+    {
+      num: '10',
+      label: '(−) IRRF Retido na Fonte',
+      value: formatCurrency(irrfRetido),
+      breakdown: irrfBreakdown,
+    },
+    { num: '11', label: '(=) IMPOSTO A PAGAR', value: formatCurrency(saldo), isFinal: true },
+  ]
+}

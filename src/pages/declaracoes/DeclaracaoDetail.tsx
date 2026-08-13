@@ -84,17 +84,13 @@ export default function DeclaracaoDetail() {
       loadData()
       setActiveTab('visao_geral')
     } catch (err) {
+      dismiss()
       toast({
         title: 'Falha ao calcular a declaração',
         description: getErrorMessage(err),
         variant: 'destructive',
         action: (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={calculating}
-            onClick={() => handleCalcular()}
-          >
+          <Button size="sm" variant="outline" onClick={() => handleCalcular()}>
             Repetir
           </Button>
         ),

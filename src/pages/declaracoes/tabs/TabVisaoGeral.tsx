@@ -41,7 +41,17 @@ export default function TabVisaoGeral({
       .catch(() => setResultado(null))
   }, [declaracao.id, calcResult])
 
-  const detalhamento = resultado?.detalhamento
+  const detalhamentoRaw = resultado?.detalhamento
+  const detalhamento =
+    typeof detalhamentoRaw === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(detalhamentoRaw)
+          } catch (_) {
+            return undefined
+          }
+        })()
+      : detalhamentoRaw
   const legalScenario: CenarioCalculo | undefined = calcResult?.legal || detalhamento?.legal
   const simpScenario: CenarioCalculo | undefined =
     calcResult?.simplificada || detalhamento?.simplificada

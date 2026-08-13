@@ -25,9 +25,14 @@ routerAdd(
       return e.badRequestError('Calcule a declaração antes de escolher a modalidade.')
     }
 
-    let detalhamento = {}
+    var detalhamento = {}
     try {
-      detalhamento = resRecord.get('detalhamento') || {}
+      var rawDet = resRecord.get('detalhamento')
+      if (typeof rawDet === 'string') {
+        detalhamento = JSON.parse(rawDet) || {}
+      } else if (rawDet && typeof rawDet === 'object') {
+        detalhamento = rawDet
+      }
     } catch (_) {}
 
     const legal = detalhamento.legal || {}

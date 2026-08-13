@@ -1,4 +1,3 @@
-/* Toaster Component - A component that displays a toaster (a component that displays a toast) - from shadcn/ui (exposes Toaster) */
 import { useToast } from '@/hooks/use-toast'
 import {
   Toast,
@@ -11,9 +10,8 @@ import {
 
 export function Toaster() {
   const { toasts } = useToast()
-
   return (
-    <ToastProvider>
+    <ToastProvider duration={4000} swipeDirection="right">
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
@@ -26,7 +24,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport className="top-0 right-0 flex flex-col p-4 gap-2 w-full max-w-[420px]" />
     </ToastProvider>
   )
 }

@@ -1,6 +1,4 @@
-/* Table Component primitives - A component that displays a table - from shadcn/ui (exposes Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption) */
 import * as React from 'react'
-
 import { cn } from '@/lib/utils'
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -16,7 +14,11 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn('[&_tr]:border-b', className)} {...props} />
+  <thead
+    ref={ref}
+    className={cn('[&_tr]:border-b sticky top-0 z-10 bg-muted/50 backdrop-blur-sm', className)}
+    {...props}
+  />
 ))
 TableHeader.displayName = 'TableHeader'
 
@@ -44,10 +46,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn(
-        'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
-        className,
-      )}
+      className={cn('border-b border-border transition-colors hover:bg-muted/40 h-10', className)}
       {...props}
     />
   ),
@@ -61,7 +60,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
+      'h-10 px-3 text-left align-middle text-xs font-semibold text-muted-foreground uppercase tracking-wider',
       className,
     )}
     {...props}
@@ -73,11 +72,7 @@ const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
-  <td
-    ref={ref}
-    className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}
-    {...props}
-  />
+  <td ref={ref} className={cn('h-10 px-3 align-middle', className)} {...props} />
 ))
 TableCell.displayName = 'TableCell'
 

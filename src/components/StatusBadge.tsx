@@ -1,39 +1,70 @@
 import { Badge } from '@/components/ui/badge'
-import { getStatusLabel } from '@/lib/irpf-calc'
+import { cn } from '@/lib/utils'
 
 interface StatusBadgeProps {
   status: string
+  className?: string
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
-  let colorClasses = 'bg-slate-100 text-slate-700 border-slate-200'
+const statusConfig: Record<string, { classes: string; label: string }> = {
+  rascunho: {
+    classes: 'bg-muted text-muted-foreground border-border',
+    label: 'Rascunho',
+  },
+  em_preenchimento: {
+    classes: 'bg-amber-50 text-amber-700 border-amber-200',
+    label: 'Em Preenchimento',
+  },
+  calculada: {
+    classes: 'bg-blue-50 text-blue-700 border-blue-200',
+    label: 'Calculada',
+  },
+  revisada: {
+    classes: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    label: 'Revisada',
+  },
+  concluida: {
+    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: 'Concluída',
+  },
+  entregue: {
+    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: 'Entregue',
+  },
+  apresentada: {
+    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: 'Apresentada',
+  },
+  retificada: {
+    classes: 'bg-red-50 text-red-700 border-red-200',
+    label: 'Retificada',
+  },
+  ativo: {
+    classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    label: 'Ativo',
+  },
+  inativo: {
+    classes: 'bg-muted text-muted-foreground border-border',
+    label: 'Inativo',
+  },
+}
 
-  switch (status) {
-    case 'calculada':
-      colorClasses = 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-      break
-    case 'concluida':
-    case 'ativo':
-      colorClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-      break
-    case 'em_preenchimento':
-      colorClasses = 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-      break
-    case 'entregue':
-      colorClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-      break
-    case 'rascunho':
-    case 'inativo':
-      colorClasses = 'bg-slate-100 text-slate-600 border-slate-200'
-      break
+export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const config = statusConfig[status] || {
+    classes: 'bg-muted text-muted-foreground border-border',
+    label: status,
   }
 
   return (
     <Badge
       variant="outline"
-      className={`font-medium border text-xs px-2.5 py-0.5 rounded-full ${colorClasses}`}
+      className={cn(
+        'font-medium border text-xs px-2.5 py-0.5 rounded-full transition-colors duration-150',
+        config.classes,
+        className,
+      )}
     >
-      {getStatusLabel(status)}
+      {config.label}
     </Badge>
   )
 }

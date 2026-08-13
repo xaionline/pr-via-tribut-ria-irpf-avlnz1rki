@@ -3,6 +3,16 @@ export function formatCurrency(value: number | undefined | null): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+export function formatNumber(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) return '0'
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -60,3 +70,5 @@ export function validateCpf(cpf: string): boolean {
   if (rev === 10 || rev === 11) rev = 0
   return rev === parseInt(clean.charAt(10))
 }
+
+export const currencyClassName = 'font-mono tabular-nums'

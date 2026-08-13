@@ -1,47 +1,41 @@
 export function getStatusLabel(status: string): string {
-  switch (status) {
-    case 'rascunho':
-      return 'Rascunho'
-    case 'em_preenchimento':
-      return 'Em preenchimento'
-    case 'calculada':
-      return 'Calculada'
-    case 'concluida':
-      return 'Concluída'
-    case 'entregue':
-      return 'Entregue'
-    case 'ativo':
-      return 'Ativo'
-    case 'inativo':
-      return 'Inativo'
-    case 'pessoa_fisica':
-      return 'Pessoa Física'
-    case 'socio':
-      return 'Sócio de Empresa'
-    default:
-      return status
+  const labels: Record<string, string> = {
+    rascunho: 'Rascunho',
+    em_preenchimento: 'Em Preenchimento',
+    calculada: 'Calculada',
+    revisada: 'Revisada',
+    concluida: 'Concluída',
+    apresentada: 'Apresentada',
+    entregue: 'Entregue',
+    retificada: 'Retificada',
+    ativo: 'Ativo',
+    inativo: 'Inativo',
   }
+  return labels[status] || status
 }
 
 export function getDeadline(anoCalendario: number): Date {
-  return new Date(anoCalendario + 1, 4, 28)
+  return new Date(anoCalendario + 1, 4, 31)
 }
 
 export function daysUntilDeadline(anoCalendario: number): number {
   const deadline = getDeadline(anoCalendario)
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  return Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const diff = deadline.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
 export function getNextDeadlineInfo(): { date: Date; days: number } {
   const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  let year = now.getFullYear()
-  let date = new Date(year, 4, 28)
-  if (date < now) date = new Date(year + 1, 4, 28)
-  const days = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  return { date, days }
+  const currentYear = now.getFullYear()
+  const deadline = getDeadline(currentYear - 1)
+  if (deadline.getTime() > now.getTime()) {
+    return { date: deadline, days: daysUntilDeadline(currentYear - 1) }
+  }
+  const nextDeadline = getDeadline(currentYear)
+  const diff = nextDeadline.getTime() - now.getTime()
+  return { date: nextDeadline, days: Math.ceil(diff / (1000 * 60 * 60 * 24)) }
 }
 
 export function getStatusBadgeVariant(
@@ -49,16 +43,16 @@ export function getStatusBadgeVariant(
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'calculada':
-    case 'concluida':
-    case 'ativo':
+    case 'revisada':
       return 'default'
-    case 'em_preenchimento':
+    case 'concluida':
     case 'entregue':
+    case 'apresentada':
       return 'secondary'
     case 'rascunho':
     case 'inativo':
       return 'outline'
     default:
-      return 'secondary'
+      return 'default'
   }
 }

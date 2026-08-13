@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T02:17:49.804Z",
+  "generatedAt": "2026-08-13T02:30:54.853Z",
   "collections": [
     {
       "name": "users",
@@ -418,9 +418,32 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "origem",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["manual", "importado"]
+        },
+        {
+          "name": "importacao_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "importacoes_informes"
+        },
+        {
+          "name": "confianca",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE INDEX `idx_rendimentos_importacao` ON `rendimentos` (importacao_id)",
+        "CREATE INDEX `idx_rendimentos_origem` ON `rendimentos` (origem)"
+      ]
     },
     {
       "name": "despesas_dedutiveis",
@@ -805,6 +828,91 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_cenarios_declaracao ON cenarios_simulacao (declaracao_id)"]
+    },
+    {
+      "name": "importacoes_informes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "declaracao_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "declaracoes"
+        },
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "clientes"
+        },
+        {
+          "name": "arquivo_original",
+          "type": "file",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "nome_arquivo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "importado_por",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["processando", "concluida", "falhou", "cancelada"]
+        },
+        {
+          "name": "detalhes",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "reversao",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_importacoes_declaracao ON importacoes_informes (declaracao_id)",
+        "CREATE INDEX idx_importacoes_cliente ON importacoes_informes (cliente_id)",
+        "CREATE INDEX idx_importacoes_usuario ON importacoes_informes (importado_por)",
+        "CREATE INDEX idx_importacoes_created ON importacoes_informes (created)"
+      ]
     }
   ]
 }

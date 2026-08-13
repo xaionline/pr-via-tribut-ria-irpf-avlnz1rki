@@ -122,7 +122,7 @@ export default function SimuladorTributario() {
         .filter((d) => d.categoria === 'previdencia')
         .reduce((s, d) => s + d.valor, 0)
       const destinacoesAtuais = dests.reduce((s, d) => s + d.valor, 0)
-      const tabela = tabs.find((t) => t.ano === dec.ano_calendario)
+      const tabela = tabs.find((t) => (t.ano_calendario || t.ano) === dec.ano_calendario)
       setBaseData({
         rendTributavel,
         deducoesAtuais,

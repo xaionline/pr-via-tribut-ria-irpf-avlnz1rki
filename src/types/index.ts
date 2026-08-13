@@ -142,15 +142,26 @@ export interface ResultadoRecord {
 
 export interface FaixaProgressiva {
   limite_inferior: number
-  limite_superior: number
+  /** `null` na última faixa (acima de...). */
+  limite_superior: number | null
   aliquota: number
-  deducao: number
+  /** Parcela a deduzir da faixa, em base anual. */
+  parcela_deduzir: number
+  /** @deprecated use `parcela_deduzir` — mantido para compat com tabelas antigas. */
+  deducao?: number
 }
 
 export interface TabelaProgressivaRecord {
   id: string
-  ano: number
+  /** @deprecated use `ano_calendario`. */
+  ano?: number
+  ano_calendario: number
+  descricao?: string
+  data_vigencia_inicio: string
+  data_vigencia_fim?: string
+  /** @deprecated use `data_vigencia_inicio`. */
   vigencia_de?: string
+  /** @deprecated use `data_vigencia_fim`. */
   vigencia_ate?: string
   faixas: FaixaProgressiva[]
   created: string

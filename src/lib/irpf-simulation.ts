@@ -13,13 +13,14 @@ export interface SimulationBaseData {
 
 function calcIRPF(baseCalculo: number, faixas: FaixaProgressiva[]): number {
   if (!Array.isArray(faixas) || faixas.length === 0) return 0
+  // As faixas são armazenadas em valores ANUAIS — limite_inferior e parcela_deduzir
+  // já estão na base anual, sem multiplicação por 12.
   for (let i = faixas.length - 1; i >= 0; i--) {
     const f = faixas[i]
-    const limInfAnual = (f.limite_inferior || 0) * 12
-    if (baseCalculo > limInfAnual) {
+    if (baseCalculo > (f.limite_inferior || 0)) {
       const aliq = (f.aliquota || 0) / 100
-      const dedAnual = (f.deducao || 0) * 12
-      return Math.max(0, baseCalculo * aliq - dedAnual)
+      const parcelaDeduzir = f.parcela_deduzir != null ? f.parcela_deduzir : (f.deducao || 0) * 12
+      return Math.max(0, baseCalculo * aliq - parcelaDeduzir)
     }
   }
   return 0

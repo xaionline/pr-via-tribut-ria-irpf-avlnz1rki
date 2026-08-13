@@ -46,13 +46,16 @@ routerAdd(
 
       var tabRecord
       try {
-        tabRecord = $app.findFirstRecordByData('tabelas_progressivas', 'ano', ano)
+        tabRecord = $app.findFirstRecordByData('tabelas_progressivas', 'ano_calendario', ano)
       } catch (_) {
-        return e.badRequestError(
-          'Nenhuma tabela progressiva vigente para o ano-calendário ' +
-            ano +
-            '. Cadastre a tabela antes de calcular.',
-        )
+        // Backwards-compat fallback to the legacy `ano` field.
+        try {
+          tabRecord = $app.findFirstRecordByData('tabelas_progressivas', 'ano', ano)
+        } catch (_e) {
+          return e.badRequestError(
+            'Nenhuma tabela progressiva cadastrada para o ano-calendário ' + ano + '.',
+          )
+        }
       }
 
       var faixas = []
@@ -79,22 +82,27 @@ routerAdd(
 
       if (!Array.isArray(faixas) || faixas.length === 0) {
         return e.badRequestError(
-          'A tabela progressiva do ano ' +
+          'A tabela progressiva do ano-calendário ' +
             ano +
             ' não possui faixas configuradas. Edite a tabela e adicione as faixas.',
         )
       }
 
+      // The faixas stored in `tabelas_progressivas` are ANNUAL values (limite_inferior,
+      // limite_superior and parcela_deduzir already in base anual). The calc applies the
+      // aliquota of the faixa whose limite_inferior the base exceeds, then subtracts that
+      // faixa's parcela_deduzir — no monthly ×12 multiplication is needed.
       function calcIRPF(baseCalculo, faixasArr) {
         var irrfDevido = 0
         for (var i = faixasArr.length - 1; i >= 0; i--) {
           var f = faixasArr[i]
           if (!f || typeof f !== 'object') continue
-          var limInfAnual = (f.limite_inferior || 0) * 12
-          if (baseCalculo > limInfAnual) {
+          var limInf = f.limite_inferior || 0
+          if (baseCalculo > limInf) {
             var aliq = (f.aliquota || 0) / 100
-            var dedAnual = (f.deducao || 0) * 12
-            irrfDevido = Math.max(0, baseCalculo * aliq - dedAnual)
+            var parcelaDeduzir =
+              f.parcela_deduzir != null ? f.parcela_deduzir : (f.deducao || 0) * 12
+            irrfDevido = Math.max(0, baseCalculo * aliq - parcelaDeduzir)
             break
           }
         }

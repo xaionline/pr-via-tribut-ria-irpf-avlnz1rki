@@ -39,9 +39,10 @@ const catLabels: Record<string, string> = {
 
 function findMatchingFaixa(baseCalc: number, faixas: FaixaProgressiva[]): FaixaProgressiva | null {
   if (!faixas || faixas.length === 0) return null
+  // As faixas são armazenadas em valores ANUAIS — não há multiplicação por 12.
   for (let i = faixas.length - 1; i >= 0; i--) {
-    const limInfAnual = (faixas[i].limite_inferior || 0) * 12
-    if (baseCalc > limInfAnual) return faixas[i]
+    const limInf = faixas[i].limite_inferior || 0
+    if (baseCalc > limInf) return faixas[i]
   }
   return null
 }
@@ -63,7 +64,9 @@ export function computeSteps(data: CalcData): CalcStep[] {
   const faixas = tabela?.faixas || []
   const faixa = findMatchingFaixa(baseCalc, faixas)
   const aliquota = faixa?.aliquota || 0
-  const parcelaDeduzir = (faixa?.deducao || 0) * 12
+  // A parcela a deduzir já é anual nas faixas armazenadas (parcela_deduzir).
+  const parcelaDeduzir =
+    faixa?.parcela_deduzir != null ? faixa.parcela_deduzir : (faixa?.deducao || 0) * 12
   const faixaNum = faixa ? faixas.indexOf(faixa) + 1 : 0
 
   const ativRuralResult = atividadesRurais.reduce((s, a) => s + (a.resultado || 0), 0)

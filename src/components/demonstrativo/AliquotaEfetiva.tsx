@@ -28,15 +28,16 @@ export function AliquotaEfetiva({ resultado, tabela }: Props) {
         </div>
         <div className="space-y-1.5">
           {faixas.map((faixa, i) => {
+            // As faixas são armazenadas em base anual — usar limite_inferior diretamente.
+            const limInf = faixa.limite_inferior || 0
             const pct = ((faixa.aliquota || 0) / maxAliquota) * 100
             const isCurrent =
-              aliquotaEfetiva >= (faixa.limite_inferior || 0) * 12 &&
-              (i === faixas.length - 1 ||
-                aliquotaEfetiva < (faixas[i + 1].limite_inferior || 0) * 12)
+              aliquotaEfetiva >= limInf &&
+              (i === faixas.length - 1 || aliquotaEfetiva < (faixas[i + 1].limite_inferior || 0))
             return (
               <div key={i} className="flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 w-20 truncate hidden sm:inline">
-                  {formatCurrency((faixa.limite_inferior || 0) * 12)}
+                  {formatCurrency(limInf)}
                 </span>
                 <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
                   <div

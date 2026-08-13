@@ -45,7 +45,7 @@ export async function fetchDemonstrativoData(declaracaoId: string): Promise<Demo
     throw new Error('NO_RESULTADO')
   }
 
-  const tabela = tabelas.find((t) => t.ano === declaracao.ano_calendario)
+  const tabela = tabelas.find((t) => (t.ano_calendario || t.ano) === declaracao.ano_calendario)
 
   return {
     declaracao,

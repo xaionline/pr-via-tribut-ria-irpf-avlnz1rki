@@ -46,7 +46,7 @@ export default function DemonstrativoCalculo() {
   useEffect(() => {
     loadData()
   }, [id])
-  useRealtime<ResultadoRecord>('resultados', (e) => {
+  useRealtime('resultados', (e) => {
     if (e.record.declaracao_id === id) loadData()
   })
 

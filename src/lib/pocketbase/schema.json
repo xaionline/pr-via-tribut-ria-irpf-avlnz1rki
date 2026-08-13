@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T15:08:22.350Z",
+  "generatedAt": "2026-08-13T17:05:55.253Z",
   "collections": [
     {
       "name": "users",
@@ -738,7 +738,32 @@
         {
           "name": "ano",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ano_calendario",
+          "type": "number",
           "required": true,
+          "system": false,
+          "onlyInt": true
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_vigencia_inicio",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_vigencia_fim",
+          "type": "date",
+          "required": false,
           "system": false
         },
         {
@@ -774,7 +799,9 @@
           "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_tabelas_progressivas_ano_calendario` ON `tabelas_progressivas` (ano_calendario)"
+      ]
     },
     {
       "name": "cenarios_simulacao",

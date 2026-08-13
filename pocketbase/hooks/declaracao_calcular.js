@@ -176,6 +176,24 @@ routerAdd(
     dec.set('progresso', 100)
     $app.save(dec)
 
+    try {
+      var auditCol = $app.findCollectionByNameOrId('audit_logs')
+      var auditRec = new Record(auditCol)
+      if (e.auth && e.auth.id) auditRec.set('user_id', e.auth.id)
+      auditRec.set('action', 'calculate')
+      auditRec.set('entity', 'declaracoes')
+      auditRec.set('entity_id', decId)
+      auditRec.set(
+        'diff',
+        JSON.stringify({
+          irrf_devido: chosenScenario.irrf_devido,
+          saldo_imposto: chosenScenario.saldo_imposto,
+          modalidade: modalidadeEscolhida || recommended,
+        }),
+      )
+      $app.save(auditRec)
+    } catch (_) {}
+
     return e.json(200, {
       success: true,
       legal: legalScenario,

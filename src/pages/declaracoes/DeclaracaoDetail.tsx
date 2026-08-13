@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Calculator,
-  CheckCircle2,
   FileText,
   Pencil,
   SlidersHorizontal,
+  Printer,
+  FileX2,
+  Lock,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +19,8 @@ import { getDeclaracao, calcularDeclaracao } from '@/services/declaracoes'
 import type { DeclaracaoRecord, CalcularResponse } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
-
+import { useRealtime } from '@/hooks/use-realtime'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import TabVisaoGeral from './tabs/TabVisaoGeral'
 import TabFontesPagadoras from './tabs/TabFontesPagadoras'
 import TabRendimentos from './tabs/TabRendimentos'
@@ -26,35 +30,51 @@ import TabAtividadesRurais from './tabs/TabAtividadesRurais'
 import TabDestinacoesFiscais from './tabs/TabDestinacoesFiscais'
 
 export default function DeclaracaoDetail() {
-  const { declaracaoId } = useParams<{ declaracaoId: string }>()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { isVisualizador } = useAuth()
-
+  const { user, isVisualizador, isAdmin, isConsultor } = useAuth()
   const [declaracao, setDeclaracao] = useState<DeclaracaoRecord | null>(null)
+  const [loadError, setLoadError] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(false)
   const [calculating, setCalculating] = useState(false)
   const [calcResult, setCalcResult] = useState<CalcularResponse | null>(null)
   const [activeTab, setActiveTab] = useState('visao_geral')
 
-  const loadData = async () => {
-    if (!declaracaoId) return
+  const loadData = useCallback(async () => {
+    if (!id) return
     try {
-      const d = await getDeclaracao(declaracaoId)
+      const d = await getDeclaracao(id)
+      if (isConsultor && !isAdmin) {
+        const resp = d.expand?.cliente_id?.responsaveis || []
+        if (!resp.includes(user?.id || '')) {
+          setAccessDenied(true)
+          setDeclaracao(null)
+          return
+        }
+      }
       setDeclaracao(d)
+      setLoadError(false)
+      setAccessDenied(false)
     } catch {
-      /* intentionally ignored */
+      setLoadError(true)
+      setDeclaracao(null)
     }
-  }
+  }, [id, isConsultor, isAdmin, user?.id])
 
   useEffect(() => {
     loadData()
-  }, [declaracaoId])
+  }, [loadData])
+
+  useRealtime('declaracoes', () => {
+    if (id) loadData()
+  })
 
   const handleCalcular = async () => {
-    if (!declaracaoId) return
+    if (!id) return
     setCalculating(true)
     try {
-      const result = await calcularDeclaracao(declaracaoId)
+      const result = await calcularDeclaracao(id)
       setCalcResult(result)
       toast({
         title: 'Declaração calculada',
@@ -62,10 +82,10 @@ export default function DeclaracaoDetail() {
       })
       loadData()
       setActiveTab('visao_geral')
-    } catch {
+    } catch (err) {
       toast({
         title: 'Falha ao calcular a declaração',
-        description: 'Verifique os dados lançados e tente novamente',
+        description: getErrorMessage(err),
         variant: 'destructive',
         action: (
           <Button size="sm" variant="outline" onClick={handleCalcular}>
@@ -79,6 +99,48 @@ export default function DeclaracaoDetail() {
     }
   }
 
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="text-center max-w-sm">
+          <FileX2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-slate-900">Declaração não encontrada</h2>
+          <p className="text-xs text-slate-500 mt-1.5 mb-6">
+            A declaração pode ter sido removida ou o identificador está incorreto
+          </p>
+          <Button
+            onClick={() => navigate('/app/declaracoes')}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para declarações
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4">
+        <div className="text-center max-w-sm">
+          <Lock className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-slate-900">Acesso restrito</h2>
+          <p className="text-xs text-slate-500 mt-1.5 mb-6">
+            Você não tem permissão para acessar esta declaração
+          </p>
+          <Button
+            onClick={() => navigate('/app/declaracoes')}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para declarações
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   if (!declaracao) {
     return (
       <div className="p-8 text-center text-xs text-slate-500">
@@ -86,6 +148,14 @@ export default function DeclaracaoDetail() {
       </div>
     )
   }
+
+  const canEdit = !isVisualizador
+  const modLabel =
+    declaracao.modalidade === 'legal'
+      ? 'Legal'
+      : declaracao.modalidade === 'simplificada'
+        ? 'Simplificada'
+        : ''
 
   return (
     <div className="space-y-6">
@@ -100,6 +170,14 @@ export default function DeclaracaoDetail() {
                 {declaracao.expand?.cliente_id?.nome} - Ano {declaracao.ano_calendario}
               </h1>
               <StatusBadge status={declaracao.status} />
+              {modLabel && (
+                <Badge
+                  variant="outline"
+                  className="bg-violet-50 text-violet-700 border-violet-200 text-[10px]"
+                >
+                  {modLabel}
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] gap-1"
@@ -118,6 +196,7 @@ export default function DeclaracaoDetail() {
           <Button
             variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/editar`)}
+            disabled={!canEdit}
             className="text-xs gap-1.5 font-semibold h-9 touch-target"
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -133,7 +212,16 @@ export default function DeclaracaoDetail() {
           </Button>
           <Button
             variant="outline"
+            onClick={() => window.print()}
+            className="text-xs gap-1.5 font-semibold h-9 touch-target"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Exportar PDF</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/simulador`)}
+            disabled={!canEdit}
             className="text-xs gap-1.5 font-semibold h-9 touch-target"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -141,7 +229,7 @@ export default function DeclaracaoDetail() {
           </Button>
           <Button
             onClick={handleCalcular}
-            disabled={calculating || isVisualizador}
+            disabled={calculating || !canEdit}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-50 h-9 touch-target"
           >
             <Calculator className="w-3.5 h-3.5" />

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T02:30:54.853Z",
+  "generatedAt": "2026-08-13T10:42:06.654Z",
   "collections": [
     {
       "name": "users",
@@ -912,6 +912,69 @@
         "CREATE INDEX idx_importacoes_cliente ON importacoes_informes (cliente_id)",
         "CREATE INDEX idx_importacoes_usuario ON importacoes_informes (importado_por)",
         "CREATE INDEX idx_importacoes_created ON importacoes_informes (created)"
+      ]
+    },
+    {
+      "name": "audit_logs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "entity",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "entity_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "diff",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_audit_logs_entity ON audit_logs (entity, entity_id)",
+        "CREATE INDEX idx_audit_logs_user ON audit_logs (user_id)",
+        "CREATE INDEX idx_audit_logs_created ON audit_logs (created)"
       ]
     }
   ]

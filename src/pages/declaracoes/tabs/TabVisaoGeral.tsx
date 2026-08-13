@@ -15,6 +15,7 @@ import { TrendingDown, TrendingUp, DollarSign, CheckCircle2 } from 'lucide-react
 import { useToast } from '@/hooks/use-toast'
 import { ComparativoCard } from './ComparativoCard'
 import { DemonstrativoCard } from './DemonstrativoCard'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 interface TabVisaoGeralProps {
   declaracao: DeclaracaoRecord
@@ -70,8 +71,12 @@ export default function TabVisaoGeral({
       await updateDeclaracao(declaracao.id, { status: newStatus as any })
       toast({ title: 'Status atualizado' })
       onRefresh()
-    } catch {
-      /* intentionally ignored */
+    } catch (err) {
+      toast({
+        title: 'Falha ao atualizar status',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
     }
   }
 
@@ -82,10 +87,10 @@ export default function TabVisaoGeral({
       toast({ title: 'Modalidade selecionada', description: 'Status atualizado para Calculada' })
       setTrocarModalidade(false)
       onRefresh()
-    } catch {
+    } catch (err) {
       toast({
         title: 'Falha ao selecionar modalidade',
-        description: 'Tente novamente',
+        description: getErrorMessage(err),
         variant: 'destructive',
       })
     } finally {

@@ -41,7 +41,8 @@ routerAdd(
 
     return e.json(200, {
       success: true,
-      ano_calendario: tabRecord.getNumber('ano_calendario') || tabRecord.getNumber('ano') || anoNum,
+      ano_calendario:
+        Number(tabRecord.get('ano_calendario')) || Number(tabRecord.get('ano')) || anoNum,
       descricao: tabRecord.getString('descricao') || '',
       data_vigencia_inicio: tabRecord.getString('data_vigencia_inicio') || '',
       data_vigencia_fim: tabRecord.getString('data_vigencia_fim') || '',

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T17:05:55.253Z",
+  "generatedAt": "2026-08-13T20:14:47.410Z",
   "collections": [
     {
       "name": "users",
@@ -742,31 +742,6 @@
           "system": false
         },
         {
-          "name": "ano_calendario",
-          "type": "number",
-          "required": true,
-          "system": false,
-          "onlyInt": true
-        },
-        {
-          "name": "descricao",
-          "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "data_vigencia_inicio",
-          "type": "date",
-          "required": true,
-          "system": false
-        },
-        {
-          "name": "data_vigencia_fim",
-          "type": "date",
-          "required": false,
-          "system": false
-        },
-        {
           "name": "vigencia_de",
           "type": "date",
           "required": false,
@@ -797,6 +772,30 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "ano_calendario",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "descricao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_vigencia_inicio",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_vigencia_fim",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

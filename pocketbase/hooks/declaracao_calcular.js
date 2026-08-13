@@ -37,7 +37,7 @@ routerAdd(
         }
       }
 
-      var ano = dec.getNumber('ano_calendario')
+      var ano = Number(dec.get('ano_calendario')) || 0
       if (!ano) {
         return e.badRequestError(
           'Ano-calendário não definido na declaração. Edite a declaração e informe o ano-calendário.',
@@ -128,7 +128,7 @@ routerAdd(
       var rendTributavel = 0
       for (var ri = 0; ri < rends.length; ri++) {
         if (rends[ri].getString('tipo') === 'tributavel') {
-          rendTributavel += rends[ri].getNumber('valor') || 0
+          rendTributavel += Number(rends[ri].get('valor')) || 0
         }
       }
 
@@ -146,7 +146,7 @@ routerAdd(
 
       var totalDeducoes = 0
       for (var di = 0; di < desps.length; di++) {
-        totalDeducoes += desps[di].getNumber('valor') || 0
+        totalDeducoes += Number(desps[di].get('valor')) || 0
       }
 
       var deps = []
@@ -169,7 +169,7 @@ routerAdd(
         )
       } catch (_) {}
       for (var ai = 0; ai < ativs.length; ai++) {
-        var resAtiv = ativs[ai].getNumber('resultado') || 0
+        var resAtiv = Number(ativs[ai].get('resultado')) || 0
         if (resAtiv > 0) rendTributavel += resAtiv
       }
 
@@ -186,7 +186,7 @@ routerAdd(
       } catch (_) {}
       var totalDest = 0
       for (var dsti = 0; dsti < dests.length; dsti++) {
-        totalDest += dests[dsti].getNumber('valor') || 0
+        totalDest += Number(dests[dsti].get('valor')) || 0
       }
 
       var irrfRetido = rendTributavel * 0.12

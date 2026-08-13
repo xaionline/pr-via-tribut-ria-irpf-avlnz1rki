@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, FileText, Filter, MoreVertical, Eye, Calculator, AlertCircle } from 'lucide-react'
+import {
+  Plus,
+  FileText,
+  Filter,
+  MoreVertical,
+  Eye,
+  Calculator,
+  AlertCircle,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -11,15 +20,28 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { StatusBadge } from '@/components/StatusBadge'
+import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getDeclaracoes } from '@/services/declaracoes'
+import { useToast } from '@/hooks/use-toast'
+import { getDeclaracoes, deleteDeclaracao } from '@/services/declaracoes'
 import type { DeclaracaoRecord } from '@/types'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 export default function DeclaracoesList() {
   const [searchParams] = useSearchParams()
@@ -29,8 +51,14 @@ export default function DeclaracoesList() {
   const [anoFilter, setAnoFilter] = useState<string>('todos')
   const [statusFilter, setStatusFilter] = useState<string>('todos')
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
+  const [target, setTarget] = useState<DeclaracaoRecord | null>(null)
 
   const navigate = useNavigate()
+  const { isVisualizador } = useAuth()
+  const { toast } = useToast()
+
+  const canDelete = !isVisualizador
 
   const loadData = async () => {
     setLoading(true)
@@ -50,6 +78,25 @@ export default function DeclaracoesList() {
   }, [anoFilter, statusFilter, filterClienteId])
 
   useRealtime('declaracoes', () => loadData())
+
+  const confirmDelete = async () => {
+    if (!target) return
+    setDeleting(true)
+    try {
+      await deleteDeclaracao(target.id)
+      setDeclaracoes((prev) => prev.filter((d) => d.id !== target.id))
+      toast({ title: 'Declaração excluída' })
+      setTarget(null)
+    } catch {
+      toast({
+        title: 'Falha ao excluir declaração',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -196,11 +243,23 @@ export default function DeclaracoesList() {
                               <MoreVertical className="w-4 h-4 text-slate-500" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40 text-xs">
+                          <DropdownMenuContent align="end" className="w-44 text-xs">
                             <DropdownMenuItem onClick={() => navigate(`/app/declaracoes/${d.id}`)}>
                               <Eye className="w-3.5 h-3.5 mr-2" />
                               <span>Abrir declaração</span>
                             </DropdownMenuItem>
+                            {canDelete && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => setTarget(d)}
+                                  className="text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                  <span>Excluir declaração</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -234,19 +293,64 @@ export default function DeclaracoesList() {
                     <span className="text-[10px] text-slate-500 font-mono">{d.progresso}%</span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-9 text-xs touch-target"
-                  onClick={() => navigate(`/app/declaracoes/${d.id}`)}
-                >
-                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Abrir declaração
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9 text-xs touch-target"
+                    onClick={() => navigate(`/app/declaracoes/${d.id}`)}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1.5" /> Abrir declaração
+                  </Button>
+                  {canDelete && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-xs text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 touch-target"
+                      onClick={() => setTarget(d)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
               </Card>
             ))}
           </div>
         </>
       )}
+
+      {/* Confirmation dialog */}
+      <AlertDialog open={!!target} onOpenChange={(open) => !open && setTarget(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base">Excluir declaração?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-slate-500">
+              Esta ação não pode ser desfeita. Os dados da declaração de{' '}
+              <span className="font-semibold text-slate-700">
+                {target?.expand?.cliente_id?.nome || 'cliente'}
+              </span>{' '}
+              para o ano{' '}
+              <span className="font-semibold text-slate-700">{target?.ano_calendario}</span> serão
+              removidos permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="text-xs" disabled={deleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700 text-xs"
+              disabled={deleting}
+              onClick={(e) => {
+                e.preventDefault()
+                confirmDelete()
+              }}
+            >
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

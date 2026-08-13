@@ -32,7 +32,7 @@ import TabDestinacoesFiscais from './tabs/TabDestinacoesFiscais'
 export default function DeclaracaoDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { toast } = useToast()
+  const { toast, dismiss } = useToast()
   const { user, isVisualizador, isAdmin, isConsultor } = useAuth()
   const [declaracao, setDeclaracao] = useState<DeclaracaoRecord | null>(null)
   const [loadError, setLoadError] = useState(false)
@@ -71,11 +71,12 @@ export default function DeclaracaoDetail() {
   })
 
   const handleCalcular = async () => {
-    if (!id) return
+    if (!id || calculating) return
     setCalculating(true)
     try {
       const result = await calcularDeclaracao(id)
       setCalcResult(result)
+      dismiss()
       toast({
         title: 'Declaração calculada',
         description: 'Comparativo disponível na aba Visão Geral',
@@ -88,7 +89,12 @@ export default function DeclaracaoDetail() {
         description: getErrorMessage(err),
         variant: 'destructive',
         action: (
-          <Button size="sm" variant="outline" onClick={handleCalcular}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={calculating}
+            onClick={() => handleCalcular()}
+          >
             Repetir
           </Button>
         ),

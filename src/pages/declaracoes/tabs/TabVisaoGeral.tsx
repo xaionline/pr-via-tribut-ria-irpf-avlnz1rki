@@ -39,7 +39,7 @@ export default function TabVisaoGeral({
     getResultado(declaracao.id)
       .then(setResultado)
       .catch(() => setResultado(null))
-  }, [declaracao.id])
+  }, [declaracao.id, calcResult])
 
   const detalhamento = resultado?.detalhamento
   const legalScenario: CenarioCalculo | undefined = calcResult?.legal || detalhamento?.legal

@@ -32,6 +32,18 @@ routerAdd(
       var rawFaixas = tabRecord.get('faixas')
       // JSON round-trip normaliza qualquer tipo (Go-native, string JSON, JS array) para array JS puro
       var normalized = JSON.parse(JSON.stringify(rawFaixas))
+      console.log(
+        '[tabelas_progressivas_get] rawFaixas typeof=' +
+          typeof rawFaixas +
+          ' | JSON.stringify=' +
+          (typeof JSON.stringify(rawFaixas) === 'string'
+            ? JSON.stringify(rawFaixas).slice(0, 200)
+            : JSON.stringify(rawFaixas)) +
+          ' | normalized isArray=' +
+          Array.isArray(normalized) +
+          ' | normalized.length=' +
+          (Array.isArray(normalized) ? normalized.length : 'N/A'),
+      )
       if (Array.isArray(normalized)) {
         var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
         for (var fi = 0; fi < normalized.length; fi++) {
@@ -47,6 +59,7 @@ routerAdd(
       }
     } catch (_) {}
 
+    console.log('[tabelas_progressivas_get] ano=' + anoNum + ' faixas.length=' + faixas.length)
     return e.json(200, {
       success: true,
       ano_calendario:

@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import { getDeclaracoes, deleteDeclaracao } from '@/services/declaracoes'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type { DeclaracaoRecord } from '@/types'
 import {
   DropdownMenu,
@@ -87,11 +88,23 @@ export default function DeclaracoesList() {
       setDeclaracoes((prev) => prev.filter((d) => d.id !== target.id))
       toast({ title: 'Declaração excluída' })
       setTarget(null)
-    } catch {
+    } catch (err) {
+      const msg = getErrorMessage(err)
+      const isRelationError = /relation reference|Failed to delete record/i.test(msg)
       toast({
-        title: 'Falha ao excluir declaração',
-        description: 'Tente novamente',
+        title: isRelationError
+          ? 'Não foi possível excluir a declaração'
+          : 'Falha ao excluir declaração',
+        description: isRelationError
+          ? 'Existem registros vinculados que impedem a exclusão. Tente novamente.'
+          : msg || 'Tente novamente',
         variant: 'destructive',
+        action: (
+          <Button size="sm" variant="outline" onClick={() => confirmDelete()}>
+            Repetir
+          </Button>
+        ),
+        duration: 0,
       })
     } finally {
       setDeleting(false)

@@ -81,6 +81,9 @@ export interface RendimentoRecord {
   descricao: string
   tipo: 'tributavel' | 'isento' | 'exclusiva'
   valor: number
+  origem?: 'manual' | 'importado'
+  importacao_id?: string
+  confianca?: number
   created: string
   updated: string
   expand?: {

@@ -54,6 +54,7 @@ export default function TabRendimentos({ declaracaoId }: { declaracaoId: string 
         valor: parseFloat(valor),
         tipo,
         fonte_pagadora_id: fonteId || undefined,
+        origem: 'manual',
       })
       toast({ title: 'Rendimento adicionado' })
       setOpen(false)

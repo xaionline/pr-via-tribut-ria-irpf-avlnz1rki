@@ -30,24 +30,22 @@ routerAdd(
     var faixas = []
     try {
       var rawFaixas = tabRecord.get('faixas')
-      // JSON round-trip normaliza qualquer tipo (Go-native, string JSON, JS array) para array JS puro
-      var normalized = JSON.parse(JSON.stringify(rawFaixas))
-      console.log(
-        '[tabelas_progressivas_get] rawFaixas typeof=' +
-          typeof rawFaixas +
-          ' | JSON.stringify=' +
-          (typeof JSON.stringify(rawFaixas) === 'string'
-            ? JSON.stringify(rawFaixas).slice(0, 200)
-            : JSON.stringify(rawFaixas)) +
-          ' | normalized isArray=' +
-          Array.isArray(normalized) +
-          ' | normalized.length=' +
-          (Array.isArray(normalized) ? normalized.length : 'N/A'),
-      )
-      if (Array.isArray(normalized)) {
+      // Goja pode retornar `faixas` como []byte (array de números = códigos ASCII),
+      // string JSON, ou array JS. Detectamos cada caso e normalizamos para array JS puro.
+      if (Array.isArray(rawFaixas) && rawFaixas.length > 0 && typeof rawFaixas[0] === 'number') {
+        // []byte do Go: cada elemento é o código ASCII de um caractere do JSON.
+        var byteStr = ''
+        for (var bi = 0; bi < rawFaixas.length; bi++) {
+          byteStr += String.fromCharCode(rawFaixas[bi])
+        }
+        rawFaixas = JSON.parse(byteStr)
+      } else if (typeof rawFaixas === 'string') {
+        rawFaixas = JSON.parse(rawFaixas)
+      }
+      if (Array.isArray(rawFaixas)) {
         var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
-        for (var fi = 0; fi < normalized.length; fi++) {
-          var fr = normalized[fi]
+        for (var fi = 0; fi < rawFaixas.length; fi++) {
+          var fr = rawFaixas[fi]
           if (fr == null) continue
           var fo = {}
           for (var fki = 0; fki < fkeys.length; fki++) {
@@ -59,7 +57,6 @@ routerAdd(
       }
     } catch (_) {}
 
-    console.log('[tabelas_progressivas_get] ano=' + anoNum + ' faixas.length=' + faixas.length)
     return e.json(200, {
       success: true,
       ano_calendario:

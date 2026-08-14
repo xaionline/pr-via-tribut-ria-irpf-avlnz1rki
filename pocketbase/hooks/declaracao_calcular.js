@@ -71,15 +71,22 @@ routerAdd(
       var faixas = []
       try {
         var rawFaixas = tabRecord.get('faixas')
-        // JSON round-trip: funciona com Go-native types, JSON strings ou JS arrays.
-        // Goja pode retornar tipos que typeof/instanceof não identificam corretamente.
-        var normalizedRaw = JSON.parse(JSON.stringify(rawFaixas))
-
-        // Copia cada faixa para objeto JS puro com Numbers explícitos
+        // Goja pode retornar `faixas` como []byte (array de números = códigos ASCII),
+        // string JSON, ou array JS. Detectamos cada caso e normalizamos para array JS puro.
+        if (Array.isArray(rawFaixas) && rawFaixas.length > 0 && typeof rawFaixas[0] === 'number') {
+          // []byte do Go: cada elemento é o código ASCII de um caractere do JSON.
+          var byteStr = ''
+          for (var bi = 0; bi < rawFaixas.length; bi++) {
+            byteStr += String.fromCharCode(rawFaixas[bi])
+          }
+          rawFaixas = JSON.parse(byteStr)
+        } else if (typeof rawFaixas === 'string') {
+          rawFaixas = JSON.parse(rawFaixas)
+        }
         var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
-        if (normalizedRaw && typeof normalizedRaw.length === 'number') {
-          for (var fi = 0; fi < normalizedRaw.length; fi++) {
-            var fr = normalizedRaw[fi]
+        if (Array.isArray(rawFaixas)) {
+          for (var fi = 0; fi < rawFaixas.length; fi++) {
+            var fr = rawFaixas[fi]
             if (fr == null || typeof fr !== 'object') continue
             var fo = {}
             for (var fki = 0; fki < fkeys.length; fki++) {
@@ -100,10 +107,6 @@ routerAdd(
             tabRecord.id,
           )
       }
-
-      console.log(
-        '[calcular] declaracao=' + decId + ' ano=' + ano + ' faixas_carregadas=' + faixas.length,
-      )
 
       if (!faixas || faixas.length === 0) {
         return e.badRequestError(
@@ -140,14 +143,6 @@ routerAdd(
             break
           }
         }
-        console.log(
-          '[calcular] base=' +
-            baseCalculo +
-            ' faixa_aplicada=' +
-            (faixaAplicada ? JSON.stringify(faixaAplicada) : 'nenhuma') +
-            ' irrf_devido=' +
-            irrfDevido,
-        )
         return irrfDevido
       }
 
@@ -257,21 +252,6 @@ routerAdd(
         saldo_imposto: round2(simpIRRF - irrfRetido - totalDest),
         destinacoes_aplicadas: round2(totalDest),
       }
-
-      console.log(
-        '[calcular] resultado_final declaracao=' +
-          decId +
-          ' base_legal=' +
-          round2(legalBase) +
-          ' irrf_legal=' +
-          round2(legalIRRF) +
-          ' base_simplificada=' +
-          round2(simpBase) +
-          ' irrf_simplificada=' +
-          round2(simpIRRF) +
-          ' recomendada=' +
-          (legalScenario.saldo_imposto <= simpScenario.saldo_imposto ? 'legal' : 'simplificada'),
-      )
 
       var recommended =
         legalScenario.saldo_imposto <= simpScenario.saldo_imposto ? 'legal' : 'simplificada'

@@ -71,38 +71,20 @@ routerAdd(
       var faixas = []
       try {
         var rawFaixas = tabRecord.get('faixas')
-        if (typeof rawFaixas === 'string') {
-          try {
-            rawFaixas = JSON.parse(rawFaixas)
-          } catch (_) {
-            rawFaixas = []
-          }
-        }
-        // Robust array-ification: in the Goja runtime, Go-native slices
-        // returned by record.get() are NOT recognized by Array.isArray(), so we
-        // rely on a duck-typed length check as a fallback and copy each element
-        // into a plain JS object so property access (f.limite_inferior, etc.)
-        // works regardless of whether the source is a Go map/struct or a JS obj.
-        var faixasIsArr =
-          rawFaixas instanceof Array ||
-          (rawFaixas != null &&
-            typeof rawFaixas.length === 'number' &&
-            typeof rawFaixas !== 'string')
-        if (faixasIsArr) {
-          var fkeys = [
-            'limite_inferior',
-            'limite_superior',
-            'aliquota',
-            'parcela_deduzir',
-            'deducao',
-          ]
-          for (var fi = 0; fi < rawFaixas.length; fi++) {
-            var fr = rawFaixas[fi]
-            if (fr == null) continue
+        // JSON round-trip: funciona com Go-native types, JSON strings ou JS arrays.
+        // Goja pode retornar tipos que typeof/instanceof não identificam corretamente.
+        var normalizedRaw = JSON.parse(JSON.stringify(rawFaixas))
+
+        // Copia cada faixa para objeto JS puro com Numbers explícitos
+        var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
+        if (normalizedRaw && typeof normalizedRaw.length === 'number') {
+          for (var fi = 0; fi < normalizedRaw.length; fi++) {
+            var fr = normalizedRaw[fi]
+            if (fr == null || typeof fr !== 'object') continue
             var fo = {}
             for (var fki = 0; fki < fkeys.length; fki++) {
               var fk = fkeys[fki]
-              if (fr[fk] != null) fo[fk] = fr[fk]
+              if (fr[fk] != null) fo[fk] = Number(fr[fk])
             }
             faixas.push(fo)
           }

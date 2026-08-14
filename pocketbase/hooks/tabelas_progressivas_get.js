@@ -30,28 +30,17 @@ routerAdd(
     var faixas = []
     try {
       var rawFaixas = tabRecord.get('faixas')
-      if (typeof rawFaixas === 'string') {
-        try {
-          rawFaixas = JSON.parse(rawFaixas)
-        } catch (_) {
-          rawFaixas = []
-        }
-      }
-      // Goja does not recognize Go-native slices via Array.isArray(); duck-type
-      // on .length (excluding strings) and normalize each element into a plain
-      // JS object so the response serializes correctly regardless of source type.
-      if (
-        rawFaixas instanceof Array ||
-        (rawFaixas != null && typeof rawFaixas.length === 'number' && typeof rawFaixas !== 'string')
-      ) {
+      // JSON round-trip normaliza qualquer tipo (Go-native, string JSON, JS array) para array JS puro
+      var normalized = JSON.parse(JSON.stringify(rawFaixas))
+      if (Array.isArray(normalized)) {
         var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
-        for (var fi = 0; fi < rawFaixas.length; fi++) {
-          var fr = rawFaixas[fi]
+        for (var fi = 0; fi < normalized.length; fi++) {
+          var fr = normalized[fi]
           if (fr == null) continue
           var fo = {}
           for (var fki = 0; fki < fkeys.length; fki++) {
             var fk = fkeys[fki]
-            if (fr[fk] != null) fo[fk] = fr[fk]
+            if (fr[fk] != null) fo[fk] = Number(fr[fk])
           }
           faixas.push(fo)
         }

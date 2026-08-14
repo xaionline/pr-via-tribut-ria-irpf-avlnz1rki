@@ -31,11 +31,30 @@ routerAdd(
     try {
       var rawFaixas = tabRecord.get('faixas')
       if (typeof rawFaixas === 'string') {
-        faixas = JSON.parse(rawFaixas)
-      } else if (Array.isArray(rawFaixas)) {
-        faixas = rawFaixas
-      } else if (rawFaixas && typeof rawFaixas === 'object') {
-        faixas = rawFaixas
+        try {
+          rawFaixas = JSON.parse(rawFaixas)
+        } catch (_) {
+          rawFaixas = []
+        }
+      }
+      // Goja does not recognize Go-native slices via Array.isArray(); duck-type
+      // on .length (excluding strings) and normalize each element into a plain
+      // JS object so the response serializes correctly regardless of source type.
+      if (
+        rawFaixas instanceof Array ||
+        (rawFaixas != null && typeof rawFaixas.length === 'number' && typeof rawFaixas !== 'string')
+      ) {
+        var fkeys = ['limite_inferior', 'limite_superior', 'aliquota', 'parcela_deduzir', 'deducao']
+        for (var fi = 0; fi < rawFaixas.length; fi++) {
+          var fr = rawFaixas[fi]
+          if (fr == null) continue
+          var fo = {}
+          for (var fki = 0; fki < fkeys.length; fki++) {
+            var fk = fkeys[fki]
+            if (fr[fk] != null) fo[fk] = fr[fk]
+          }
+          faixas.push(fo)
+        }
       }
     } catch (_) {}
 

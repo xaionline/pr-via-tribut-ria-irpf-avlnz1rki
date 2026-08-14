@@ -31,7 +31,17 @@ routerAdd(
           return e.notFoundError('Cliente não encontrado')
         }
         var respRaw = cliente.get('responsaveis') || []
-        var respArr = Array.isArray(respRaw) ? respRaw : [respRaw]
+        // Goja does not recognize Go-native slices via Array.isArray(); duck-type
+        // on .length but exclude strings (which also have a .length).
+        var respArr
+        if (
+          respRaw instanceof Array ||
+          (respRaw != null && typeof respRaw.length === 'number' && typeof respRaw !== 'string')
+        ) {
+          respArr = respRaw
+        } else {
+          respArr = [respRaw]
+        }
         if (e.auth && respArr.indexOf(e.auth.id) === -1) {
           return e.forbiddenError('Você não tem permissão para calcular esta declaração')
         }
@@ -62,11 +72,40 @@ routerAdd(
       try {
         var rawFaixas = tabRecord.get('faixas')
         if (typeof rawFaixas === 'string') {
-          faixas = JSON.parse(rawFaixas)
-        } else if (Array.isArray(rawFaixas)) {
-          faixas = rawFaixas
-        } else if (rawFaixas && typeof rawFaixas === 'object') {
-          faixas = rawFaixas
+          try {
+            rawFaixas = JSON.parse(rawFaixas)
+          } catch (_) {
+            rawFaixas = []
+          }
+        }
+        // Robust array-ification: in the Goja runtime, Go-native slices
+        // returned by record.get() are NOT recognized by Array.isArray(), so we
+        // rely on a duck-typed length check as a fallback and copy each element
+        // into a plain JS object so property access (f.limite_inferior, etc.)
+        // works regardless of whether the source is a Go map/struct or a JS obj.
+        var faixasIsArr =
+          rawFaixas instanceof Array ||
+          (rawFaixas != null &&
+            typeof rawFaixas.length === 'number' &&
+            typeof rawFaixas !== 'string')
+        if (faixasIsArr) {
+          var fkeys = [
+            'limite_inferior',
+            'limite_superior',
+            'aliquota',
+            'parcela_deduzir',
+            'deducao',
+          ]
+          for (var fi = 0; fi < rawFaixas.length; fi++) {
+            var fr = rawFaixas[fi]
+            if (fr == null) continue
+            var fo = {}
+            for (var fki = 0; fki < fkeys.length; fki++) {
+              var fk = fkeys[fki]
+              if (fr[fk] != null) fo[fk] = fr[fk]
+            }
+            faixas.push(fo)
+          }
         }
       } catch (parseErr) {
         $app
@@ -80,7 +119,11 @@ routerAdd(
           )
       }
 
-      if (!Array.isArray(faixas) || faixas.length === 0) {
+      console.log(
+        '[calcular] declaracao=' + decId + ' ano=' + ano + ' faixas_carregadas=' + faixas.length,
+      )
+
+      if (!faixas || faixas.length === 0) {
         return e.badRequestError(
           'A tabela progressiva do ano-calendário ' +
             ano +
@@ -94,18 +137,35 @@ routerAdd(
       // faixa's parcela_deduzir — no monthly ×12 multiplication is needed.
       function calcIRPF(baseCalculo, faixasArr) {
         var irrfDevido = 0
+        var faixaAplicada = null
         for (var i = faixasArr.length - 1; i >= 0; i--) {
           var f = faixasArr[i]
           if (!f || typeof f !== 'object') continue
-          var limInf = f.limite_inferior || 0
+          var limInf = Number(f.limite_inferior) || 0
           if (baseCalculo > limInf) {
-            var aliq = (f.aliquota || 0) / 100
+            var aliq = (Number(f.aliquota) || 0) / 100
             var parcelaDeduzir =
-              f.parcela_deduzir != null ? f.parcela_deduzir : (f.deducao || 0) * 12
+              f.parcela_deduzir != null
+                ? Number(f.parcela_deduzir) || 0
+                : (Number(f.deducao) || 0) * 12
             irrfDevido = Math.max(0, baseCalculo * aliq - parcelaDeduzir)
+            faixaAplicada = {
+              indice: i,
+              limite_inferior: limInf,
+              aliquota: Number(f.aliquota) || 0,
+              parcela_deduzir: parcelaDeduzir,
+            }
             break
           }
         }
+        console.log(
+          '[calcular] base=' +
+            baseCalculo +
+            ' faixa_aplicada=' +
+            (faixaAplicada ? JSON.stringify(faixaAplicada) : 'nenhuma') +
+            ' irrf_devido=' +
+            irrfDevido,
+        )
         return irrfDevido
       }
 
@@ -192,27 +252,44 @@ routerAdd(
       var irrfRetido = rendTributavel * 0.12
 
       var legalBase = Math.max(0, rendTributavel - totalDeducoes)
+      var legalIRRF = calcIRPF(legalBase, faixas)
       var legalScenario = {
         modalidade: 'legal',
         base_calculo: round2(legalBase),
         total_deducoes: round2(totalDeducoes),
-        irrf_devido: round2(calcIRPF(legalBase, faixas)),
+        irrf_devido: round2(legalIRRF),
         irrf_retido: round2(irrfRetido),
-        saldo_imposto: round2(calcIRPF(legalBase, faixas) - irrfRetido - totalDest),
+        saldo_imposto: round2(legalIRRF - irrfRetido - totalDest),
         destinacoes_aplicadas: round2(totalDest),
       }
 
       var deducaoSimplificada = Math.min(rendTributavel * 0.2, 16754.34)
       var simpBase = Math.max(0, rendTributavel - deducaoSimplificada)
+      var simpIRRF = calcIRPF(simpBase, faixas)
       var simpScenario = {
         modalidade: 'simplificada',
         base_calculo: round2(simpBase),
         total_deducoes: round2(deducaoSimplificada),
-        irrf_devido: round2(calcIRPF(simpBase, faixas)),
+        irrf_devido: round2(simpIRRF),
         irrf_retido: round2(irrfRetido),
-        saldo_imposto: round2(calcIRPF(simpBase, faixas) - irrfRetido - totalDest),
+        saldo_imposto: round2(simpIRRF - irrfRetido - totalDest),
         destinacoes_aplicadas: round2(totalDest),
       }
+
+      console.log(
+        '[calcular] resultado_final declaracao=' +
+          decId +
+          ' base_legal=' +
+          round2(legalBase) +
+          ' irrf_legal=' +
+          round2(legalIRRF) +
+          ' base_simplificada=' +
+          round2(simpBase) +
+          ' irrf_simplificada=' +
+          round2(simpIRRF) +
+          ' recomendada=' +
+          (legalScenario.saldo_imposto <= simpScenario.saldo_imposto ? 'legal' : 'simplificada'),
+      )
 
       var recommended =
         legalScenario.saldo_imposto <= simpScenario.saldo_imposto ? 'legal' : 'simplificada'

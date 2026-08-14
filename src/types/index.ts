@@ -19,9 +19,33 @@ export interface EscritorioRecord {
   email?: string
   telefone?: string
   endereco?: string
+  logradouro?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  cidade?: string
+  estado?: string
+  cep?: string
   logo?: string
   plano: 'starter' | 'pro' | 'enterprise'
   limite_clientes: number
+  sessao_inatividade_min?: number
+  ultima_revisao_politicas?: string
+  ultimo_backup_status?: string
+  created: string
+  updated: string
+}
+
+/** Membro de equipe retornado pela rota de configurações. */
+export interface MembroEquipeDTO {
+  id: string
+  email: string
+  name: string
+  escritorio_id?: string
+  cargo: CargoUser
+  ativo: boolean
+  verified: boolean
+  ultimo_acesso: string | null
   created: string
   updated: string
 }

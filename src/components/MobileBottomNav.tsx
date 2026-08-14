@@ -69,14 +69,16 @@ export function MobileBottomNav() {
                 <span>Tabela Progressiva</span>
               </Link>
             )}
-            <Link
-              to="/app/configuracoes/perfil"
-              onClick={() => setDrawerOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
-            >
-              <Settings className="w-5 h-5 text-slate-600" />
-              <span>Configurações do Escritório</span>
-            </Link>
+            {isAdmin && (
+              <Link
+                to="/app/configuracoes/escritorio"
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
+              >
+                <Settings className="w-5 h-5 text-slate-600" />
+                <span>Configurações do Escritório</span>
+              </Link>
+            )}
             <div className="pt-3 border-t">
               <button
                 onClick={() => {

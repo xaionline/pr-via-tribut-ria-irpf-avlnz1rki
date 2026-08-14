@@ -57,6 +57,9 @@ export function Header() {
       ? [{ label: 'Tabela Progressiva', path: '/app/tabelas', icon: TableProperties }]
       : []),
     { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+    ...(isAdmin
+      ? [{ label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings }]
+      : []),
   ]
 
   const currentTitle =
@@ -157,14 +160,16 @@ export function Header() {
               )
             })}
             <div className="pt-3 border-t border-slate-100">
-              <Link
-                to="/app/configuracoes/perfil"
-                onClick={() => setNavOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors touch-target"
-              >
-                <Settings className="w-5 h-5" />
-                <span>Configurações</span>
-              </Link>
+              {isAdmin && (
+                <Link
+                  to="/app/configuracoes/escritorio"
+                  onClick={() => setNavOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors touch-target"
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Configurações</span>
+                </Link>
+              )}
               <button
                 onClick={() => {
                   setNavOpen(false)

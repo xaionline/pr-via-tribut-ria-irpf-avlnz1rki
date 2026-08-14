@@ -41,6 +41,42 @@ export function maskCnpj(cnpj?: string): string {
   return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
+export function maskTelefone(tel?: string): string {
+  if (!tel) return ''
+  const clean = tel.replace(/\D/g, '')
+  if (clean.length === 11) {
+    return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+  }
+  if (clean.length === 10) {
+    return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+  }
+  return tel
+}
+
+export function maskCep(cep?: string): string {
+  if (!cep) return ''
+  const clean = cep.replace(/\D/g, '')
+  if (clean.length !== 8) return cep
+  return clean.replace(/(\d{5})(\d{3})/, '$1-$2')
+}
+
+export function formatDateTime(dateStr?: string): string {
+  if (!dateStr) return '-'
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d)
+  } catch {
+    return dateStr
+  }
+}
+
 export function relativeTime(dateStr?: string): string {
   if (!dateStr) return '-'
   const date = new Date(dateStr)

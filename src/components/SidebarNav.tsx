@@ -37,6 +37,9 @@ export function SidebarNav() {
       ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: Calculator }]
       : []),
     { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+    ...(isAdmin
+      ? [{ label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings }]
+      : []),
   ]
 
   const initials = user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'
@@ -116,37 +119,6 @@ export function SidebarNav() {
             </Link>
           )
         })}
-
-        <div
-          className={cn(
-            'pt-4 px-3 py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider transition-opacity',
-            'opacity-0 lg:opacity-100',
-            hovered && 'opacity-100',
-          )}
-        >
-          Configurações
-        </div>
-        <Link
-          to="/app/configuracoes/perfil"
-          title="Configurações"
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all touch-target',
-            location.pathname.startsWith('/app/configuracoes')
-              ? 'bg-slate-800 text-white font-semibold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60',
-          )}
-        >
-          <Settings className="w-4 h-4 text-slate-400 shrink-0" />
-          <span
-            className={cn(
-              'whitespace-nowrap transition-opacity duration-200',
-              'opacity-0 lg:opacity-100',
-              hovered && 'opacity-100',
-            )}
-          >
-            Configurações
-          </span>
-        </Link>
       </nav>
 
       <div className="p-2 lg:p-3 border-t border-slate-800/80 bg-slate-950/40">
@@ -189,15 +161,17 @@ export function SidebarNav() {
               <p className="text-xs font-semibold text-white">{user?.name}</p>
               <p className="text-[10px] text-slate-400">{user?.email}</p>
             </div>
-            <DropdownMenuItem
-              asChild
-              className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-xs"
-            >
-              <Link to="/app/configuracoes/perfil" className="flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Perfil do Escritório</span>
-              </Link>
-            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem
+                asChild
+                className="cursor-pointer hover:bg-slate-800 focus:bg-slate-800 text-xs"
+              >
+                <Link to="/app/configuracoes/escritorio" className="flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Configurações do escritório</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator className="bg-slate-800" />
             <DropdownMenuItem
               onClick={signOut}

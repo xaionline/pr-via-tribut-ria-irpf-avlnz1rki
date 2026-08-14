@@ -19,6 +19,7 @@ import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
 import SimuladorTributario from '@/pages/declaracoes/SimuladorTributario'
 import DemonstrativoCalculo from '@/pages/declaracoes/DemonstrativoCalculo'
 import TabelaProgressiva from '@/pages/TabelaProgressiva'
+import Configuracoes from '@/pages/configuracoes/Configuracoes'
 
 const App = () => (
   <BrowserRouter>

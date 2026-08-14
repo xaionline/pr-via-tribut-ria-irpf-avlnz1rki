@@ -10,6 +10,7 @@ export function Breadcrumbs() {
     clientes: 'Clientes',
     declaracoes: 'Declarações',
     tabelas: 'Tabela Progressiva',
+    'tabela-progressiva': 'Tabela Progressiva',
     relatorios: 'Relatórios',
     configuracoes: 'Configurações',
     perfil: 'Perfil',

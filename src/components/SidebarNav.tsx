@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  TableProperties,
+  Calculator,
   BarChart3,
   Settings,
   ShieldCheck,
@@ -34,7 +34,7 @@ export function SidebarNav() {
     { label: 'Clientes', path: '/app/clientes', icon: Users },
     { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
     ...(isAdmin
-      ? [{ label: 'Tabela Progressiva', path: '/app/tabelas', icon: TableProperties }]
+      ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: Calculator }]
       : []),
     { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
   ]

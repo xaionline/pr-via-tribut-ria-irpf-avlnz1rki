@@ -18,6 +18,7 @@ import DeclaracaoForm from '@/pages/declaracoes/DeclaracaoForm'
 import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
 import SimuladorTributario from '@/pages/declaracoes/SimuladorTributario'
 import DemonstrativoCalculo from '@/pages/declaracoes/DemonstrativoCalculo'
+import TabelaProgressiva from '@/pages/TabelaProgressiva'
 
 const App = () => (
   <BrowserRouter>
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/app/declaracoes/:id" element={<DeclaracaoDetail />} />
             <Route path="/app/declaracoes/:id/simulador" element={<SimuladorTributario />} />
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />
+            <Route path="/app/tabela-progressiva" element={<TabelaProgressiva />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

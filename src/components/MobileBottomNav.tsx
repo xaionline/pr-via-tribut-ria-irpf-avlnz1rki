@@ -7,7 +7,7 @@ import {
   BarChart3,
   Menu,
   Settings,
-  TableProperties,
+  Calculator,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -61,11 +61,11 @@ export function MobileBottomNav() {
           <div className="space-y-2">
             {isAdmin && (
               <Link
-                to="/app/tabelas"
+                to="/app/tabela-progressiva"
                 onClick={() => setDrawerOpen(false)}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
               >
-                <TableProperties className="w-5 h-5 text-emerald-600" />
+                <Calculator className="w-5 h-5 text-emerald-600" />
                 <span>Tabela Progressiva</span>
               </Link>
             )}

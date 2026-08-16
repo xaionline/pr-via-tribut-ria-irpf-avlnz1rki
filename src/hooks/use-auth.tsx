@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import pb from '@/lib/pocketbase/client'
 import type { UserRecord, EscritorioRecord } from '@/types'
 
+import type { CadastroPayload } from '@/services/cadastro'
+
 interface AuthContextType {
   user: UserRecord | null
   escritorio: EscritorioRecord | null
@@ -10,12 +12,18 @@ interface AuthContextType {
   isConsultor: boolean
   isVisualizador: boolean
   isCliente: boolean
+  /** Registro legado (mantido para compatibilidade com a tela de /registro). */
   signUp: (
     email: string,
     pass: string,
     name: string,
     nomeEscritorio: string,
   ) => Promise<{ error: any }>
+  /**
+   * Onboarding multi-tenant: cria escritório + admin via rota pública
+   * e faz login automático em caso de sucesso.
+   */
+  cadastrarEscritorio: (payload: CadastroPayload) => Promise<{ error: any }>
   signIn: (email: string, pass: string) => Promise<{ error: any }>
   signOut: () => void
   loading: boolean
@@ -107,6 +115,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const cadastrarEscritorio = async (payload: CadastroPayload) => {
+    try {
+      const { cadastrarEscritorio: apiCall } = await import('@/services/cadastro')
+      const result = await apiCall(payload)
+      if (!result.success) {
+        return {
+          error: {
+            fieldErrors: result.fieldErrors,
+            message: result.globalError,
+          },
+        }
+      }
+      // Login automático com as credenciais do admin recém-criado.
+      await pb.collection('users').authWithPassword(payload.email_admin, payload.senha)
+      return { error: null }
+    } catch (error) {
+      return { error }
+    }
+  }
+
   const signIn = async (email: string, pass: string) => {
     try {
       await pb.collection('users').authWithPassword(email, pass)
@@ -137,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isVisualizador,
         isCliente,
         signUp,
+        cadastrarEscritorio,
         signIn,
         signOut,
         loading,

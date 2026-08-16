@@ -1,0 +1,157 @@
+// POST /backend/v1/cadastro
+// Rota pública de onboarding de escritório: cria o escritório e o usuário
+// administrador vinculado de forma atômica, registra auditoria e retorna os
+// dados necessários para o login automático no cliente.
+routerAdd('POST', '/backend/v1/cadastro', (e) => {
+  // ---- Parse do corpo -------------------------------------------------
+  var body = {}
+  try {
+    body = e.requestInfo().body || {}
+  } catch (_) {
+    body = {}
+  }
+
+  var nomeEscritorio = (body.nome_escritorio || '').trim()
+  var cnpj = (body.cnpj || '').trim()
+  var telefone = (body.telefone || '').trim()
+  var emailEscritorio = (body.email_escritorio || '').trim().toLowerCase()
+  var nomeAdmin = (body.nome_admin || '').trim()
+  var emailAdmin = (body.email_admin || '').trim().toLowerCase()
+  var senha = body.senha || ''
+  var senhaConfirm = body.senha_confirm || ''
+
+  // ---- Validações de campos obrigatórios ------------------------------
+  var erros = {}
+
+  if (!nomeEscritorio) {
+    erros.nome_escritorio = 'Informe o nome do escritório.'
+  } else if (nomeEscritorio.length < 3) {
+    erros.nome_escritorio = 'O nome do escritório deve ter ao menos 3 caracteres.'
+  }
+
+  // CNPJ: aceita formatado (00.000.000/0000-00) ou somente dígitos.
+  var cnpjDigitos = cnpj.replace(/\D/g, '')
+  if (!cnpj) {
+    erros.cnpj = 'Informe o CNPJ.'
+  } else if (cnpjDigitos.length !== 14) {
+    erros.cnpj = 'CNPJ deve conter 14 dígitos.'
+  }
+
+  if (!telefone) {
+    erros.telefone = 'Informe o telefone.'
+  } else if (telefone.replace(/\D/g, '').length < 10) {
+    erros.telefone = 'Telefone inválido.'
+  }
+
+  if (!emailEscritorio) {
+    erros.email_escritorio = 'Informe o e-mail do escritório.'
+  } else if (emailEscritorio.indexOf('@') < 0) {
+    erros.email_escritorio = 'E-mail do escritório inválido.'
+  }
+
+  if (!nomeAdmin) {
+    erros.nome_admin = 'Informe o nome completo do administrador.'
+  } else if (nomeAdmin.length < 3) {
+    erros.nome_admin = 'O nome deve ter ao menos 3 caracteres.'
+  }
+
+  if (!emailAdmin) {
+    erros.email_admin = 'Informe o e-mail do administrador.'
+  } else if (emailAdmin.indexOf('@') < 0) {
+    erros.email_admin = 'E-mail do administrador inválido.'
+  }
+
+  if (!senha) {
+    erros.senha = 'Informe a senha.'
+  } else if (senha.length < 8) {
+    erros.senha = 'A senha deve ter no mínimo 8 caracteres.'
+  }
+
+  if (senha !== senhaConfirm) {
+    erros.senha_confirm = 'As senhas não coincidem.'
+  }
+
+  if (Object.keys(erros).length > 0) {
+    return e.json(400, { success: false, errors: erros })
+  }
+
+  // ---- Verifica duplicidade de CNPJ e e-mail --------------------------
+  try {
+    $app.findFirstRecordByData('escritorios', 'cnpj', cnpjDigitos)
+    return e.json(409, {
+      success: false,
+      errors: { cnpj: 'Já existe um escritório cadastrado com este CNPJ.' },
+    })
+  } catch (_) {}
+
+  try {
+    $app.findAuthRecordByEmail('_pb_users_auth_', emailAdmin)
+    return e.json(409, {
+      success: false,
+      errors: { email_admin: 'Já existe um usuário com este e-mail.' },
+    })
+  } catch (_) {}
+
+  // ---- Criação atômica (escritório + admin) ---------------------------
+  try {
+    var criado = $app.runInTransaction(function (txApp) {
+      // 1. Escritório
+      var escCol = txApp.findCollectionByNameOrId('escritorios')
+      var esc = new Record(escCol)
+      esc.set('nome', nomeEscritorio)
+      esc.set('cnpj', cnpjDigitos)
+      esc.set('telefone', telefone)
+      esc.set('email', emailEscritorio)
+      esc.set('plano', 'pro')
+      esc.set('limite_clientes', 100)
+      txApp.save(esc)
+
+      // 2. Usuário administrador vinculado
+      var usersCol = txApp.findCollectionByNameOrId('_pb_users_auth_')
+      var admin = new Record(usersCol)
+      admin.setEmail(emailAdmin)
+      admin.setPassword(senha)
+      admin.setVerified(true)
+      admin.set('name', nomeAdmin)
+      admin.set('escritorio_id', esc.id)
+      admin.set('cargo', 'admin')
+      admin.set('ativo', true)
+      txApp.save(admin)
+
+      // 3. Auditoria
+      try {
+        var auditCol = txApp.findCollectionByNameOrId('audit_logs')
+        var auditRec = new Record(auditCol)
+        auditRec.set('user_id', admin.id)
+        auditRec.set('action', 'cadastro_escritorio')
+        auditRec.set('entity', 'escritorios')
+        auditRec.set('entity_id', esc.id)
+        auditRec.set(
+          'diff',
+          JSON.stringify({
+            nome_escritorio: nomeEscritorio,
+            cnpj: cnpjDigitos,
+            email_admin: emailAdmin,
+          }),
+        )
+        txApp.save(auditRec)
+      } catch (_) {}
+
+      return { escritorio_id: esc.id, user_id: admin.id }
+    })
+
+    return e.json(201, {
+      success: true,
+      escritorio_id: criado.escritorio_id,
+      user_id: criado.user_id,
+      email: emailAdmin,
+    })
+  } catch (err) {
+    $app.logger().error('cadastro escritorio failed', 'error', String(err))
+    var msg = err && err.message ? err.message : String(err)
+    return e.json(500, {
+      success: false,
+      errors: { _global: 'Não foi possível concluir o cadastro: ' + msg },
+    })
+  }
+})

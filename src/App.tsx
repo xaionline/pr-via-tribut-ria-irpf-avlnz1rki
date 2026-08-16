@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 import Login from '@/pages/Login'
 import Registro from '@/pages/Registro'
+import Cadastro from '@/pages/Cadastro'
 import Dashboard from '@/pages/Dashboard'
 import ClientesList from '@/pages/clientes/ClientesList'
 import ClienteForm from '@/pages/clientes/ClienteForm'
@@ -32,6 +33,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/cadastro" element={<Cadastro />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/app/dashboard" element={<Dashboard />} />

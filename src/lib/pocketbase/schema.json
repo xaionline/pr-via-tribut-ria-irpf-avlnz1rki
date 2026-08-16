@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-14T19:59:18.101Z",
+  "generatedAt": "2026-08-16T20:25:47.736Z",
   "collections": [
     {
       "name": "users",
@@ -50,7 +50,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["admin", "consultor", "visualizador"]
+          "selectValues": ["admin", "consultor", "visualizador", "cliente"]
         },
         {
           "name": "ativo",
@@ -137,6 +137,66 @@
           "type": "file",
           "required": false,
           "system": false
+        },
+        {
+          "name": "logradouro",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "numero",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "complemento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "bairro",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cidade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estado",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cep",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sessao_inatividade_min",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ultima_revisao_politicas",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ultimo_backup_status",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -145,11 +205,11 @@
       "name": "clientes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id)",
+        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id)",
+        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
+        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
+        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)"
       },
       "fields": [
         {
@@ -229,6 +289,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
         }
       ],
       "indexes": [
@@ -240,11 +307,11 @@
       "name": "declaracoes",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id)",
+        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id)",
+        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
+        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
+        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)"
       },
       "fields": [
         {

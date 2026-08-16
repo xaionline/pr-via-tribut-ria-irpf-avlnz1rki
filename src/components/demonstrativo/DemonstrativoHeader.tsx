@@ -10,9 +10,17 @@ interface Props {
   escritorio: EscritorioRecord | null
   user: UserRecord | null
   onLogoUploaded: () => void
+  /** Modo somente leitura — oculta o upload de logo (perfil do cliente). */
+  readOnly?: boolean
 }
 
-export function DemonstrativoHeader({ declaracao, escritorio, user, onLogoUploaded }: Props) {
+export function DemonstrativoHeader({
+  declaracao,
+  escritorio,
+  user,
+  onLogoUploaded,
+  readOnly,
+}: Props) {
   const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -37,13 +45,15 @@ export function DemonstrativoHeader({ declaracao, escritorio, user, onLogoUpload
     }
   }
 
+  const canUploadLogo = !readOnly
+
   return (
     <header className="border-b-2 border-slate-800 pb-4 mb-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           {logoUrl ? (
             <img src={logoUrl} alt="Logo do escritório" className="w-16 h-16 object-contain" />
-          ) : (
+          ) : canUploadLogo ? (
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading || !escritorio}
@@ -58,14 +68,20 @@ export function DemonstrativoHeader({ declaracao, escritorio, user, onLogoUpload
                 </>
               )}
             </button>
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
+              <Upload className="w-5 h-5" />
+            </div>
           )}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleLogoUpload}
-          />
+          {canUploadLogo && (
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoUpload}
+            />
+          )}
         </div>
         <div className="text-right">
           <h1 className="text-lg font-bold text-slate-900">

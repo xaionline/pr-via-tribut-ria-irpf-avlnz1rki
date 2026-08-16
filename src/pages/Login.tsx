@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import pb from '@/lib/pocketbase/client'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -33,8 +34,9 @@ export default function Login() {
         variant: 'destructive',
       })
     } else {
-      toast({ title: 'Bem-vindo!', description: 'Acesso realizado com sucesso.' })
-      navigate('/app/dashboard')
+      toast({ title: 'Bem-vindo', description: 'Acesso realizado com sucesso.' })
+      const cargo = pb.authStore.model?.cargo
+      navigate(cargo === 'cliente' ? '/app/cliente' : '/app/dashboard')
     }
   }
 

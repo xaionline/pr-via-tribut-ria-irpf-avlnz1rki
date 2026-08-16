@@ -1,11 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export function Fab() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isCliente } = useAuth()
 
   const getAction = (() => {
+    // Clientes não têm ações de criação.
+    if (isCliente) return null
     if (location.pathname.startsWith('/app/clientes')) {
       return () => navigate('/app/clientes/novo')
     }

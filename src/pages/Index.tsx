@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Index() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, isCliente } = useAuth()
 
   if (loading) {
     return (
@@ -13,7 +13,7 @@ export default function Index() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/app/dashboard" replace />
+    return <Navigate to={isCliente ? '/app/cliente' : '/app/dashboard'} replace />
   }
 
   return <Navigate to="/login" replace />

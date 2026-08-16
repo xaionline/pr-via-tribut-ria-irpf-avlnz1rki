@@ -22,6 +22,8 @@ interface Props {
   onLoadCenario: (c: CenarioSimulacaoRecord) => void
   onSave: () => void
   onApply: () => void
+  /** Oculta os botões Salvar/Aplicar (modo simulação do cliente). */
+  hideActions?: boolean
 }
 
 function SliderInput({
@@ -89,8 +91,10 @@ export function SimulationControls({
   onLoadCenario,
   onSave,
   onApply,
+  hideActions,
 }: Props) {
   const set = (key: keyof SimulacaoParams, v: number) => onParamsChange({ ...params, [key]: v })
+  const readOnly = !!hideActions || isVisualizador
 
   return (
     <Card className="border border-slate-200/80 shadow-subtle">
@@ -185,27 +189,37 @@ export function SimulationControls({
           )}
         </div>
 
-        <div className="flex gap-2 pt-2 border-t border-slate-100">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 text-xs gap-1.5"
-            onClick={onSave}
-            disabled={isVisualizador}
-          >
-            <Save className="w-3.5 h-3.5" />
-            Salvar cenário
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 text-xs gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={onApply}
-            disabled={isVisualizador}
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Aplicar à declaração
-          </Button>
-        </div>
+        {hideActions ? (
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Modo simulação — as alterações não são salvas na declaração.
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2 pt-2 border-t border-slate-100">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs gap-1.5"
+              onClick={onSave}
+              disabled={isVisualizador}
+            >
+              <Save className="w-3.5 h-3.5" />
+              Salvar cenário
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 text-xs gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={onApply}
+              disabled={isVisualizador}
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Aplicar à declaração
+            </Button>
+          </div>
+        )}
+        {/* readOnly mantido para referência futura de desabilitar sliders */}
+        {readOnly ? null : null}
       </CardContent>
     </Card>
   )

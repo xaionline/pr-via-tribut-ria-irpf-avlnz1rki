@@ -26,21 +26,26 @@ import { cn } from '@/lib/utils'
 
 export function SidebarNav() {
   const location = useLocation()
-  const { user, escritorio, isAdmin, signOut } = useAuth()
+  const { user, escritorio, isAdmin, isCliente, signOut } = useAuth()
   const [hovered, setHovered] = useState(false)
 
-  const navItems = [
-    { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
-    { label: 'Clientes', path: '/app/clientes', icon: Users },
-    { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
-    ...(isAdmin
-      ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: Calculator }]
-      : []),
-    { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
-    ...(isAdmin
-      ? [{ label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings }]
-      : []),
-  ]
+  const navItems = isCliente
+    ? [
+        { label: 'Dashboard', path: '/app/cliente', icon: LayoutDashboard },
+        { label: 'Demonstrativo', path: '/app/cliente/demonstrativo', icon: FileText },
+      ]
+    : [
+        { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
+        { label: 'Clientes', path: '/app/clientes', icon: Users },
+        { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
+        ...(isAdmin
+          ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: Calculator }]
+          : []),
+        { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+        ...(isAdmin
+          ? [{ label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings }]
+          : []),
+      ]
 
   const initials = user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'
 
@@ -90,7 +95,10 @@ export function SidebarNav() {
           Módulos
         </div>
         {navItems.map((item) => {
-          const isActive = location.pathname.startsWith(item.path)
+          const isActive =
+            item.path === '/app/cliente'
+              ? location.pathname === '/app/cliente'
+              : location.pathname.startsWith(item.path)
           const Icon = item.icon
           return (
             <Link

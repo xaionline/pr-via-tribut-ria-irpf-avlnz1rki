@@ -1,6 +1,20 @@
 import pb from '@/lib/pocketbase/client'
 import type { EscritorioRecord, MembroEquipeDTO, CargoUser } from '@/types'
 
+/** Registra uma ação em audit_logs (usado por visualizações/exportações do cliente). */
+export const registrarAuditoria = (
+  action: string,
+  entity: string,
+  entity_id?: string,
+  diff?: Record<string, unknown>,
+) =>
+  pb.collection('audit_logs').create({
+    action,
+    entity,
+    entity_id: entity_id || '',
+    diff: diff || {},
+  })
+
 export interface RetencaoRelatorioDTO {
   success: boolean
   gerado_em: string

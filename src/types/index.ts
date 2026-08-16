@@ -1,4 +1,4 @@
-export type CargoUser = 'admin' | 'consultor' | 'visualizador'
+export type CargoUser = 'admin' | 'consultor' | 'visualizador' | 'cliente'
 
 export interface UserRecord {
   id: string
@@ -62,10 +62,12 @@ export interface ClienteRecord {
   tipo: 'pessoa_fisica' | 'socio'
   status: 'ativo' | 'inativo'
   responsaveis?: string[]
+  user_id?: string
   created: string
   updated: string
   expand?: {
     responsaveis?: UserRecord[]
+    user_id?: UserRecord
   }
 }
 

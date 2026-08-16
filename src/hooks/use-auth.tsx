@@ -9,6 +9,7 @@ interface AuthContextType {
   isAdmin: boolean
   isConsultor: boolean
   isVisualizador: boolean
+  isCliente: boolean
   signUp: (
     email: string,
     pass: string,
@@ -123,6 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = cargo === 'admin'
   const isConsultor = cargo === 'consultor'
   const isVisualizador = cargo === 'visualizador'
+  const isCliente = cargo === 'cliente'
 
   return (
     <AuthContext.Provider
@@ -133,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         isConsultor,
         isVisualizador,
+        isCliente,
         signUp,
         signIn,
         signOut,

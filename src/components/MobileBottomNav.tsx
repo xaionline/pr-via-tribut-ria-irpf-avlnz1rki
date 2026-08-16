@@ -15,20 +15,28 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 
 export function MobileBottomNav() {
   const location = useLocation()
-  const { isAdmin, signOut, user } = useAuth()
+  const { isAdmin, isCliente, signOut, user } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const mainTabs = [
-    { label: 'Inicio', path: '/app/dashboard', icon: LayoutDashboard },
-    { label: 'Clientes', path: '/app/clientes', icon: Users },
-    { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
-    { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
-  ]
+  const mainTabs = isCliente
+    ? [
+        { label: 'Início', path: '/app/cliente', icon: LayoutDashboard },
+        { label: 'Demonstrativo', path: '/app/cliente/demonstrativo', icon: FileText },
+      ]
+    : [
+        { label: 'Inicio', path: '/app/dashboard', icon: LayoutDashboard },
+        { label: 'Clientes', path: '/app/clientes', icon: Users },
+        { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
+        { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+      ]
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 shadow-elevation px-2 py-1.5 flex items-center justify-around">
       {mainTabs.map((tab) => {
-        const isActive = location.pathname === tab.path
+        const isActive =
+          tab.path === '/app/cliente'
+            ? location.pathname === '/app/cliente'
+            : location.pathname === tab.path
         const Icon = tab.icon
         return (
           <Link

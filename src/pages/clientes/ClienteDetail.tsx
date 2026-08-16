@@ -1,22 +1,57 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Plus, FileText, User, DollarSign } from 'lucide-react'
+import {
+  ArrowLeft,
+  Edit,
+  Plus,
+  FileText,
+  User,
+  DollarSign,
+  Mail,
+  CheckCircle2,
+  Loader2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatusBadge } from '@/components/StatusBadge'
-import { getCliente } from '@/services/clientes'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { getCliente, convidarCliente } from '@/services/clientes'
 import { getDeclaracoes } from '@/services/declaracoes'
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { maskCpf, formatDate, formatCurrency } from '@/lib/formatters'
 import type { ClienteRecord, DeclaracaoRecord } from '@/types'
 
 export default function ClienteDetail() {
   const { clienteId } = useParams<{ clienteId: string }>()
   const navigate = useNavigate()
+  const { isAdmin, isConsultor } = useAuth()
+  const { toast } = useToast()
+
+  const podeConvidar = isAdmin || isConsultor
 
   const [cliente, setCliente] = useState<ClienteRecord | null>(null)
   const [declaracoes, setDeclaracoes] = useState<DeclaracaoRecord[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [conviteOpen, setConviteOpen] = useState(false)
+  const [conviteEmail, setConviteEmail] = useState('')
+  const [conviteNome, setConviteNome] = useState('')
+  const [conviteLoading, setConviteLoading] = useState(false)
+  const [conviteSucesso, setConviteSucesso] = useState<null | { email: string; enviado: boolean }>(
+    null,
+  )
 
   useEffect(() => {
     if (!clienteId) return
@@ -24,10 +59,64 @@ export default function ClienteDetail() {
     Promise.all([getCliente(clienteId), getDeclaracoes(clienteId)])
       .then(([c, decs]) => {
         setCliente(c)
+        setConviteNome(c.nome || '')
+        setConviteEmail(c.email || '')
         setDeclaracoes(decs)
       })
       .finally(() => setLoading(false))
   }, [clienteId])
+
+  const abrirConvite = () => {
+    setConviteSucesso(null)
+    setConviteOpen(true)
+  }
+
+  const enviarConvite = async () => {
+    if (!clienteId) return
+    if (!conviteEmail || conviteEmail.indexOf('@') < 0) {
+      toast({
+        title: 'E-mail inválido',
+        description: 'Informe um e-mail válido do cliente.',
+        variant: 'destructive',
+      })
+      return
+    }
+    setConviteLoading(true)
+    try {
+      const resp = await convidarCliente(clienteId, { nome: conviteNome, email: conviteEmail })
+      setConviteSucesso({ email: resp.email, enviado: resp.convite_enviado })
+      // Recarrega o cliente para refletir o user_id vinculado.
+      getCliente(clienteId)
+        .then(setCliente)
+        .catch(() => {})
+      toast({
+        title: resp.convite_enviado ? 'Convite enviado' : 'Acesso criado',
+        description: resp.convite_enviado
+          ? `E-mail enviado para ${resp.email}.`
+          : 'O acesso foi criado, mas não foi possível enviar o e-mail. Informe o cliente para usar "Esqueci minha senha".',
+      })
+    } catch (err) {
+      toast({
+        title: 'Erro ao convidar',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
+    } finally {
+      setConviteLoading(false)
+    }
+  }
+
+  const copiarLinkConvite = () => {
+    const link = `${window.location.origin}/login`
+    navigator.clipboard?.writeText(link).then(
+      () =>
+        toast({
+          title: 'Link copiado',
+          description: 'Link de acesso copiado para a área de transferência.',
+        }),
+      () => toast({ title: 'Não foi possível copiar', variant: 'destructive' }),
+    )
+  }
 
   if (loading || !cliente) {
     return (
@@ -65,6 +154,28 @@ export default function ClienteDetail() {
             <Edit className="w-3.5 h-3.5" />
             <span>Editar</span>
           </Button>
+          {podeConvidar &&
+            (cliente.user_id ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="text-xs gap-1.5 text-emerald-700 border-emerald-200 bg-emerald-50"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Acesso liberado</span>
+              </Button>
+            ) : (
+              <Button
+                onClick={abrirConvite}
+                size="sm"
+                variant="outline"
+                className="text-xs gap-1.5 text-blue-700 border-blue-200 hover:bg-blue-50"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Convidar para acesso</span>
+              </Button>
+            ))}
           <Button
             onClick={() => navigate(`/app/declaracoes/nova?clienteId=${cliente.id}`)}
             size="sm"
@@ -184,6 +295,96 @@ export default function ClienteDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de convite */}
+      <Dialog open={conviteOpen} onOpenChange={setConviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Convidar cliente para acesso</DialogTitle>
+            <DialogDescription>
+              O cliente receberá um login com acesso somente leitura ao seu demonstrativo e
+              simulador.
+            </DialogDescription>
+          </DialogHeader>
+
+          {conviteSucesso ? (
+            <div className="space-y-4 py-2">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                <div className="text-xs text-emerald-800">
+                  <p className="font-semibold">Acesso criado para {conviteSucesso.email}</p>
+                  <p className="mt-1 text-emerald-700">
+                    {conviteSucesso.enviado
+                      ? 'O e-mail de convite foi enviado. O cliente define a senha na primeira entrada.'
+                      : 'Não foi possível enviar o e-mail automaticamente. Copie o link abaixo e oriente o cliente a usar "Esqueci minha senha".'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs gap-1.5"
+                onClick={copiarLinkConvite}
+              >
+                <Mail className="w-3.5 h-3.5" /> Copiar link de acesso
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Nome do cliente</Label>
+                <Input
+                  value={conviteNome}
+                  onChange={(e) => setConviteNome(e.target.value)}
+                  className="text-xs h-9"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">E-mail de acesso</Label>
+                <Input
+                  type="email"
+                  value={conviteEmail}
+                  onChange={(e) => setConviteEmail(e.target.value)}
+                  className="text-xs h-9"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            {conviteSucesso ? (
+              <Button size="sm" className="text-xs" onClick={() => setConviteOpen(false)}>
+                Concluir
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setConviteOpen(false)}
+                  disabled={conviteLoading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                  onClick={enviarConvite}
+                  disabled={conviteLoading}
+                >
+                  {conviteLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Mail className="w-3.5 h-3.5" />
+                  )}
+                  Enviar convite
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

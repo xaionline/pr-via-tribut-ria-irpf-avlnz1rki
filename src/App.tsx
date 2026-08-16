@@ -1,5 +1,5 @@
 /* Main App Component - Handles routing (using react-router-dom), query client and other providers - use this file to add all routes */
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -20,6 +20,8 @@ import SimuladorTributario from '@/pages/declaracoes/SimuladorTributario'
 import DemonstrativoCalculo from '@/pages/declaracoes/DemonstrativoCalculo'
 import TabelaProgressiva from '@/pages/TabelaProgressiva'
 import Configuracoes from '@/pages/configuracoes/Configuracoes'
+import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
+import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 
 const App = () => (
   <BrowserRouter>
@@ -44,6 +46,14 @@ const App = () => (
             <Route path="/app/declaracoes/:id/simulador" element={<SimuladorTributario />} />
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />
             <Route path="/app/tabela-progressiva" element={<TabelaProgressiva />} />
+            <Route path="/app/configuracoes/:tab" element={<Configuracoes />} />
+            {/* Rotas do perfil de cliente (somente leitura) */}
+            <Route path="/app/cliente" element={<ClienteDashboard />} />
+            <Route path="/app/cliente/demonstrativo" element={<ClienteDashboard />} />
+            <Route
+              path="/app/cliente/demonstrativo/:declaracaoId"
+              element={<ClienteDemonstrativoWrapper />}
+            />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -51,5 +61,11 @@ const App = () => (
     </AuthProvider>
   </BrowserRouter>
 )
+
+/** Wrapper que extrai o parâmetro declaracaoId da rota e repassa ao componente. */
+function ClienteDemonstrativoWrapper() {
+  const { declaracaoId } = useParams<{ declaracaoId: string }>()
+  return <ClienteDemonstrativo declaracaoId={declaracaoId || ''} />
+}
 
 export default App

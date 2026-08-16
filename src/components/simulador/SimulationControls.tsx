@@ -133,7 +133,7 @@ export function SimulationControls({
         />
 
         <SliderInput
-          label="Destinação FUNDRURAL/Crianças/Idosos"
+          label="Destinação Crianças/Idosos/Hospital"
           value={params.destinacao}
           min={0}
           max={destinacaoLimit}

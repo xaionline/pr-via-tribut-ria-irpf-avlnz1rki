@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-16T21:01:12.836Z",
+  "generatedAt": "2026-08-16T21:52:13.657Z",
   "collections": [
     {
       "name": "users",
@@ -199,7 +199,9 @@
           "system": false
         }
       ],
-      "indexes": []
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_escritorios_cnpj_unique` ON `escritorios` (cnpj) WHERE cnpj != ''"
+      ]
     },
     {
       "name": "clientes",

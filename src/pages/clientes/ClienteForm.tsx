@@ -16,8 +16,21 @@ import { FieldError } from '@/components/ui/field-error'
 import { useAuth } from '@/hooks/use-auth'
 import { createCliente, getCliente, updateCliente } from '@/services/clientes'
 import { validateCpf } from '@/lib/formatters'
-import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
+import { extractFieldErrors, getErrorMessage, type FieldErrors } from '@/lib/pocketbase/errors'
 import { useToast } from '@/hooks/use-toast'
+
+// Campos do formulário que possuem exibição de erro inline.
+// Erros de campos fora desta lista (ex.: escritorio_id) são exibidos via toast.
+const VISIBLE_FIELDS = [
+  'nome',
+  'cpf',
+  'email',
+  'telefone',
+  'data_nascimento',
+  'endereco',
+  'tipo',
+  'status',
+] as const
 
 export default function ClienteForm() {
   const { clienteId } = useParams()
@@ -51,20 +64,49 @@ export default function ClienteForm() {
     })
   }, [clienteId])
 
+  /** Limpa o erro inline de um campo quando o usuário volta a editá-lo. */
+  const clearFieldError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  /** Validação do frontend — mensagens específicas por campo. */
+  const validate = (): FieldErrors => {
+    const errors: FieldErrors = {}
+
+    if (!nome.trim()) {
+      errors.nome = 'O nome do declarante é obrigatório'
+    }
+
+    if (!cpf.trim()) {
+      errors.cpf = 'O CPF do declarante é obrigatório'
+    } else {
+      const cleanCpf = cpf.replace(/\D/g, '')
+      if (cleanCpf.length !== 11) {
+        errors.cpf = 'O CPF deve conter 11 dígitos'
+      } else if (!validateCpf(cpf)) {
+        errors.cpf = 'CPF inválido — dígitos verificadores incorretos'
+      }
+    }
+
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = 'Informe um e-mail válido'
+    }
+
+    return errors
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFieldErrors({})
 
-    const errors: FieldErrors = {}
-    if (!nome) errors.nome = 'Informe o nome do declarante'
-    if (!cpf) errors.cpf = 'Informe o CPF do declarante'
+    const errors = validate()
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
-      return
-    }
-
-    if (!validateCpf(cpf)) {
-      setFieldErrors({ cpf: 'CPF com dígitos verificadores incorretos' })
       return
     }
 
@@ -99,13 +141,22 @@ export default function ClienteForm() {
       }
       navigate('/app/clientes')
     } catch (err: any) {
+      // Extrai erros por campo vindos do backend e os exibe inline.
       const fe = extractFieldErrors(err)
-      if (Object.keys(fe).length > 0) {
-        setFieldErrors(fe)
-      } else {
+      setFieldErrors(fe)
+
+      // Garantia: NUNCA exibir mensagem genérica de "verifique os campos".
+      // Sempre que houver uma mensagem específica do backend que não esteja
+      // sendo mostrada inline (campo oculto, ou erro global como limite de
+      // clientes atingido), ela é exibida no toast.
+      const msg = getErrorMessage(err)
+      const hasHiddenFieldError = Object.keys(fe).some(
+        (k) => !VISIBLE_FIELDS.includes(k as (typeof VISIBLE_FIELDS)[number]),
+      )
+      if (Object.keys(fe).length === 0 || hasHiddenFieldError) {
         toast({
           title: 'Falha ao salvar cliente',
-          description: 'Verifique os campos e tente novamente',
+          description: msg,
           variant: 'destructive',
         })
       }
@@ -147,7 +198,7 @@ export default function ClienteForm() {
                   value={nome}
                   onChange={(e) => {
                     setNome(e.target.value)
-                    if (fieldErrors.nome) setFieldErrors({ ...fieldErrors, nome: undefined })
+                    clearFieldError('nome')
                   }}
                   className="h-10 text-xs"
                 />
@@ -161,7 +212,7 @@ export default function ClienteForm() {
                   value={cpf}
                   onChange={(e) => {
                     setCpf(e.target.value)
-                    if (fieldErrors.cpf) setFieldErrors({ ...fieldErrors, cpf: undefined })
+                    clearFieldError('cpf')
                   }}
                   className="h-10 text-xs"
                 />
@@ -173,9 +224,13 @@ export default function ClienteForm() {
                 <Input
                   type="date"
                   value={dataNascimento}
-                  onChange={(e) => setDataNascimento(e.target.value)}
+                  onChange={(e) => {
+                    setDataNascimento(e.target.value)
+                    clearFieldError('data_nascimento')
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.data_nascimento} />
               </div>
 
               <div className="space-y-1.5">
@@ -184,9 +239,13 @@ export default function ClienteForm() {
                   type="email"
                   placeholder="cliente@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    clearFieldError('email')
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.email} />
               </div>
 
               <div className="space-y-1.5">
@@ -194,14 +253,24 @@ export default function ClienteForm() {
                 <Input
                   placeholder="(11) 99999-9999"
                   value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
+                  onChange={(e) => {
+                    setTelefone(e.target.value)
+                    clearFieldError('telefone')
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.telefone} />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="font-semibold">Tipo de Declarante</Label>
-                <Select value={tipo} onValueChange={(val: any) => setTipo(val)}>
+                <Select
+                  value={tipo}
+                  onValueChange={(val: any) => {
+                    setTipo(val)
+                    clearFieldError('tipo')
+                  }}
+                >
                   <SelectTrigger className="h-10 text-xs">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
@@ -210,11 +279,18 @@ export default function ClienteForm() {
                     <SelectItem value="socio">Sócio / Empresário</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError message={fieldErrors.tipo} />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="font-semibold">Status no Escritório</Label>
-                <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+                <Select
+                  value={status}
+                  onValueChange={(val: any) => {
+                    setStatus(val)
+                    clearFieldError('status')
+                  }}
+                >
                   <SelectTrigger className="h-10 text-xs">
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
@@ -223,6 +299,7 @@ export default function ClienteForm() {
                     <SelectItem value="inativo">Inativo</SelectItem>
                   </SelectContent>
                 </Select>
+                <FieldError message={fieldErrors.status} />
               </div>
 
               <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
@@ -230,9 +307,13 @@ export default function ClienteForm() {
                 <Input
                   placeholder="Rua, número, bairro, cidade - UF"
                   value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  onChange={(e) => {
+                    setEndereco(e.target.value)
+                    clearFieldError('endereco')
+                  }}
                   className="h-10 text-xs"
                 />
+                <FieldError message={fieldErrors.endereco} />
               </div>
             </div>
 

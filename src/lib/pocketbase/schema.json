@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-16T21:52:13.657Z",
+  "generatedAt": "2026-08-17T22:10:55.833Z",
   "collections": [
     {
       "name": "users",
@@ -50,7 +50,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["admin", "consultor", "visualizador", "cliente"]
+          "selectValues": ["admin", "consultor", "visualizador", "cliente", "super_admin"]
         },
         {
           "name": "ativo",
@@ -195,6 +195,12 @@
         {
           "name": "ultimo_backup_status",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
           "required": false,
           "system": false
         }

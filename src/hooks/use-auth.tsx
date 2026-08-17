@@ -12,6 +12,7 @@ interface AuthContextType {
   isConsultor: boolean
   isVisualizador: boolean
   isCliente: boolean
+  isSuperAdmin: boolean
   /** Registro legado (mantido para compatibilidade com a tela de /registro). */
   signUp: (
     email: string,
@@ -149,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const cargo = user?.cargo || 'admin'
+  const isSuperAdmin = cargo === 'super_admin'
   const isAdmin = cargo === 'admin'
   const isConsultor = cargo === 'consultor'
   const isVisualizador = cargo === 'visualizador'
@@ -164,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isConsultor,
         isVisualizador,
         isCliente,
+        isSuperAdmin,
         signUp,
         cadastrarEscritorio,
         signIn,

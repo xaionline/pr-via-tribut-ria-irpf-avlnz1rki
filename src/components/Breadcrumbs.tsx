@@ -6,6 +6,7 @@ export function Breadcrumbs() {
   const pathnames = location.pathname.split('/').filter((x) => x && x !== 'app')
 
   const nameMap: Record<string, string> = {
+    admin: 'Administração',
     dashboard: 'Dashboard',
     clientes: 'Clientes',
     declaracoes: 'Declarações',

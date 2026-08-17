@@ -11,6 +11,7 @@ import {
   BarChart3,
   TableProperties,
   Settings,
+  ShieldCheck,
   LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,7 +29,7 @@ export function Header() {
   const [navOpen, setNavOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, isAdmin, signOut } = useAuth()
+  const { user, isAdmin, isSuperAdmin, signOut } = useAuth()
 
   useEffect(() => {
     setSearch(searchParams.get('q') || '')
@@ -50,6 +51,7 @@ export function Header() {
     .toUpperCase()
 
   const navItems = [
+    ...(isSuperAdmin ? [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck }] : []),
     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
     { label: 'Clientes', path: '/app/clientes', icon: Users },
     { label: 'Declarações', path: '/app/declaracoes', icon: FileText },

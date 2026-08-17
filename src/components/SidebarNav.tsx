@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils'
 
 export function SidebarNav() {
   const location = useLocation()
-  const { user, escritorio, isAdmin, isCliente, signOut } = useAuth()
+  const { user, escritorio, isAdmin, isCliente, isSuperAdmin, signOut } = useAuth()
   const [hovered, setHovered] = useState(false)
 
   const navItems = isCliente
@@ -35,6 +35,10 @@ export function SidebarNav() {
         { label: 'Demonstrativo', path: '/app/cliente/demonstrativo', icon: FileText },
       ]
     : [
+        // Super_admin vê o item Administração logo no topo (antes do Dashboard).
+        ...(isSuperAdmin
+          ? [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck }]
+          : []),
         { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
         { label: 'Clientes', path: '/app/clientes', icon: Users },
         { label: 'Declarações', path: '/app/declaracoes', icon: FileText },

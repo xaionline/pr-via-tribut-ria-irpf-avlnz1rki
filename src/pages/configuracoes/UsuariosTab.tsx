@@ -68,6 +68,7 @@ const CARGO_LABEL: Record<CargoUser, string> = {
   consultor: 'Consultor',
   visualizador: 'Visualizador',
   cliente: 'Cliente',
+  super_admin: 'Super Admin',
 }
 
 const CARGO_BADGE: Record<CargoUser, string> = {
@@ -75,6 +76,7 @@ const CARGO_BADGE: Record<CargoUser, string> = {
   consultor: 'bg-blue-50 text-blue-700 border-blue-200',
   visualizador: 'bg-slate-100 text-slate-600 border-slate-200',
   cliente: 'bg-amber-50 text-amber-700 border-amber-200',
+  super_admin: 'bg-purple-50 text-purple-700 border-purple-200',
 }
 
 export function UsuariosTab() {

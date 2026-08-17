@@ -1,4 +1,4 @@
-export type CargoUser = 'admin' | 'consultor' | 'visualizador' | 'cliente'
+export type CargoUser = 'admin' | 'consultor' | 'visualizador' | 'cliente' | 'super_admin'
 
 export interface UserRecord {
   id: string

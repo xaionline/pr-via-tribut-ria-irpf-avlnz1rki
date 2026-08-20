@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { getRendimentos, getDependentes, getDespesas } from '@/services/declaracoes'
+import {
+  getRendimentos,
+  getDependentes,
+  getDespesas,
+  getAtividadesRurais,
+} from '@/services/declaracoes'
 import { formatCurrency } from '@/lib/formatters'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
@@ -23,17 +28,23 @@ export function InlineLimitAlerts({ declaracaoId, refreshKey }: InlineLimitAlert
     let cancelled = false
     const fetchData = async () => {
       try {
-        const [rends, deps, desps] = await Promise.all([
+        const [rends, deps, desps, rurais] = await Promise.all([
           getRendimentos(declaracaoId),
           getDependentes(declaracaoId),
           getDespesas(declaracaoId),
+          getAtividadesRurais(declaracaoId),
         ])
 
         if (cancelled) return
 
-        const rendTributavel = rends
+        const rendTributavelSemRural = rends
           .filter((r) => r.tipo === 'tributavel')
           .reduce((s, r) => s + r.valor, 0)
+        const ruralTributavel = rurais.reduce(
+          (s, a) => s + (a.receita_bruta > 0 ? a.receita_bruta * 0.2 : 0),
+          0,
+        )
+        const rendTributavel = rendTributavelSemRural + ruralTributavel
 
         const eduTotal = desps
           .filter((d) => d.categoria === 'educacao')

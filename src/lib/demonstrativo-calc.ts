@@ -71,15 +71,22 @@ export function computeSteps(data: CalcData): CalcStep[] {
     faixa?.parcela_deduzir != null ? faixa.parcela_deduzir : (faixa?.deducao || 0) * 12
   const faixaNum = faixa ? faixas.indexOf(faixa) + 1 : 0
 
-  const ativRuralResult = atividadesRurais.reduce((s, a) => s + (a.resultado || 0), 0)
-  const ativRural20 = ativRuralResult * 0.2
+  const ativRuralBase20 = atividadesRurais.reduce((s, a) => s + (a.receita_bruta || 0) * 0.2, 0)
 
-  const rendTribBreakdown = rendimentos
-    .filter((r) => r.tipo === 'tributavel')
-    .map((r) => ({
-      label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
-      value: formatCurrency(r.valor),
-    }))
+  const rendTribBreakdown: Array<{ label: string; value: string }> = [
+    ...rendimentos
+      .filter((r) => r.tipo === 'tributavel')
+      .map((r) => ({
+        label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
+        value: formatCurrency(r.valor),
+      })),
+    ...atividadesRurais
+      .filter((a) => (a.receita_bruta || 0) > 0)
+      .map((a) => ({
+        label: `Atividade Rural (20% de ${formatCurrency(a.receita_bruta)})`,
+        value: formatCurrency((a.receita_bruta || 0) * 0.2),
+      })),
+  ]
 
   const despesaBreakdown = despesas.map((d) => ({
     label: `${catLabels[d.categoria] || d.categoria} — ${d.descricao}`,
@@ -87,8 +94,8 @@ export function computeSteps(data: CalcData): CalcStep[] {
   }))
 
   const ruralBreakdown = atividadesRurais.map((a) => ({
-    label: `Receita: ${formatCurrency(a.receita_bruta)} − Despesas: ${formatCurrency(a.despesas)}`,
-    value: formatCurrency(a.resultado),
+    label: `Receita Bruta: ${formatCurrency(a.receita_bruta)} (20% tributável)`,
+    value: formatCurrency((a.receita_bruta || 0) * 0.2),
   }))
 
   const destBreakdown = destinacoes.map((d) => ({
@@ -124,8 +131,8 @@ export function computeSteps(data: CalcData): CalcStep[] {
     },
     {
       num: '03',
-      label: '(−) Base Atividade Rural (20%)',
-      value: formatCurrency(ativRural20),
+      label: '(+) Base Atividade Rural (20% da Receita Bruta)',
+      value: formatCurrency(ativRuralBase20),
       breakdown: ruralBreakdown,
     },
     { num: '04', label: '(=) Base de Cálculo', value: formatCurrency(baseCalc), isResult: true },

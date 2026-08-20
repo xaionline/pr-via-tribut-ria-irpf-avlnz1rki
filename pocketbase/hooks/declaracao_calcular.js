@@ -206,8 +206,8 @@ routerAdd(
         )
       } catch (_) {}
       for (var ai = 0; ai < ativs.length; ai++) {
-        var resAtiv = Number(ativs[ai].get('resultado')) || 0
-        if (resAtiv > 0) rendTributavel += resAtiv
+        var recBruta = Number(ativs[ai].get('receita_bruta')) || 0
+        if (recBruta > 0) rendTributavel += recBruta * 0.2
       }
 
       var dests = []

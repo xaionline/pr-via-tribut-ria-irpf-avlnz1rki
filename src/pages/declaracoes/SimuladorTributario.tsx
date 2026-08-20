@@ -27,6 +27,7 @@ import {
   getRendimentos,
   getDespesas,
   getDependentes,
+  getAtividadesRurais,
   getDestinacoes,
   getResultado,
   calcularDeclaracao,
@@ -92,11 +93,12 @@ export default function SimuladorTributario() {
   const loadData = async () => {
     if (!id) return
     try {
-      const [dec, rends, desps, deps, dests, tabs, cens] = await Promise.all([
+      const [dec, rends, desps, deps, rurais, dests, tabs, cens] = await Promise.all([
         getDeclaracao(id),
         getRendimentos(id),
         getDespesas(id),
         getDependentes(id),
+        getAtividadesRurais(id),
         getDestinacoes(id),
         getTabelas(),
         getCenarios(id),
@@ -114,9 +116,15 @@ export default function SimuladorTributario() {
         !!res && ['calculada', 'revisada', 'apresentada', 'retificada'].includes(dec.status),
       )
 
-      const rendTributavel = rends
+      const rendTributavelSemRural = rends
         .filter((r) => r.tipo === 'tributavel')
         .reduce((s, r) => s + r.valor, 0)
+      const ruralTributavel = rurais.reduce(
+        (s, a) => s + (a.receita_bruta > 0 ? a.receita_bruta * 0.2 : 0),
+        0,
+      )
+      const rendTributavel =
+        res?.detalhamento?.rendimento_tributavel ?? rendTributavelSemRural + ruralTributavel
       const deducoesAtuais = desps.reduce((s, d) => s + d.valor, 0)
       const previdenciaAtual = desps
         .filter((d) => d.categoria === 'previdencia')

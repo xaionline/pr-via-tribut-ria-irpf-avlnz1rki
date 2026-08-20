@@ -27,6 +27,7 @@ import {
   getRendimentos,
   getDespesas,
   getDependentes,
+  getAtividadesRurais,
   getDestinacoes,
   getResultado,
 } from '@/services/declaracoes'
@@ -107,16 +108,23 @@ export default function ClienteDashboard() {
           const calcStatuses = ['calculada', 'revisada', 'apresentada', 'retificada']
           setIsCalculated(!!res && calcStatuses.includes(dec.status))
           // Monta base de simulação a partir dos dados da declaração.
-          const [rends, desps, deps, dests, tabs] = await Promise.all([
+          const [rends, desps, deps, rurais, dests, tabs] = await Promise.all([
             getRendimentos(dec.id),
             getDespesas(dec.id),
             getDependentes(dec.id),
+            getAtividadesRurais(dec.id),
             getDestinacoes(dec.id),
             getTabelas(),
           ])
-          const rendTributavel = rends
+          const rendTributavelSemRural = rends
             .filter((r) => r.tipo === 'tributavel')
             .reduce((s, r) => s + r.valor, 0)
+          const ruralTributavel = rurais.reduce(
+            (s, a) => s + (a.receita_bruta > 0 ? a.receita_bruta * 0.2 : 0),
+            0,
+          )
+          const rendTributavel =
+            res?.detalhamento?.rendimento_tributavel ?? rendTributavelSemRural + ruralTributavel
           const deducoesAtuais = desps.reduce((s, d) => s + d.valor, 0)
           const previdenciaAtual = desps
             .filter((d) => d.categoria === 'previdencia')

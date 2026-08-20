@@ -162,6 +162,11 @@ export function computeSteps(data: CalcData): CalcStep[] {
       value: formatCurrency(irrfRetido),
       breakdown: irrfBreakdown,
     },
-    { num: '11', label: '(=) IMPOSTO A PAGAR', value: formatCurrency(saldo), isFinal: true },
+    {
+      num: '11',
+      label: saldo < 0 ? '(=) IMPOSTO A RESTITUIR' : '(=) IMPOSTO A PAGAR',
+      value: formatCurrency(saldo),
+      isFinal: true,
+    },
   ]
 }

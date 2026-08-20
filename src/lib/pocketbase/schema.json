@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T22:30:39.603Z",
+  "generatedAt": "2026-08-17T22:49:37.282Z",
   "collections": [
     {
       "name": "users",
@@ -213,11 +213,11 @@
       "name": "clientes",
       "type": "base",
       "apiRules": {
-        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id)",
-        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id)",
-        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
-        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
-        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)"
+        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id) || (@request.auth.cargo = \"super_admin\")",
+        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && responsaveis.id ?= @request.auth.id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && user_id = @request.auth.id) || (@request.auth.cargo = \"super_admin\")",
+        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")",
+        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")",
+        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")"
       },
       "fields": [
         {
@@ -315,11 +315,11 @@
       "name": "declaracoes",
       "type": "base",
       "apiRules": {
-        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id)",
-        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id)",
-        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
-        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)",
-        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id)"
+        "list": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id) || (@request.auth.cargo = \"super_admin\")",
+        "view": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && cliente_id.responsaveis.id ?= @request.auth.id && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"visualizador\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"cliente\" && cliente_id.user_id = @request.auth.id) || (@request.auth.cargo = \"super_admin\")",
+        "create": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")",
+        "update": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")",
+        "delete": "(@request.auth.cargo = \"admin\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"consultor\" && escritorio_id = @request.auth.escritorio_id) || (@request.auth.cargo = \"super_admin\")"
       },
       "fields": [
         {

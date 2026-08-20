@@ -64,11 +64,7 @@ export function KpiCard({
             {icon}
           </div>
         </div>
-        <div
-          className={cn('text-2xl font-bold font-mono', alert ? 'text-red-700' : 'text-slate-900')}
-        >
-          {value}
-        </div>
+        <div className="text-[1.3rem]">{value}</div>
         <div className="flex items-center justify-between mt-1">
           <span className="text-[11px] text-slate-400">{microcopy}</span>
           {trend && (

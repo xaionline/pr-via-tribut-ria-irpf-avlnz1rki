@@ -24,6 +24,7 @@ import { getErrorMessage } from '@/lib/pocketbase/errors'
 import TabVisaoGeral from './tabs/TabVisaoGeral'
 import TabFontesPagadoras from './tabs/TabFontesPagadoras'
 import TabRendimentos from './tabs/TabRendimentos'
+import TabIrrf from './tabs/TabIrrf'
 import TabDespesas from './tabs/TabDespesas'
 import TabDependentes from './tabs/TabDependentes'
 import TabAtividadesRurais from './tabs/TabAtividadesRurais'
@@ -251,6 +252,9 @@ export default function DeclaracaoDetail() {
           <TabsTrigger value="rendimentos" className="text-xs whitespace-nowrap">
             Rendimentos
           </TabsTrigger>
+          <TabsTrigger value="irrf" className="text-xs whitespace-nowrap">
+            IR Retido
+          </TabsTrigger>
           <TabsTrigger value="despesas" className="text-xs whitespace-nowrap">
             Despesas
           </TabsTrigger>
@@ -278,6 +282,9 @@ export default function DeclaracaoDetail() {
         </TabsContent>
         <TabsContent value="rendimentos">
           <TabRendimentos declaracaoId={declaracao.id} />
+        </TabsContent>
+        <TabsContent value="irrf">
+          <TabIrrf declaracaoId={declaracao.id} isVisualizador={isVisualizador} />
         </TabsContent>
         <TabsContent value="despesas">
           <TabDespesas declaracaoId={declaracao.id} />

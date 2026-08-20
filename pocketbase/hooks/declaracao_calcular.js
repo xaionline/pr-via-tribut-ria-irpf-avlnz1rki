@@ -226,7 +226,17 @@ routerAdd(
         totalDest += Number(dests[dsti].get('valor')) || 0
       }
 
-      var irrfRetido = rendTributavel * 0.12
+      var irrfRecords = []
+      try {
+        irrfRecords = $app.findRecordsByFilter('irrf', 'declaracao_id = {:id}', 'created', 500, 0, {
+          id: decId,
+        })
+      } catch (_) {}
+
+      var irrfRetido = 0
+      for (var irri = 0; irri < irrfRecords.length; irri++) {
+        irrfRetido += Number(irrfRecords[irri].get('valor')) || 0
+      }
 
       var legalBase = Math.max(0, rendTributavel - totalDeducoes)
       var legalIRRF = calcIRPF(legalBase, faixas)
@@ -308,6 +318,7 @@ routerAdd(
             num_dependentes: deps.length,
             num_rendimentos: rends.length,
             num_despesas: desps.length,
+            num_irrf: irrfRecords.length,
           },
           result: {
             modalidade: modalidadeEscolhida,

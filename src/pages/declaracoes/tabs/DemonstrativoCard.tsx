@@ -53,14 +53,14 @@ export function DemonstrativoCard({
         <Row label="Base de cálculo" value={formatCurrency(baseCalc)} bold />
         <Divider />
         <Row label="Imposto devido (IRRF)" value={formatCurrency(irrfDevido)} />
-        <Row label="(−) IRRF retido na fonte" value={formatCurrency(irrfRetido)} muted />
+        <Row label="(−) IRRF" value={formatCurrency(irrfRetido)} muted />
         <Row label="(−) Destinações aplicadas" value={formatCurrency(destinacoes)} muted />
         <Divider />
         <div className="flex justify-between items-center pt-2">
           <span
             className={`font-bold flex items-center gap-1 ${isRestituicao ? 'text-emerald-600' : 'text-rose-600'}`}
           >
-            {isRestituicao ? 'Restituição a receber' : 'Imposto a pagar'}
+            {isRestituicao ? 'Saldo a Restituir' : 'Saldo a Pagar'}
           </span>
           <span
             className={`font-mono font-bold text-lg ${isRestituicao ? 'text-emerald-700' : 'text-rose-700'}`}

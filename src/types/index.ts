@@ -156,6 +156,16 @@ export interface DestinacaoFiscalRecord {
   updated: string
 }
 
+export interface IrrfRecord {
+  id: string
+  declaracao_id: string
+  fonte_pagadora: string
+  cnpj_fonte?: string
+  valor: number
+  created: string
+  updated: string
+}
+
 export interface ResultadoRecord {
   id: string
   declaracao_id: string

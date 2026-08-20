@@ -7,6 +7,7 @@ import type {
   DependenteRecord,
   AtividadeRuralRecord,
   DestinacaoFiscalRecord,
+  IrrfRecord,
   ResultadoRecord,
   CalcularResponse,
   SetModalidadeResponse,
@@ -111,6 +112,16 @@ export const duplicateDeclaracao = async (id: string) => {
     })
   }
 
+  const irrfs = await getIrrfRecords(id)
+  for (const item of irrfs) {
+    await createIrrfRecord({
+      declaracao_id: newDec.id,
+      fonte_pagadora: item.fonte_pagadora,
+      cnpj_fonte: item.cnpj_fonte,
+      valor: item.valor,
+    })
+  }
+
   return newDec
 }
 
@@ -189,3 +200,17 @@ export const createDestinacao = (data: Partial<DestinacaoFiscalRecord>) =>
   pb.collection('destinacoes_fiscais').create<DestinacaoFiscalRecord>(data)
 
 export const deleteDestinacao = (id: string) => pb.collection('destinacoes_fiscais').delete(id)
+
+export const getIrrfRecords = (declaracaoId: string) =>
+  pb.collection('irrf').getFullList<IrrfRecord>({
+    filter: `declaracao_id = "${declaracaoId}"`,
+    sort: 'created',
+  })
+
+export const createIrrfRecord = (data: Partial<IrrfRecord>) =>
+  pb.collection('irrf').create<IrrfRecord>(data)
+
+export const updateIrrfRecord = (id: string, data: Partial<IrrfRecord>) =>
+  pb.collection('irrf').update<IrrfRecord>(id, data)
+
+export const deleteIrrfRecord = (id: string) => pb.collection('irrf').delete(id)

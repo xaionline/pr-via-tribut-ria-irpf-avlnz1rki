@@ -5,6 +5,7 @@ import type {
   DespesaDedutivelRecord,
   AtividadeRuralRecord,
   DestinacaoFiscalRecord,
+  IrrfRecord,
   TabelaProgressivaRecord,
 } from '@/types'
 import {
@@ -13,6 +14,7 @@ import {
   getDespesas,
   getAtividadesRurais,
   getDestinacoes,
+  getIrrfRecords,
   getResultado,
 } from '@/services/declaracoes'
 import { getTabelas } from '@/services/tabelas'
@@ -24,17 +26,19 @@ export interface DemonstrativoData {
   despesas: DespesaDedutivelRecord[]
   atividadesRurais: AtividadeRuralRecord[]
   destinacoes: DestinacaoFiscalRecord[]
+  irrfs?: IrrfRecord[]
   tabela?: TabelaProgressivaRecord
 }
 
 export async function fetchDemonstrativoData(declaracaoId: string): Promise<DemonstrativoData> {
-  const [declaracao, rendimentos, despesas, atividadesRurais, destinacoes, tabelas] =
+  const [declaracao, rendimentos, despesas, atividadesRurais, destinacoes, irrfs, tabelas] =
     await Promise.all([
       getDeclaracao(declaracaoId),
       getRendimentos(declaracaoId),
       getDespesas(declaracaoId),
       getAtividadesRurais(declaracaoId),
       getDestinacoes(declaracaoId),
+      getIrrfRecords(declaracaoId).catch(() => [] as IrrfRecord[]),
       getTabelas(),
     ])
 
@@ -54,6 +58,7 @@ export async function fetchDemonstrativoData(declaracaoId: string): Promise<Demo
     despesas,
     atividadesRurais,
     destinacoes,
+    irrfs,
     tabela,
   }
 }

@@ -4,6 +4,7 @@ import type {
   DespesaDedutivelRecord,
   AtividadeRuralRecord,
   DestinacaoFiscalRecord,
+  IrrfRecord,
   TabelaProgressivaRecord,
   FaixaProgressiva,
 } from '@/types'
@@ -25,6 +26,7 @@ export interface CalcData {
   despesas: DespesaDedutivelRecord[]
   atividadesRurais: AtividadeRuralRecord[]
   destinacoes: DestinacaoFiscalRecord[]
+  irrfs?: IrrfRecord[]
   tabela?: TabelaProgressivaRecord
 }
 
@@ -48,7 +50,7 @@ function findMatchingFaixa(baseCalc: number, faixas: FaixaProgressiva[]): FaixaP
 }
 
 export function computeSteps(data: CalcData): CalcStep[] {
-  const { resultado, rendimentos, despesas, atividadesRurais, destinacoes, tabela } = data
+  const { resultado, rendimentos, despesas, atividadesRurais, destinacoes, irrfs, tabela } = data
   const det = resultado?.detalhamento || {}
   const legal = det.legal || {}
   const demo = det.demonstrativo || {}
@@ -94,12 +96,18 @@ export function computeSteps(data: CalcData): CalcStep[] {
     value: formatCurrency(d.valor),
   }))
 
-  const irrfBreakdown = rendimentos
-    .filter((r) => r.tipo === 'tributavel')
-    .map((r) => ({
-      label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
-      value: formatCurrency(r.valor),
-    }))
+  const irrfBreakdown =
+    irrfs && irrfs.length > 0
+      ? irrfs.map((item) => ({
+          label: item.fonte_pagadora + (item.cnpj_fonte ? ` (${item.cnpj_fonte})` : ''),
+          value: formatCurrency(item.valor),
+        }))
+      : rendimentos
+          .filter((r) => r.tipo === 'tributavel')
+          .map((r) => ({
+            label: r.expand?.fonte_pagadora_id?.nome || r.descricao || 'Sem fonte',
+            value: formatCurrency(r.valor),
+          }))
 
   return [
     {

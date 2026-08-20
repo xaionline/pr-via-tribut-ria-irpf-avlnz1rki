@@ -165,7 +165,7 @@ export function computeSteps(data: CalcData): CalcStep[] {
     {
       num: '11',
       label: saldo < 0 ? '(=) IMPOSTO A RESTITUIR' : '(=) IMPOSTO A PAGAR',
-      value: formatCurrency(saldo),
+      value: formatCurrency(Math.abs(saldo)),
       isFinal: true,
     },
   ]

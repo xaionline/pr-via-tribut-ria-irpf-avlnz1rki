@@ -17,6 +17,7 @@ import { FieldError } from '@/components/ui/field-error'
 import { useAuth } from '@/hooks/use-auth'
 import { getClientes } from '@/services/clientes'
 import { createDeclaracao, getDeclaracao, updateDeclaracao } from '@/services/declaracoes'
+import { getTabelas } from '@/services/tabelas'
 import { extractFieldErrors, type FieldErrors } from '@/lib/pocketbase/errors'
 import type { ClienteRecord } from '@/types'
 import { useToast } from '@/hooks/use-toast'
@@ -47,6 +48,7 @@ export default function DeclaracaoForm() {
   const [progresso, setProgresso] = useState('10')
   const [modalidade, setModalidade] = useState<string>('')
   const [clientes, setClientes] = useState<ClienteRecord[]>([])
+  const [anosDisponiveis, setAnosDisponiveis] = useState<number[]>([2025, 2024, 2023])
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(isEditing)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -57,7 +59,36 @@ export default function DeclaracaoForm() {
 
   useEffect(() => {
     getClientes('', 1, 500).then((res) => setClientes(res.items))
-  }, [])
+
+    getTabelas()
+      .then((tabelas) => {
+        const anos = Array.from(
+          new Set(
+            tabelas
+              .map((t) => t.ano_calendario || t.ano)
+              .filter((a): a is number => typeof a === 'number' && !isNaN(a)),
+          ),
+        ).sort((a, b) => b - a)
+
+        if (anos.length > 0) {
+          // Se houver preSelectedAno ou ano já selecionado, garantir que está na lista ou incluí-lo
+          if (preSelectedAno && !anos.includes(Number(preSelectedAno))) {
+            anos.push(Number(preSelectedAno))
+            anos.sort((a, b) => b - a)
+          }
+          setAnosDisponiveis(anos)
+        }
+      })
+      .catch(() => {
+        // Fallback: 2023-2025 (ou incluir preSelectedAno se existir)
+        const fallback = [2025, 2024, 2023]
+        if (preSelectedAno && !fallback.includes(Number(preSelectedAno))) {
+          fallback.push(Number(preSelectedAno))
+          fallback.sort((a, b) => b - a)
+        }
+        setAnosDisponiveis(fallback)
+      })
+  }, [preSelectedAno])
 
   useEffect(() => {
     if (!isEditing || !declaracaoId) return
@@ -69,6 +100,12 @@ export default function DeclaracaoForm() {
         setStatus(d.status)
         setProgresso(String(d.progresso ?? 0))
         setModalidade(d.modalidade || '')
+        setAnosDisponiveis((prev) => {
+          if (!prev.includes(d.ano_calendario)) {
+            return [...prev, d.ano_calendario].sort((a, b) => b - a)
+          }
+          return prev
+        })
       })
       .catch(() => {
         toast({
@@ -221,8 +258,11 @@ export default function DeclaracaoForm() {
                     <SelectValue placeholder="Selecione o ano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2025">2025 (Exercício 2026)</SelectItem>
-                    <SelectItem value="2024">2024 (Exercício 2025)</SelectItem>
+                    {anosDisponiveis.map((a) => (
+                      <SelectItem key={a} value={String(a)}>
+                        {a} (Exercício {a + 1})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FieldError message={fieldErrors.ano_calendario} />

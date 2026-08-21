@@ -79,15 +79,6 @@ routerAdd(
         })
       }
 
-      // Se temos o registro do usuário, atualiza a senha temporária de forma segura se necessário
-      if (adminUser) {
-        try {
-          var novaSenhaTemp = $security.randomString(16)
-          adminUser.setPassword(novaSenhaTemp)
-          $app.save(adminUser)
-        } catch (_) {}
-      }
-
       var siteUrl = $os.getenv('SITE_URL') || ''
       var loginUrl = siteUrl ? siteUrl.replace(/\/$/, '') + '/login' : '/login'
       var senderAddress = $app.settings().meta.senderAddress || 'no-reply@previatributaria.com.br'
@@ -102,10 +93,10 @@ routerAdd(
         '<p>Este é o e-mail de acesso administrativo para o escritório <strong>' +
         nomeEsc +
         '</strong>.</p>' +
-        '<p>Seu login é: <strong>' +
+        '<p>Seu login de acesso é: <strong>' +
         emailDestino +
         '</strong></p>' +
-        '<p>Para acessar sua conta ou definir uma nova senha com segurança, clique no botão abaixo ou utilize a funcionalidade <em>"Esqueci minha senha"</em> na tela de login:</p>' +
+        '<p>Utilize a senha inicial cadastrada para entrar na plataforma. Caso precise redefinir sua senha, utilize a funcionalidade <em>"Esqueci minha senha"</em> na tela de login.</p>' +
         '<p style="margin:24px 0">' +
         '<a href="' +
         loginUrl +

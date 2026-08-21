@@ -30,7 +30,10 @@ routerAdd(
       var cnpj = (body.cnpj || '').trim()
       var emailAdmin = (body.email_admin || '').trim().toLowerCase()
       var nomeAdmin = (body.nome_admin || '').trim()
-      var senha = body.senha || ''
+      var senha = body.senha !== undefined && body.senha !== null ? String(body.senha) : ''
+      if (!senha && body.password !== undefined && body.password !== null) {
+        senha = String(body.password)
+      }
 
       var erros = {}
 

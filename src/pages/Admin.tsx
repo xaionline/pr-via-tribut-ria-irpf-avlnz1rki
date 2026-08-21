@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Layers,
   Users,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,6 +83,7 @@ export default function AdminEscritorios() {
   const [emailAdmin, setEmailAdmin] = useState('')
   const [nomeAdmin, setNomeAdmin] = useState('')
   const [senha, setSenha] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   // Modal: Editar Escritório
@@ -130,6 +133,7 @@ export default function AdminEscritorios() {
     setEmailAdmin('')
     setNomeAdmin('')
     setSenha('')
+    setShowPassword(false)
     setFieldErrors({})
   }
 
@@ -735,25 +739,37 @@ export default function AdminEscritorios() {
             {/* Senha inicial */}
             <div className="space-y-1.5">
               <Label htmlFor="adm-senha" className="text-xs font-semibold text-slate-700">
-                Senha inicial *
+                Senha inicial * (mínimo 8 caracteres)
               </Label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <Input
                   id="adm-senha"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Mínimo 8 caracteres"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="pl-9 text-sm h-10"
+                  className="pl-9 pr-10 text-sm h-10"
                   aria-invalid={!!fieldErrors.senha}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-10 px-3 hover:bg-transparent text-slate-400 hover:text-slate-600"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
               </div>
               {fieldErrors.senha ? (
                 <p className="text-xs text-red-600">{fieldErrors.senha}</p>
               ) : (
                 <p className="text-[10px] text-slate-400">
-                  O administrador poderá redefinir a senha após o primeiro acesso.
+                  Defina a senha com pelo menos 8 caracteres para o primeiro acesso do
+                  administrador.
                 </p>
               )}
             </div>

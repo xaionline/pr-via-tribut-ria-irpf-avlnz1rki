@@ -17,6 +17,7 @@ export interface CriarEscritorioPayload {
   email_admin: string
   nome_admin: string
   senha: string
+  password?: string
 }
 
 export interface EditarEscritorioPayload {
@@ -71,7 +72,10 @@ export async function criarEscritorio(
       errors?: Record<string, string>
     }>('/backend/v1/admin/escritorios', {
       method: 'POST',
-      body: payload,
+      body: {
+        ...payload,
+        password: payload.password || payload.senha,
+      },
     })
     if (!res.success) {
       const fieldErrors = res.errors || {}

@@ -24,6 +24,15 @@ export const createTabela = (data: Partial<TabelaProgressivaRecord>) =>
 export const updateTabela = (id: string, data: Partial<TabelaProgressivaRecord>) =>
   pb.collection('tabelas_progressivas').update<TabelaProgressivaRecord>(id, data)
 
+export const deleteTabela = (id: string) => pb.collection('tabelas_progressivas').delete(id)
+
+export const deleteTabelaPorAno = async (ano: number) => {
+  const record = await pb
+    .collection('tabelas_progressivas')
+    .getFirstListItem<TabelaProgressivaRecord>(`ano_calendario = ${ano} || ano = ${ano}`)
+  return pb.collection('tabelas_progressivas').delete(record.id)
+}
+
 export interface SalvarTabelaPayload {
   descricao?: string
   data_vigencia_inicio?: string

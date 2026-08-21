@@ -24,6 +24,7 @@ import Configuracoes from '@/pages/configuracoes/Configuracoes'
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 import AdminEscritorios from '@/pages/Admin'
+import AdminTabelas from '@/pages/admin/AdminTabelas'
 import { SuperAdminRouteGuard } from '@/components/SuperAdminRouteGuard'
 
 const App = () => (
@@ -57,6 +58,14 @@ const App = () => (
               element={
                 <SuperAdminRouteGuard>
                   <AdminEscritorios />
+                </SuperAdminRouteGuard>
+              }
+            />
+            <Route
+              path="/app/admin/tabelas"
+              element={
+                <SuperAdminRouteGuard>
+                  <AdminTabelas />
                 </SuperAdminRouteGuard>
               }
             />

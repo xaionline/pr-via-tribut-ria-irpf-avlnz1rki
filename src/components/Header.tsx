@@ -51,12 +51,17 @@ export function Header() {
     .toUpperCase()
 
   const navItems = [
-    ...(isSuperAdmin ? [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck }] : []),
+    ...(isSuperAdmin
+      ? [
+          { label: 'Administração', path: '/app/admin', icon: ShieldCheck },
+          { label: 'Tabelas IRPF', path: '/app/admin/tabelas', icon: TableProperties },
+        ]
+      : []),
     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
     { label: 'Clientes', path: '/app/clientes', icon: Users },
     { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
     ...(isAdmin
-      ? [{ label: 'Tabela Progressiva', path: '/app/tabelas', icon: TableProperties }]
+      ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: TableProperties }]
       : []),
     { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
     ...(isAdmin

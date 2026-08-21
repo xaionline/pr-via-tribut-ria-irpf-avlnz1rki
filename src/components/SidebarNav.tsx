@@ -35,9 +35,12 @@ export function SidebarNav() {
         { label: 'Demonstrativo', path: '/app/cliente/demonstrativo', icon: FileText },
       ]
     : [
-        // Super_admin vê o item Administração logo no topo (antes do Dashboard).
+        // Super_admin vê itens de administração logo no topo
         ...(isSuperAdmin
-          ? [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck }]
+          ? [
+              { label: 'Administração', path: '/app/admin', icon: ShieldCheck },
+              { label: 'Tabelas IRPF', path: '/app/admin/tabelas', icon: Calculator },
+            ]
           : []),
         { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
         { label: 'Clientes', path: '/app/clientes', icon: Users },

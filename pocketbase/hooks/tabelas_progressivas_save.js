@@ -19,8 +19,8 @@ routerAdd(
 
       // --- Auth / role check (server-side) ---------------------------------
       var isSuperuser = e.hasSuperuserAuth()
-      var userCargo = isSuperuser ? 'admin' : e.auth ? e.auth.getString('cargo') : ''
-      if (userCargo !== 'admin') {
+      var userCargo = isSuperuser ? 'super_admin' : e.auth ? e.auth.getString('cargo') : ''
+      if (userCargo !== 'admin' && userCargo !== 'super_admin') {
         return e.forbiddenError('Apenas administradores podem editar a tabela progressiva.')
       }
 

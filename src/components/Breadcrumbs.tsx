@@ -10,7 +10,7 @@ export function Breadcrumbs() {
     dashboard: 'Dashboard',
     clientes: 'Clientes',
     declaracoes: 'Declarações',
-    tabelas: 'Tabela Progressiva',
+    tabelas: 'Tabelas IRPF',
     'tabela-progressiva': 'Tabela Progressiva',
     relatorios: 'Relatórios',
     configuracoes: 'Configurações',

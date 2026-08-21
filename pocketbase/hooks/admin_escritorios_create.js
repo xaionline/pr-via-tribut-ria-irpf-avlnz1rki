@@ -22,6 +22,10 @@ routerAdd(
         body = {}
       }
 
+      console.log('=== ADMIN ESCRITORIOS CREATE REQUEST ===')
+      console.log('Auth user ID:', auth.id, 'Cargo:', auth.getString('cargo'))
+      console.log('Body:', JSON.stringify(body))
+
       var nomeEscritorio = (body.nome || '').trim()
       var cnpj = (body.cnpj || '').trim()
       var emailAdmin = (body.email_admin || '').trim().toLowerCase()
@@ -141,11 +145,29 @@ routerAdd(
         },
       })
     } catch (err) {
-      $app.logger().error('admin criar escritorio failed', 'error', String(err))
-      var msg = err && err.message ? err.message : String(err)
+      var errStr = String(err)
+      var errMsg = err && err.message ? String(err.message) : ''
+      var errStack = err && err.stack ? String(err.stack) : ''
+      console.log('=== ADMIN ESCRITORIOS CREATE ERROR ===', errStr, errMsg, errStack)
+      $app
+        .logger()
+        .error(
+          'admin criar escritorio failed: ' +
+            errStr +
+            ' | msg: ' +
+            errMsg +
+            ' | stack: ' +
+            errStack,
+        )
+      var msg = errMsg || errStr
       return e.json(500, {
         success: false,
-        errors: { _global: 'Não foi possível criar o escritório: ' + msg },
+        errors: {
+          _global: 'Não foi possível criar o escritório: ' + msg,
+          _debug_str: errStr,
+          _debug_msg: errMsg,
+          _debug_stack: errStack,
+        },
       })
     }
   },

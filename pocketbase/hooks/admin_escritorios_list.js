@@ -1,6 +1,6 @@
 // GET /backend/v1/admin/escritorios
 // Apenas super_admin: lista todos os escritórios cadastrados no sistema,
-// sem filtro de escritorio_id. Retorna id, nome, cnpj, email, status
+// sem filtro de escritorio_id. Retorna id, nome, cnpj, email, plano, limite_clientes, status
 // ativo e data de criação.
 routerAdd(
   'GET',
@@ -20,13 +20,28 @@ routerAdd(
       var lista = []
       for (var i = 0; i < registros.length; i++) {
         var r = registros[i]
+        var createdDateStr = ''
+        try {
+          createdDateStr = r.getDateTime('created') ? r.getDateTime('created').toString() : ''
+        } catch (_) {
+          createdDateStr = r.getString('created') || ''
+        }
+
+        var planoVal = r.getString('plano') || 'pro'
+        var limiteVal = Number(r.get('limite_clientes'))
+        if (isNaN(limiteVal) || limiteVal <= 0) {
+          limiteVal = 100
+        }
+
         lista.push({
           id: r.id,
           nome: r.getString('nome'),
           cnpj: r.getString('cnpj'),
           email: r.getString('email'),
+          plano: planoVal,
+          limite_clientes: limiteVal,
           ativo: r.getBool('ativo'),
-          created: r.getDateTime('created').toString(),
+          created: createdDateStr,
         })
       }
 

@@ -46,15 +46,27 @@ export async function criarEscritorio(
     })
     if (!res.success) {
       const fieldErrors = res.errors || {}
-      const globalError = fieldErrors._global || 'Não foi possível criar o escritório.'
+      const globalError =
+        fieldErrors._global ||
+        (fieldErrors.cnpj ? fieldErrors.cnpj : undefined) ||
+        (fieldErrors.email_admin ? fieldErrors.email_admin : undefined) ||
+        'Não foi possível criar o escritório.'
       return { success: false, fieldErrors, globalError }
     }
     return { success: true, fieldErrors: {}, escritorio: res.escritorio }
   } catch (error: any) {
-    const data = error?.response?.data
+    const data = error?.response?.data || error?.data
     const fieldErrors: Record<string, string> = data?.errors || {}
     const globalError =
-      fieldErrors._global || data?.message || 'Não foi possível criar o escritório.'
+      fieldErrors._global ||
+      fieldErrors.cnpj ||
+      fieldErrors.email_admin ||
+      fieldErrors.nome ||
+      fieldErrors.nome_admin ||
+      fieldErrors.senha ||
+      data?.message ||
+      error?.message ||
+      'Não foi possível criar o escritório.'
     return { success: false, fieldErrors, globalError }
   }
 }

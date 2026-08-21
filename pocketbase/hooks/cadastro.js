@@ -92,22 +92,23 @@ routerAdd('POST', '/backend/v1/cadastro', (e) => {
     })
   } catch (_) {}
 
-  // ---- Criação atômica (escritório + admin) ---------------------------
+  // ---- Criação sequencial (escritório + admin) ---------------------------
   try {
-    var criado = $app.runInTransaction(function (txApp) {
-      // 1. Escritório
-      var escCol = txApp.findCollectionByNameOrId('escritorios')
-      var esc = new Record(escCol)
-      esc.set('nome', nomeEscritorio)
-      esc.set('cnpj', cnpjDigitos)
-      esc.set('telefone', telefone)
-      esc.set('email', emailEscritorio)
-      esc.set('plano', 'pro')
-      esc.set('limite_clientes', 100)
-      txApp.save(esc)
+    // 1. Escritório
+    var escCol = $app.findCollectionByNameOrId('escritorios')
+    var esc = new Record(escCol)
+    esc.set('nome', nomeEscritorio)
+    esc.set('cnpj', cnpjDigitos)
+    esc.set('telefone', telefone)
+    esc.set('email', emailEscritorio)
+    esc.set('plano', 'pro')
+    esc.set('limite_clientes', 100)
+    esc.set('ativo', true)
+    $app.save(esc)
 
-      // 2. Usuário administrador vinculado
-      var usersCol = txApp.findCollectionByNameOrId('_pb_users_auth_')
+    // 2. Usuário administrador vinculado
+    try {
+      var usersCol = $app.findCollectionByNameOrId('_pb_users_auth_')
       var admin = new Record(usersCol)
       admin.setEmail(emailAdmin)
       admin.setPassword(senha)
@@ -116,39 +117,48 @@ routerAdd('POST', '/backend/v1/cadastro', (e) => {
       admin.set('escritorio_id', esc.id)
       admin.set('cargo', 'admin')
       admin.set('ativo', true)
-      txApp.save(admin)
-
-      // 3. Auditoria
+      $app.save(admin)
+    } catch (adminErr) {
       try {
-        var auditCol = txApp.findCollectionByNameOrId('audit_logs')
-        var auditRec = new Record(auditCol)
-        auditRec.set('user_id', admin.id)
-        auditRec.set('action', 'cadastro_escritorio')
-        auditRec.set('entity', 'escritorios')
-        auditRec.set('entity_id', esc.id)
-        auditRec.set(
-          'diff',
-          JSON.stringify({
-            nome_escritorio: nomeEscritorio,
-            cnpj: cnpjDigitos,
-            email_admin: emailAdmin,
-          }),
-        )
-        txApp.save(auditRec)
+        $app.delete(esc)
       } catch (_) {}
+      throw adminErr
+    }
 
-      return { escritorio_id: esc.id, user_id: admin.id }
-    })
+    // 3. Auditoria (best-effort)
+    try {
+      var auditCol = $app.findCollectionByNameOrId('audit_logs')
+      var auditRec = new Record(auditCol)
+      auditRec.set('user_id', admin.id)
+      auditRec.set('action', 'cadastro_escritorio')
+      auditRec.set('entity', 'escritorios')
+      auditRec.set('entity_id', esc.id)
+      auditRec.set(
+        'diff',
+        JSON.stringify({
+          nome_escritorio: nomeEscritorio,
+          cnpj: cnpjDigitos,
+          email_admin: emailAdmin,
+        }),
+      )
+      $app.save(auditRec)
+    } catch (_) {}
 
     return e.json(201, {
       success: true,
-      escritorio_id: criado.escritorio_id,
-      user_id: criado.user_id,
+      escritorio_id: esc.id,
+      user_id: admin.id,
       email: emailAdmin,
     })
   } catch (err) {
-    $app.logger().error('cadastro escritorio failed', 'error', String(err))
-    var msg = err && err.message ? err.message : String(err)
+    var errStr = ''
+    try {
+      errStr = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err)
+    } catch (_) {
+      errStr = String(err)
+    }
+    var msg = err && err.message ? err.message : errStr
+    $app.logger().error('cadastro escritorio failed', 'error', msg)
     return e.json(500, {
       success: false,
       errors: { _global: 'Não foi possível concluir o cadastro: ' + msg },

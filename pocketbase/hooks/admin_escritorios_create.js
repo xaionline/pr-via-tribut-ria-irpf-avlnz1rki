@@ -87,19 +87,24 @@ routerAdd(
         })
       } catch (_) {}
 
-      // Criação atômica.
-      var criado = $app.runInTransaction(function (txApp) {
-        var escCol = txApp.findCollectionByNameOrId('escritorios')
-        var esc = new Record(escCol)
-        esc.set('nome', nomeEscritorio)
-        esc.set('cnpj', cnpjDigitos)
-        esc.set('email', emailAdmin)
-        esc.set('plano', 'pro')
-        esc.set('limite_clientes', 100)
-        esc.set('ativo', true)
-        txApp.save(esc)
+      // Criação dos registros (escritório + admin + audit).
+      // 1. Escritório
+      console.log('[DEBUG] Criando registro de escritorio...')
+      var escCol = $app.findCollectionByNameOrId('escritorios')
+      var esc = new Record(escCol)
+      esc.set('nome', nomeEscritorio)
+      esc.set('cnpj', cnpjDigitos)
+      esc.set('email', emailAdmin)
+      esc.set('plano', 'pro')
+      esc.set('limite_clientes', 100)
+      esc.set('ativo', true)
+      $app.save(esc)
+      console.log('[DEBUG] Escritorio criado com sucesso. ID:', esc.id)
 
-        var usersCol = txApp.findCollectionByNameOrId('_pb_users_auth_')
+      // 2. Administrador vinculado
+      try {
+        console.log('[DEBUG] Criando registro de admin...')
+        var usersCol = $app.findCollectionByNameOrId('_pb_users_auth_')
         var admin = new Record(usersCol)
         admin.setEmail(emailAdmin)
         admin.setPassword(senha)
@@ -108,44 +113,66 @@ routerAdd(
         admin.set('escritorio_id', esc.id)
         admin.set('cargo', 'admin')
         admin.set('ativo', true)
-        txApp.save(admin)
-
+        $app.save(admin)
+        console.log('[DEBUG] Admin criado com sucesso. ID:', admin.id)
+      } catch (adminErr) {
+        // Rollback manual do escritório se a criação do admin falhar
+        console.log(
+          '[DEBUG] Falha ao criar admin, excluindo escritorio criado...',
+          String(adminErr),
+        )
         try {
-          var auditCol = txApp.findCollectionByNameOrId('audit_logs')
-          var auditRec = new Record(auditCol)
-          auditRec.set('user_id', auth.id)
-          auditRec.set('action', 'admin_criar_escritorio')
-          auditRec.set('entity', 'escritorios')
-          auditRec.set('entity_id', esc.id)
-          auditRec.set(
-            'diff',
-            JSON.stringify({
-              nome: nomeEscritorio,
-              cnpj: cnpjDigitos,
-              email_admin: emailAdmin,
-            }),
-          )
-          txApp.save(auditRec)
+          $app.delete(esc)
         } catch (_) {}
+        throw adminErr
+      }
 
-        return { escritorio_id: esc.id, user_id: admin.id }
-      })
+      // 3. Auditoria (best-effort)
+      try {
+        var auditCol = $app.findCollectionByNameOrId('audit_logs')
+        var auditRec = new Record(auditCol)
+        auditRec.set('user_id', auth.id)
+        auditRec.set('action', 'admin_criar_escritorio')
+        auditRec.set('entity', 'escritorios')
+        auditRec.set('entity_id', esc.id)
+        auditRec.set(
+          'diff',
+          JSON.stringify({
+            nome: nomeEscritorio,
+            cnpj: cnpjDigitos,
+            email_admin: emailAdmin,
+          }),
+        )
+        $app.save(auditRec)
+      } catch (auditErr) {
+        console.log('[DEBUG] Falha ao salvar audit_log (ignorado):', String(auditErr))
+      }
 
-      var escRecord = $app.findRecordById('escritorios', criado.escritorio_id)
+      var createdDateStr = ''
+      try {
+        createdDateStr = esc.getDateTime('created') ? esc.getDateTime('created').toString() : ''
+      } catch (_) {
+        createdDateStr = esc.getString('created') || ''
+      }
 
       return e.json(201, {
         success: true,
         escritorio: {
-          id: escRecord.id,
-          nome: escRecord.getString('nome'),
-          cnpj: escRecord.getString('cnpj'),
-          email: escRecord.getString('email'),
-          ativo: escRecord.getBool('ativo'),
-          created: escRecord.getDateTime('created').toString(),
+          id: esc.id,
+          nome: esc.getString('nome'),
+          cnpj: esc.getString('cnpj'),
+          email: esc.getString('email'),
+          ativo: esc.getBool('ativo'),
+          created: createdDateStr,
         },
       })
     } catch (err) {
-      var errStr = String(err)
+      var errStr = ''
+      try {
+        errStr = typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err)
+      } catch (_) {
+        errStr = String(err)
+      }
       var errMsg = err && err.message ? String(err.message) : ''
       var errStack = err && err.stack ? String(err.stack) : ''
       console.log('=== ADMIN ESCRITORIOS CREATE ERROR ===', errStr, errMsg, errStack)
@@ -159,14 +186,13 @@ routerAdd(
             ' | stack: ' +
             errStack,
         )
-      var msg = errMsg || errStr
+      var msg = errMsg || errStr || 'Erro interno no servidor.'
       return e.json(500, {
         success: false,
         errors: {
           _global: 'Não foi possível criar o escritório: ' + msg,
           _debug_str: errStr,
           _debug_msg: errMsg,
-          _debug_stack: errStack,
         },
       })
     }

@@ -158,12 +158,7 @@ export default function Login() {
             </Button>
 
             <div className="text-center pt-3 border-t border-slate-100">
-              <p className="text-xs text-slate-500">
-                Ainda não tem conta para o escritório?{' '}
-                <Link to="/cadastro" className="text-emerald-600 font-semibold hover:underline">
-                  Criar novo escritório
-                </Link>
-              </p>
+              <p className="text-xs text-slate-500">Ainda não tem conta para o escritório? </p>
             </div>
           </form>
         </CardContent>

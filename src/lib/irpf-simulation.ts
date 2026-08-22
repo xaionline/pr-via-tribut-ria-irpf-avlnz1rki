@@ -103,7 +103,7 @@ export function simulate(base: SimulationBaseData, params: SimulacaoParams): Sim
     { componente: 'Outros', reducao: round2(reducaoOutros), percentual: pct(reducaoOutros) },
   ]
 
-  const recomendacao = `Com base no perfil do cliente, o cenário ótimo é aportar ${formatCurrency(params.pgbl_adicional)} em PGBL + ${formatCurrency(params.destinacao)} em FUNDRURAL, gerando economia de ${formatCurrency(economia)} (ROI de ${roi}%). Esta configuração maximiza o aproveitamento do limite de 12% sem ultrapassá-lo.`
+  const recomendacao = `Com base no perfil do cliente, o cenário ótimo é aportar ${formatCurrency(params.pgbl_adicional)} em PGBL + ${formatCurrency(params.destinacao)} em Destinações, gerando economia de ${formatCurrency(economia)} (ROI de ${roi}%). Esta configuração maximiza o aproveitamento do limite de 12% sem ultrapassá-lo.`
 
   return {
     imposto_atual,

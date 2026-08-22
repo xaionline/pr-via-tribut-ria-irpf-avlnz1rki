@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const cargo = user?.cargo || 'admin'
   const isSuperAdmin = cargo === 'super_admin'
-  const isAdmin = cargo === 'admin'
+  const isAdmin = cargo === 'admin' || cargo === 'super_admin'
   const isConsultor = cargo === 'consultor'
   const isVisualizador = cargo === 'visualizador'
   const isCliente = cargo === 'cliente'

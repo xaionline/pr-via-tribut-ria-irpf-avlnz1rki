@@ -4,18 +4,58 @@ import { Building2, ArrowRight, Lock, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail) {
+      toast({ title: 'Atenção', description: 'Informe seu e-mail.', variant: 'destructive' })
+      return
+    }
+    setResetLoading(true)
+    try {
+      await pb.collection('users').requestPasswordReset(resetEmail)
+      setResetLoading(false)
+      setResetOpen(false)
+      setResetEmail('')
+      toast({
+        title: 'E-mail enviado',
+        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
+      })
+    } catch (error) {
+      setResetLoading(false)
+      toast({
+        title: 'Erro ao enviar e-mail',
+        description:
+          getErrorMessage(error) ||
+          'Não foi possível enviar o e-mail de redefinição. Tente novamente.',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,9 +121,13 @@ export default function Login() {
                 <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
                   Senha
                 </Label>
-                <a href="#" className="text-[11px] text-emerald-600 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => setResetOpen(true)}
+                  className="text-[11px] text-emerald-600 hover:underline"
+                >
                   Esqueci minha senha
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -124,6 +168,54 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recuperar senha</DialogTitle>
+            <DialogDescription>
+              Informe seu e-mail profissional. Enviaremos um link para redefinir sua senha.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-email" className="text-xs font-semibold text-slate-700">
+                E-mail
+              </Label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="contador@escritorio.com.br"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="pl-9 text-xs h-10"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetOpen(false)}
+                disabled={resetLoading}
+                className="h-10"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={resetLoading}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-10"
+              >
+                {resetLoading ? 'Enviando...' : 'Enviar e-mail'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

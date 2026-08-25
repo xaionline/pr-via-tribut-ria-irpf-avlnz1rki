@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Calculator,
@@ -10,6 +10,7 @@ import {
   FileX2,
   Lock,
   CheckCircle2,
+  LayoutDashboard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,9 +33,45 @@ import TabDestinacoesFiscais from './tabs/TabDestinacoesFiscais'
 import TabAltasRendas from './tabs/TabAltasRendas'
 import TabIbsCbs from './tabs/TabIbsCbs'
 
+const VALID_TABS = [
+  'visao_geral',
+  'fontes',
+  'rendimentos',
+  'irrf',
+  'despesas',
+  'dependentes',
+  'rurais',
+  'destinacoes',
+  'altas_rendas',
+  'ibs_cbs',
+]
+
+const TAB_ALIAS_MAP: Record<string, string> = {
+  'visao-geral': 'visao_geral',
+  visao_geral: 'visao_geral',
+  demonstrativo: 'visao_geral',
+  fontes: 'fontes',
+  'fontes-pagadoras': 'fontes',
+  rendimentos: 'rendimentos',
+  irrf: 'irrf',
+  'ir-retido': 'irrf',
+  despesas: 'despesas',
+  dependentes: 'dependentes',
+  rural: 'rurais',
+  rurais: 'rurais',
+  'atividades-rurais': 'rurais',
+  destinacoes: 'destinacoes',
+  'destinacoes-fiscais': 'destinacoes',
+  'altas-rendas': 'altas_rendas',
+  altas_rendas: 'altas_rendas',
+  'ibs-cbs': 'ibs_cbs',
+  ibs_cbs: 'ibs_cbs',
+}
+
 export default function DeclaracaoDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { toast, dismiss } = useToast()
   const { user, isVisualizador, isAdmin, isConsultor } = useAuth()
   const [declaracao, setDeclaracao] = useState<DeclaracaoRecord | null>(null)
@@ -42,7 +79,32 @@ export default function DeclaracaoDetail() {
   const [accessDenied, setAccessDenied] = useState(false)
   const [calculating, setCalculating] = useState(false)
   const [calcResult, setCalcResult] = useState<CalcularResponse | null>(null)
-  const [activeTab, setActiveTab] = useState('visao_geral')
+
+  const tabParam = searchParams.get('tab')
+  const initialTab = (tabParam && TAB_ALIAS_MAP[tabParam]) || 'visao_geral'
+  const [activeTab, setActiveTab] = useState(initialTab)
+
+  // Sincroniza tab com URL quando o parâmetro ?tab= muda
+  useEffect(() => {
+    if (tabParam) {
+      const normalized = TAB_ALIAS_MAP[tabParam]
+      if (normalized && normalized !== activeTab) {
+        setActiveTab(normalized)
+      }
+    }
+  }, [tabParam, activeTab])
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set('tab', newTab)
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -200,6 +262,14 @@ export default function DeclaracaoDetail() {
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <Button
             variant="outline"
+            onClick={() => navigate(`/app/declaracoes/${declaracao.id}/resumo`)}
+            className="text-xs gap-1.5 font-semibold h-9 touch-target bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5 text-amber-600" />
+            <span>Ver Resumo</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate(`/app/declaracoes/${declaracao.id}/editar`)}
             disabled={!canEdit}
             className="text-xs gap-1.5 font-semibold h-9 touch-target"
@@ -217,7 +287,7 @@ export default function DeclaracaoDetail() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setActiveTab('altas_rendas')}
+            onClick={() => handleTabChange('altas_rendas')}
             className="text-xs gap-1.5 font-semibold h-9 touch-target text-amber-800 border-amber-200 hover:bg-amber-50"
           >
             <Calculator className="w-3.5 h-3.5 text-amber-600" />
@@ -225,7 +295,7 @@ export default function DeclaracaoDetail() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setActiveTab('ibs_cbs')}
+            onClick={() => handleTabChange('ibs_cbs')}
             className="text-xs gap-1.5 font-semibold h-9 touch-target text-emerald-800 border-emerald-200 hover:bg-emerald-50"
           >
             <Calculator className="w-3.5 h-3.5 text-emerald-600" />
@@ -259,7 +329,7 @@ export default function DeclaracaoDetail() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="bg-slate-100 p-1 border flex overflow-x-auto justify-start max-w-full no-scrollbar">
           <TabsTrigger value="visao_geral" className="text-xs whitespace-nowrap">
             Visão Geral

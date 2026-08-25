@@ -20,6 +20,7 @@ import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
 import SimuladorTributario from '@/pages/declaracoes/SimuladorTributario'
 import DemonstrativoCalculo from '@/pages/declaracoes/DemonstrativoCalculo'
 import DeclaracaoIbsCbsPage from '@/pages/declaracoes/DeclaracaoIbsCbs'
+import ResumoDashboard from '@/pages/declaracoes/ResumoDashboard'
 import TabelaProgressiva from '@/pages/TabelaProgressiva'
 import Configuracoes from '@/pages/configuracoes/Configuracoes'
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id/editar" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id" element={<DeclaracaoDetail />} />
+            <Route path="/app/declaracoes/:id/resumo" element={<ResumoDashboard />} />
             <Route path="/app/declaracoes/:id/simulador" element={<SimuladorTributario />} />
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />
             <Route path="/app/declaracoes/:id/ibs-cbs" element={<DeclaracaoIbsCbsPage />} />

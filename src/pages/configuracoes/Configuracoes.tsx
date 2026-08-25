@@ -16,15 +16,19 @@ import { EscritorioTab } from './EscritorioTab'
 import { UsuariosTab } from './UsuariosTab'
 import { SegurancaTab } from './SegurancaTab'
 
-type TabKey = 'escritorio' | 'usuarios' | 'seguranca'
+import { Calculator } from 'lucide-react'
+import { IbsCbsTab } from './IbsCbsTab'
+
+type TabKey = 'escritorio' | 'usuarios' | 'seguranca' | 'ibs-cbs'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'escritorio', label: 'Dados do Escritório', icon: Building2 },
   { key: 'usuarios', label: 'Usuários de Acesso', icon: Users },
   { key: 'seguranca', label: 'Segurança e Políticas', icon: ShieldCheck },
+  { key: 'ibs-cbs', label: 'Parâmetros IBS/CBS', icon: Calculator },
 ]
 
-const VALID_TABS: TabKey[] = ['escritorio', 'usuarios', 'seguranca']
+const VALID_TABS: TabKey[] = ['escritorio', 'usuarios', 'seguranca', 'ibs-cbs']
 
 export default function Configuracoes() {
   const navigate = useNavigate()
@@ -112,6 +116,7 @@ export default function Configuracoes() {
           {activeTab === 'escritorio' && <EscritorioTab />}
           {activeTab === 'usuarios' && <UsuariosTab />}
           {activeTab === 'seguranca' && <SegurancaTab />}
+          {activeTab === 'ibs-cbs' && <IbsCbsTab />}
         </div>
       </Tabs>
     </div>

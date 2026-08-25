@@ -50,7 +50,10 @@ export function SidebarNav() {
           : []),
         { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
         ...(isAdmin
-          ? [{ label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings }]
+          ? [
+              { label: 'IBS / CBS', path: '/app/configuracoes/ibs-cbs', icon: Calculator },
+              { label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings },
+            ]
           : []),
       ]
 

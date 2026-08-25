@@ -166,6 +166,37 @@ export interface IrrfRecord {
   updated: string
 }
 
+export interface IbsCbsParametroRecord {
+  id: string
+  ano_calendario: number
+  iva_padrao: number
+  reducao_percentual: number
+  presuncao_bc: number
+  funrural: number
+  created: string
+  updated: string
+}
+
+export interface IbsCbsApuracaoCalculo {
+  receita_bruta: number
+  despesa_bruta: number
+  resultado_liquido: number
+  presuncao_bc_perc: number
+  base_calculo: number
+  iva_padrao_perc: number
+  reducao_percentual: number
+  iva_reduzido_perc: number
+  debito_ibs_cbs: number
+  credito_ibs_cbs: number
+  funrural_perc: number
+  funrural_valor: number
+  total_tributos: number
+  carga_tributaria_perc: number
+  ano_calendario: number
+  is_fallback_ano?: boolean
+  ano_utilizado?: number
+}
+
 export interface ResultadoRecord {
   id: string
   declaracao_id: string

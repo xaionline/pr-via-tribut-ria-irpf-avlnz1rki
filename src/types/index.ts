@@ -100,12 +100,14 @@ export interface FontePagadoraRecord {
   updated: string
 }
 
+export type TipoRendimento = 'tributavel' | 'isento' | 'exclusiva' | 'dividendos' | 'exterior'
+
 export interface RendimentoRecord {
   id: string
   declaracao_id: string
   fonte_pagadora_id?: string
   descricao: string
-  tipo: 'tributavel' | 'isento' | 'exclusiva'
+  tipo: TipoRendimento
   valor: number
   origem?: 'manual' | 'importado'
   importacao_id?: string
@@ -156,14 +158,43 @@ export interface DestinacaoFiscalRecord {
   updated: string
 }
 
+export type TipoIrrf = 'irrf_comum' | 'irpfm_exercicio'
+
 export interface IrrfRecord {
   id: string
   declaracao_id: string
   fonte_pagadora: string
   cnpj_fonte?: string
   valor: number
+  tipo?: TipoIrrf
   created: string
   updated: string
+}
+
+export interface AltasRendasParametroRecord {
+  id: string
+  ano_calendario: number
+  aliquota: number
+  created: string
+  updated: string
+}
+
+export interface AltasRendasApuracaoCalculo {
+  rendimentos_tributaveis: number
+  dividendos: number
+  receita_rural: number
+  receita_exterior: number
+  bc_irpfm: number
+  aliquota_perc: number
+  irpfm_devido: number
+  irrf_retido: number
+  irpfm_retido_exercicio: number
+  total_a_pagar: number
+  total_a_restituir: number
+  carga_tributaria_perc: number
+  ano_calendario: number
+  is_fallback_ano?: boolean
+  ano_utilizado?: number
 }
 
 export interface IbsCbsParametroRecord {

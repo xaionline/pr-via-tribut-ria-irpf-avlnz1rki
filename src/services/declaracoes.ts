@@ -119,6 +119,7 @@ export const duplicateDeclaracao = async (id: string) => {
       fonte_pagadora: item.fonte_pagadora,
       cnpj_fonte: item.cnpj_fonte,
       valor: item.valor,
+      tipo: item.tipo,
     })
   }
 

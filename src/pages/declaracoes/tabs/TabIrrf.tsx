@@ -3,6 +3,14 @@ import { Plus, Trash2, Pencil, ShieldCheck, Landmark } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Dialog,
@@ -18,7 +26,7 @@ import {
   deleteIrrfRecord,
 } from '@/services/declaracoes'
 import { formatCurrency, maskCnpj } from '@/lib/formatters'
-import type { IrrfRecord } from '@/types'
+import type { IrrfRecord, TipoIrrf } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 
 interface TabIrrfProps {
@@ -33,6 +41,7 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
   const [editingItem, setEditingItem] = useState<IrrfRecord | null>(null)
   const [fontePagadora, setFontePagadora] = useState('')
   const [cnpjFonte, setCnpjFonte] = useState('')
+  const [tipo, setTipo] = useState<TipoIrrf>('irrf_comum')
   const [valor, setValor] = useState('')
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
@@ -57,6 +66,7 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
     setEditingItem(null)
     setFontePagadora('')
     setCnpjFonte('')
+    setTipo('irrf_comum')
     setValor('')
     setOpen(true)
   }
@@ -65,6 +75,7 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
     setEditingItem(item)
     setFontePagadora(item.fonte_pagadora)
     setCnpjFonte(item.cnpj_fonte ? maskCnpj(item.cnpj_fonte) : '')
+    setTipo(item.tipo || 'irrf_comum')
     setValor(item.valor.toString())
     setOpen(true)
   }
@@ -89,17 +100,19 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
         await updateIrrfRecord(editingItem.id, {
           fonte_pagadora: fontePagadora.trim(),
           cnpj_fonte: cnpjFonte.trim() || undefined,
+          tipo,
           valor: numValor,
         })
-        toast({ title: 'IRRF atualizado com sucesso' })
+        toast({ title: 'Retenção atualizada com sucesso' })
       } else {
         await createIrrfRecord({
           declaracao_id: declaracaoId,
           fonte_pagadora: fontePagadora.trim(),
           cnpj_fonte: cnpjFonte.trim() || undefined,
+          tipo,
           valor: numValor,
         })
-        toast({ title: 'IRRF cadastrado com sucesso' })
+        toast({ title: 'Retenção cadastrada com sucesso' })
       }
       setOpen(false)
       loadData()
@@ -186,18 +199,33 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="valor_irrf">Valor do Imposto Retido (R$) *</Label>
-                <Input
-                  id="valor_irrf"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="0,00"
-                  value={valor}
-                  onChange={(e) => setValor(e.target.value)}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="tipo_irrf">Tipo de Retenção</Label>
+                  <Select value={tipo} onValueChange={(v) => setTipo(v as TipoIrrf)}>
+                    <SelectTrigger id="tipo_irrf" className="text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="irrf_comum">IRRF Comum (Geral)</SelectItem>
+                      <SelectItem value="irpfm_exercicio">IRPF-M Retido Exercício</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="valor_irrf">Valor Retido (R$) *</Label>
+                  <Input
+                    id="valor_irrf"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0,00"
+                    value={valor}
+                    onChange={(e) => setValor(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -257,10 +285,27 @@ export default function TabIrrf({ declaracaoId, isVisualizador = false }: TabIrr
                       <Landmark className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <span className="font-semibold text-slate-900 block truncate">
-                        {item.fonte_pagadora}
-                      </span>
-                      <span className="text-[10px] text-slate-400 block font-mono">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-900 block truncate">
+                          {item.fonte_pagadora}
+                        </span>
+                        {item.tipo === 'irpfm_exercicio' ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-amber-50 text-amber-800 border-amber-300 text-[10px] px-1.5 py-0 font-medium"
+                          >
+                            IRPF-M Exercício
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] px-1.5 py-0 font-medium"
+                          >
+                            IRRF Comum
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 block font-mono mt-0.5">
                         CNPJ: {item.cnpj_fonte ? maskCnpj(item.cnpj_fonte) : 'Não informado'}
                       </span>
                     </div>

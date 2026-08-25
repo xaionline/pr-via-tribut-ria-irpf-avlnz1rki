@@ -18,6 +18,8 @@ export function Breadcrumbs() {
     escritorio: 'Escritório',
     usuarios: 'Usuários',
     seguranca: 'Segurança e Políticas',
+    'altas-rendas': 'Altas Rendas (IRPF-M)',
+    altas_rendas: 'Altas Rendas (IRPF-M)',
     'ibs-cbs': 'IBS/CBS',
     ibs_cbs: 'IBS/CBS',
     simulador: 'Simulador',

@@ -29,7 +29,9 @@ export default function TabRendimentos({ declaracaoId }: { declaracaoId: string 
   const [open, setOpen] = useState(false)
   const [descricao, setDescricao] = useState('')
   const [valor, setValor] = useState('')
-  const [tipo, setTipo] = useState<'tributavel' | 'isento' | 'exclusiva'>('tributavel')
+  const [tipo, setTipo] = useState<
+    'tributavel' | 'isento' | 'exclusiva' | 'dividendos' | 'exterior'
+  >('tributavel')
   const [fonteId, setFonteId] = useState('')
   const { toast } = useToast()
 
@@ -78,6 +80,8 @@ export default function TabRendimentos({ declaracaoId }: { declaracaoId: string 
     tributavel: 'Tributável',
     isento: 'Isento',
     exclusiva: 'Exclusiva',
+    dividendos: 'Dividendos (Altas Rendas)',
+    exterior: 'Receita Exterior (Altas Rendas)',
   }
 
   return (
@@ -124,6 +128,8 @@ export default function TabRendimentos({ declaracaoId }: { declaracaoId: string 
                       <SelectItem value="tributavel">Tributável</SelectItem>
                       <SelectItem value="isento">Isento</SelectItem>
                       <SelectItem value="exclusiva">Exclusiva</SelectItem>
+                      <SelectItem value="dividendos">Dividendos</SelectItem>
+                      <SelectItem value="exterior">Receita Exterior</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

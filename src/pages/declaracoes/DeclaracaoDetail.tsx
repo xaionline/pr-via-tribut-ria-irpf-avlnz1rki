@@ -29,6 +29,7 @@ import TabDespesas from './tabs/TabDespesas'
 import TabDependentes from './tabs/TabDependentes'
 import TabAtividadesRurais from './tabs/TabAtividadesRurais'
 import TabDestinacoesFiscais from './tabs/TabDestinacoesFiscais'
+import TabAltasRendas from './tabs/TabAltasRendas'
 import TabIbsCbs from './tabs/TabIbsCbs'
 
 export default function DeclaracaoDetail() {
@@ -216,6 +217,14 @@ export default function DeclaracaoDetail() {
           </Button>
           <Button
             variant="outline"
+            onClick={() => setActiveTab('altas_rendas')}
+            className="text-xs gap-1.5 font-semibold h-9 touch-target text-amber-800 border-amber-200 hover:bg-amber-50"
+          >
+            <Calculator className="w-3.5 h-3.5 text-amber-600" />
+            <span className="hidden sm:inline">Altas Rendas</span>
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setActiveTab('ibs_cbs')}
             className="text-xs gap-1.5 font-semibold h-9 touch-target text-emerald-800 border-emerald-200 hover:bg-emerald-50"
           >
@@ -277,6 +286,12 @@ export default function DeclaracaoDetail() {
             Destinações
           </TabsTrigger>
           <TabsTrigger
+            value="altas_rendas"
+            className="text-xs whitespace-nowrap font-medium text-amber-800"
+          >
+            Altas Rendas
+          </TabsTrigger>
+          <TabsTrigger
             value="ibs_cbs"
             className="text-xs whitespace-nowrap font-medium text-emerald-800"
           >
@@ -312,6 +327,9 @@ export default function DeclaracaoDetail() {
         </TabsContent>
         <TabsContent value="destinacoes">
           <TabDestinacoesFiscais declaracaoId={declaracao.id} />
+        </TabsContent>
+        <TabsContent value="altas_rendas">
+          <TabAltasRendas declaracao={declaracao} />
         </TabsContent>
         <TabsContent value="ibs_cbs">
           <TabIbsCbs declaracao={declaracao} />

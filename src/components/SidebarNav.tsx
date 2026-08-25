@@ -51,6 +51,11 @@ export function SidebarNav() {
         { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
         ...(isAdmin
           ? [
+              {
+                label: 'Altas Rendas (IRPF-M)',
+                path: '/app/configuracoes/altas-rendas',
+                icon: Calculator,
+              },
               { label: 'IBS / CBS', path: '/app/configuracoes/ibs-cbs', icon: Calculator },
               { label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings },
             ]

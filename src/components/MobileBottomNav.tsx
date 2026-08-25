@@ -79,6 +79,16 @@ export function MobileBottomNav() {
             )}
             {isAdmin && (
               <Link
+                to="/app/configuracoes/altas-rendas"
+                onClick={() => setDrawerOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
+              >
+                <Calculator className="w-5 h-5 text-amber-600" />
+                <span>Altas Rendas (IRPF-M)</span>
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
                 to="/app/configuracoes/ibs-cbs"
                 onClick={() => setDrawerOpen(false)}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"

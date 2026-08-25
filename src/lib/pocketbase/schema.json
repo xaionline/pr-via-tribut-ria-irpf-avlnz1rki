@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-25T02:27:58.507Z",
+  "generatedAt": "2026-08-25T12:14:16.042Z",
   "collections": [
     {
       "name": "users",
@@ -472,7 +472,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["tributavel", "isento", "exclusiva"]
+          "selectValues": ["tributavel", "isento", "exclusiva", "dividendos", "exterior"]
         },
         {
           "name": "valor",
@@ -1127,6 +1127,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "tipo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["irrf_comum", "irpfm_exercicio"]
         }
       ],
       "indexes": ["CREATE INDEX idx_irrf_declaracao ON irrf (declaracao_id)"]
@@ -1189,6 +1196,48 @@
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_ibs_cbs_parametros_ano_calendario ON ibs_cbs_parametros (ano_calendario)"
+      ]
+    },
+    {
+      "name": "altas_rendas_parametros",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "update": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "delete": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "ano_calendario",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "aliquota",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_altas_rendas_parametros_ano_calendario ON altas_rendas_parametros (ano_calendario)"
       ]
     }
   ]

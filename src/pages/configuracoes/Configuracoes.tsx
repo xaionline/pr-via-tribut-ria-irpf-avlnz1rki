@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Settings, Building2, Users, ShieldCheck } from 'lucide-react'
+import { Settings, Building2, Users, ShieldCheck, Coins, Calculator } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -15,20 +15,20 @@ import { useToast } from '@/hooks/use-toast'
 import { EscritorioTab } from './EscritorioTab'
 import { UsuariosTab } from './UsuariosTab'
 import { SegurancaTab } from './SegurancaTab'
-
-import { Calculator } from 'lucide-react'
 import { IbsCbsTab } from './IbsCbsTab'
+import { AltasRendasTab } from './AltasRendasTab'
 
-type TabKey = 'escritorio' | 'usuarios' | 'seguranca' | 'ibs-cbs'
+type TabKey = 'escritorio' | 'usuarios' | 'seguranca' | 'ibs-cbs' | 'altas-rendas'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'escritorio', label: 'Dados do Escritório', icon: Building2 },
   { key: 'usuarios', label: 'Usuários de Acesso', icon: Users },
   { key: 'seguranca', label: 'Segurança e Políticas', icon: ShieldCheck },
+  { key: 'altas-rendas', label: 'Altas Rendas (IRPF-M)', icon: Coins },
   { key: 'ibs-cbs', label: 'Parâmetros IBS/CBS', icon: Calculator },
 ]
 
-const VALID_TABS: TabKey[] = ['escritorio', 'usuarios', 'seguranca', 'ibs-cbs']
+const VALID_TABS: TabKey[] = ['escritorio', 'usuarios', 'seguranca', 'ibs-cbs', 'altas-rendas']
 
 export default function Configuracoes() {
   const navigate = useNavigate()
@@ -116,6 +116,7 @@ export default function Configuracoes() {
           {activeTab === 'escritorio' && <EscritorioTab />}
           {activeTab === 'usuarios' && <UsuariosTab />}
           {activeTab === 'seguranca' && <SegurancaTab />}
+          {activeTab === 'altas-rendas' && <AltasRendasTab />}
           {activeTab === 'ibs-cbs' && <IbsCbsTab />}
         </div>
       </Tabs>

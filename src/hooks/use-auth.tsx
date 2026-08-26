@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     pb.authStore.clear()
   }
 
-  const cargo = user?.cargo || 'admin'
+  const cargo = user?.cargo || 'super_admin'
   const isSuperAdmin = cargo === 'super_admin'
   const isAdmin = cargo === 'admin' || cargo === 'super_admin'
   const isConsultor = cargo === 'consultor'

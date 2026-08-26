@@ -34,7 +34,7 @@ import { maskCpf, formatDate, formatCurrency } from '@/lib/formatters'
 import type { ClienteRecord, DeclaracaoRecord } from '@/types'
 
 export default function ClienteDetail() {
-  const { clienteId } = useParams<{ clienteId: string }>()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isAdmin, isConsultor } = useAuth()
   const { toast } = useToast()
@@ -54,9 +54,9 @@ export default function ClienteDetail() {
   )
 
   useEffect(() => {
-    if (!clienteId) return
+    if (!id) return
     setLoading(true)
-    Promise.all([getCliente(clienteId), getDeclaracoes(clienteId)])
+    Promise.all([getCliente(id), getDeclaracoes(id)])
       .then(([c, decs]) => {
         setCliente(c)
         setConviteNome(c.nome || '')
@@ -64,7 +64,7 @@ export default function ClienteDetail() {
         setDeclaracoes(decs)
       })
       .finally(() => setLoading(false))
-  }, [clienteId])
+  }, [id])
 
   const abrirConvite = () => {
     setConviteSucesso(null)
@@ -72,7 +72,7 @@ export default function ClienteDetail() {
   }
 
   const enviarConvite = async () => {
-    if (!clienteId) return
+    if (!id) return
     if (!conviteEmail || conviteEmail.indexOf('@') < 0) {
       toast({
         title: 'E-mail inválido',
@@ -83,10 +83,10 @@ export default function ClienteDetail() {
     }
     setConviteLoading(true)
     try {
-      const resp = await convidarCliente(clienteId, { nome: conviteNome, email: conviteEmail })
+      const resp = await convidarCliente(id, { nome: conviteNome, email: conviteEmail })
       setConviteSucesso({ email: resp.email, enviado: resp.convite_enviado })
       // Recarrega o cliente para refletir o user_id vinculado.
-      getCliente(clienteId)
+      getCliente(id)
         .then(setCliente)
         .catch(() => {})
       toast({

@@ -94,7 +94,7 @@ export default function ClienteDashboard() {
       try {
         const cli = await getClienteDoUsuario(user.id)
         setCliente(cli)
-        const decs = await getDeclaracoes(cli.id, 2026)
+        const decs = await getDeclaracoes(cli.id, declaracao.ano_calendario)
         const dec = decs[0] || null
         setDeclaracao(dec)
         if (dec) {

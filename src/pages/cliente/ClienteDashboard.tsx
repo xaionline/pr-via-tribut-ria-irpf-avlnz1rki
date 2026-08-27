@@ -51,7 +51,10 @@ const DEFAULT_PARAMS: SimulacaoParams = {
   pensao_alimenticia: 0,
 }
 
-const ANO_CALENDARIO = new Date().getFullYear() - 1
+// Gera array dos últimos 5 anos (ex: [2025, 2024, 2023, 2022, 2021])
+const ANOS_DISPONIVEIS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 - i)
+
+const ANO_PADRAO = new Date().getFullYear() - 1
 
 export default function ClienteDashboard() {
   const navigate = useNavigate()
@@ -60,6 +63,7 @@ export default function ClienteDashboard() {
 
   const [loading, setLoading] = useState(true)
   const [cliente, setCliente] = useState<ClienteRecord | null>(null)
+  const [anoSelecionado, setAnoSelecionado] = useState<number>(ANO_PADRAO)
   const [declaracao, setDeclaracao] = useState<DeclaracaoRecord | null>(null)
   const [resultado, setResultado] = useState<ResultadoRecord | null>(null)
   const [baseData, setBaseData] = useState<SimulationBaseData | null>(null)
@@ -67,6 +71,7 @@ export default function ClienteDashboard() {
   const [params, setParams] = useState<SimulacaoParams>(DEFAULT_PARAMS)
   const [showMedicas, setShowMedicas] = useState(false)
   const [showPensao, setShowPensao] = useState(false)
+  const [trocouAno, setTrocouAno] = useState(false)
 
   const debouncedParams = useDebounce(params, 300)
 
@@ -87,16 +92,33 @@ export default function ClienteDashboard() {
     [baseData, debouncedParams, pgblLimit],
   )
 
+  // Carrega cliente na primeira vez
   useEffect(() => {
-    const loadData = async () => {
+    const loadCliente = async () => {
       if (!user?.id) return
-      setLoading(true)
       try {
         const cli = await getClienteDoUsuario(user.id)
         setCliente(cli)
-        const decs = await getDeclaracoes(cli.id, declaracao.ano_calendario)
+      } catch {
+        setCliente(null)
+      }
+    }
+    loadCliente()
+  }, [user?.id])
+
+  // Carrega declaração quando cliente ou ano muda
+  useEffect(() => {
+    const loadDeclaracao = async () => {
+      if (!cliente?.id) return
+      setLoading(true)
+      try {
+        const decs = await getDeclaracoes(cliente.id, anoSelecionado)
         const dec = decs[0] || null
         setDeclaracao(dec)
+        setResultado(null)
+        setBaseData(null)
+        setIsCalculated(false)
+
         if (dec) {
           let res: ResultadoRecord | null = null
           try {
@@ -107,7 +129,7 @@ export default function ClienteDashboard() {
           setResultado(res)
           const calcStatuses = ['calculada', 'revisada', 'apresentada', 'retificada']
           setIsCalculated(!!res && calcStatuses.includes(dec.status))
-          // Monta base de simulação a partir dos dados da declaração.
+
           const [rends, desps, deps, rurais, dests, tabs] = await Promise.all([
             getRendimentos(dec.id),
             getDespesas(dec.id),
@@ -116,6 +138,7 @@ export default function ClienteDashboard() {
             getDestinacoes(dec.id),
             getTabelas(),
           ])
+
           const rendTributavelSemRural = rends
             .filter((r) => r.tipo === 'tributavel')
             .reduce((s, r) => s + r.valor, 0)
@@ -131,6 +154,7 @@ export default function ClienteDashboard() {
             .reduce((s, d) => s + d.valor, 0)
           const destinacoesAtuais = dests.reduce((s, d) => s + d.valor, 0)
           const tabela = tabs.find((t) => (t.ano_calendario || t.ano) === dec.ano_calendario)
+
           setBaseData({
             rendTributavel,
             deducoesAtuais,
@@ -142,15 +166,23 @@ export default function ClienteDashboard() {
           })
         }
       } catch {
-        setCliente(null)
         setDeclaracao(null)
       } finally {
         setLoading(false)
+        setTrocouAno(false)
       }
     }
-    loadData()
+    loadDeclaracao()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
+  }, [cliente?.id, anoSelecionado])
+
+  const handleAnoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTrocouAno(true)
+    setParams(DEFAULT_PARAMS)
+    setShowMedicas(false)
+    setShowPensao(false)
+    setAnoSelecionado(Number(e.target.value))
+  }
 
   const handleExportar = () => {
     if (!declaracao) return
@@ -181,18 +213,34 @@ export default function ClienteDashboard() {
     )
   }
 
-  // Empty state: sem declaração no ano atual.
+  // Empty state: sem declaração no ano selecionado
   if (!cliente || !declaracao) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Olá, {user?.name || 'cliente'}</h1>
-          <p className="text-xs text-slate-500 mt-1">Ano-calendário {ANO_CALENDARIO}</p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Olá, {user?.name || 'cliente'}</h1>
+            <p className="text-xs text-slate-500 mt-1">Ano-calendário {anoSelecionado}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-slate-600">Ano:</label>
+            <select
+              value={anoSelecionado}
+              onChange={handleAnoChange}
+              className="border border-slate-300 rounded-md px-3 py-1.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {ANOS_DISPONIVEIS.map((ano) => (
+                <option key={ano} value={ano}>
+                  {ano}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <Card className="p-12 text-center border-dashed border-slate-300">
           <FileX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <h3 className="text-base font-bold text-slate-800">
-            Nenhuma declaração encontrada para {ANO_CALENDARIO}
+            Nenhuma declaração encontrada para {anoSelecionado}
           </h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             Entre em contato com seu contador para mais informações.
@@ -208,13 +256,27 @@ export default function ClienteDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header com dropdown de ano */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Olá, {clienteNome}</h1>
           <p className="text-xs text-slate-500 mt-1">Ano-calendário {declaracao.ano_calendario}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Ano:</label>
+            <select
+              value={anoSelecionado}
+              onChange={handleAnoChange}
+              className="border border-slate-300 rounded-md px-3 py-1.5 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {ANOS_DISPONIVEIS.map((ano) => (
+                <option key={ano} value={ano}>
+                  {ano}
+                </option>
+              ))}
+            </select>
+          </div>
           <StatusBadge status={declaracao.status} />
           {declaracao.modalidade && (
             <span className="text-[11px] text-slate-500 capitalize">
@@ -281,7 +343,6 @@ export default function ClienteDashboard() {
               </p>
             </div>
           </div>
-
           <div className="grid md:grid-cols-5 gap-6">
             <div className="md:col-span-2">
               <SimulationControls

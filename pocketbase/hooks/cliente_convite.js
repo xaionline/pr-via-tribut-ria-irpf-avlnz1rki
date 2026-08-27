@@ -12,7 +12,7 @@ routerAdd(
         return e.unauthorizedError('Autenticação necessária.')
       }
       var cargo = auth.getString('cargo')
-      if (cargo !== 'Super_admin') {
+      if !['admin', 'consultor', 'Super_admin'].includes(cargo) {
         return e.forbiddenError('Acesso restrito a admin ou consultor.')
       }
       var escId = auth.getString('escritorio_id')

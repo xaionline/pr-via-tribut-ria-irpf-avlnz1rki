@@ -12,7 +12,7 @@ routerAdd(
         return e.unauthorizedError('Autenticação necessária.')
       }
       var cargo = auth.getString('cargo')
-      if (cargo !== 'admin' && cargo !== 'consultor') {
+      if (cargo !== 'Super_admin' && cargo !== 'consultor') {
         return e.forbiddenError('Acesso restrito a admin ou consultor.')
       }
       var escId = auth.getString('escritorio_id')
@@ -92,7 +92,7 @@ routerAdd(
       var emailEnviado = false
       try {
         var esc = $app.findRecordById('escritorios', escId)
-        var nomeEsc = esc ? esc.getString('nome') : 'Prévia Tributária IRPF'
+        var nomeEsc = esc ? esc.getString('nome') : 'Calculadora Tributária IR'
         var siteUrl = $os.getenv('SITE_URL') || ''
         var loginUrl = siteUrl ? siteUrl.replace(/\/$/, '') + '/login' : '/login'
         var html =

@@ -52,7 +52,7 @@ const DEFAULT_PARAMS: SimulacaoParams = {
 }
 
 // Gera array dos últimos 5 anos (ex: [2025, 2024, 2023, 2022, 2021])
-const ANOS_DISPONIVEIS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 - i)
+const ANOS_DISPONIVEIS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i)
 
 const ANO_PADRAO = new Date().getFullYear() - 1
 

@@ -476,7 +476,12 @@ export function SimuladorResumoPjTab({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                >
+                                  <HelpCircle className="w-3.5 h-3.5 cursor-help" />
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs text-xs">
                                 Remuneração tributável mensal do sócio administrador. Dedutível na
@@ -516,7 +521,12 @@ export function SimuladorResumoPjTab({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <HelpCircle className="w-3.5 h-3.5 text-slate-400 cursor-help" />
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                >
+                                  <HelpCircle className="w-3.5 h-3.5 cursor-help" />
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-xs text-xs">
                                 Percentual do lucro distribuível atribuído ao sócio que será

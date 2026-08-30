@@ -101,7 +101,7 @@ export default function EmpresaDetail() {
     try {
       await deleteEmpresa(empresa.id)
       toast({ title: 'Empresa excluída com sucesso!' })
-      navigate('/empresas')
+      navigate('/app/empresas')
     } catch (err) {
       toast({
         title: 'Erro ao excluir empresa',
@@ -128,7 +128,7 @@ export default function EmpresaDetail() {
         <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
         <h2 className="text-lg font-semibold text-slate-800">Empresa não encontrada</h2>
         <Button asChild className="mt-4" variant="outline">
-          <Link to="/empresas">Voltar para Empresas</Link>
+          <Link to="/app/empresas">Voltar para Empresas</Link>
         </Button>
       </div>
     )
@@ -142,7 +142,7 @@ export default function EmpresaDetail() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/empresas')}
+            onClick={() => navigate('/app/empresas')}
             className="h-9 w-9 text-slate-600 hover:text-slate-900"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -154,9 +154,9 @@ export default function EmpresaDetail() {
 
         <div className="flex items-center gap-2">
           <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 h-9">
-            <Link to={`/empresas/${empresa.id}/editar`}>
+            <Link to={`/app/empresas/${empresa.id}/editar`}>
               <Pencil className="w-3.5 h-3.5" />
-              Editar Cadastro
+              <span>Editar Cadastro</span>
             </Link>
           </Button>
           <Button
@@ -166,7 +166,7 @@ export default function EmpresaDetail() {
             className="text-xs gap-1.5 h-9 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Excluir
+            <span>Excluir</span>
           </Button>
         </div>
       </div>

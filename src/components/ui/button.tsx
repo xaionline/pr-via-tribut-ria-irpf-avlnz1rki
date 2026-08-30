@@ -38,24 +38,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     { className, variant, size, asChild = false, loading = false, children, disabled, ...props },
     ref,
   ) => {
-    if (asChild) {
-      return (
-        <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
-          {children}
-        </Slot>
-      )
-    }
+    const Comp = asChild ? Slot : 'button'
 
     return (
-      <button
+      <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
         {...props}
       >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {children}
-      </button>
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {children}
+          </>
+        )}
+      </Comp>
     )
   },
 )

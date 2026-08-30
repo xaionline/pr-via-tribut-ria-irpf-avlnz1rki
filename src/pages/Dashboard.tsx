@@ -1,7 +1,18 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { FileText, TrendingDown, TrendingUp, CalendarClock } from 'lucide-react'
+import {
+  FileText,
+  TrendingDown,
+  TrendingUp,
+  CalendarClock,
+  Building2,
+  Plus,
+  ArrowRight,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { getAllEmpresas } from '@/services/empresas'
+import type { EmpresaRecord } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCard, KpiCarousel, type KpiCardProps } from '@/components/dashboard/KpiCard'
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable'
@@ -24,17 +35,20 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true)
   const [clientes, setClientes] = useState<ClienteRecord[]>([])
+  const [empresas, setEmpresas] = useState<EmpresaRecord[]>([])
   const [declaracoes, setDeclaracoes] = useState<DeclaracaoRecord[]>([])
   const [resultados, setResultados] = useState<ResultadoRecord[]>([])
 
   const loadData = async () => {
     try {
-      const [cliRes, decs, res] = await Promise.all([
+      const [cliRes, empRes, decs, res] = await Promise.all([
         getClientes('', 1, 500),
+        getAllEmpresas(),
         getDeclaracoes(),
         getAllResultados(),
       ])
       setClientes(cliRes.items)
+      setEmpresas(empRes)
       setDeclaracoes(decs)
       setResultados(res)
     } catch {
@@ -53,6 +67,7 @@ export default function Dashboard() {
   }, [])
   useRealtime('declaracoes', () => loadData())
   useRealtime('clientes', () => loadData())
+  useRealtime('empresas', () => loadData())
 
   const resultadosMap = useMemo(
     () => new Map(resultados.map((r) => [r.declaracao_id, r])),
@@ -225,6 +240,51 @@ export default function Dashboard() {
       <div className="lg:hidden">
         <KpiCarousel kpis={kpis} />
       </div>
+
+      {/* Card de Destaque Módulo Pessoa Jurídica (PJ) */}
+      <Card className="p-4 sm:p-5 border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white shadow-subtle">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm font-bold text-slate-900">
+                  Módulo Pessoa Jurídica (PJ & Sócios)
+                </h3>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                  {empresas.length} empresa(s) cadastrada(s)
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Apure o Simples Nacional e Lucro Presumido e sincronize automaticamente Pró-Labore,
+                Lucros Isentos e Dividendos no IRPF dos Sócios.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/app/empresas')}
+              className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50 gap-1.5"
+            >
+              <span>Ver Empresas</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => navigate('/app/empresas/nova')}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nova Empresa</span>
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <DeclarationsTable

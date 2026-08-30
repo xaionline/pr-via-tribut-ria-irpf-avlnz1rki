@@ -58,7 +58,8 @@ export function Header() {
         ]
       : []),
     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
-    { label: 'Clientes', path: '/app/clientes', icon: Users },
+    { label: 'Clientes PF', path: '/app/clientes', icon: Users },
+    { label: 'Empresas PJ', path: '/app/empresas', icon: Users },
     { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
     ...(isAdmin
       ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: TableProperties }]
@@ -72,6 +73,22 @@ export function Header() {
             icon: TableProperties,
           },
           { label: 'IBS / CBS', path: '/app/configuracoes/ibs-cbs', icon: TableProperties },
+          {
+            label: 'Simples Nacional',
+            path: '/app/configuracoes/simples-nacional',
+            icon: TableProperties,
+          },
+          {
+            label: 'Lucro Presumido',
+            path: '/app/configuracoes/lucro-presumido',
+            icon: TableProperties,
+          },
+          {
+            label: 'IRPJ / CSLL',
+            path: '/app/configuracoes/irpj-csll',
+            icon: TableProperties,
+          },
+          { label: 'Tabelas ISS', path: '/app/configuracoes/iss', icon: TableProperties },
           { label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings },
         ]
       : []),

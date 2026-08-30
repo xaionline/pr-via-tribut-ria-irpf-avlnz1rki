@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T00:38:41.277Z",
+  "generatedAt": "2026-08-30T16:18:31.409Z",
   "collections": [
     {
       "name": "users",
@@ -1239,6 +1239,433 @@
       "indexes": [
         "CREATE UNIQUE INDEX idx_altas_rendas_parametros_ano_calendario ON altas_rendas_parametros (ano_calendario)"
       ]
+    },
+    {
+      "name": "empresas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "escritorio_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "escritorios"
+        },
+        {
+          "name": "razao_social",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "regime",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["simples", "presumido", "real"]
+        },
+        {
+          "name": "atividade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anexo_simples",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["I", "II", "III", "IV", "V"]
+        },
+        {
+          "name": "data_abertura",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_empresas_escritorio ON empresas (escritorio_id)",
+        "CREATE INDEX idx_empresas_cnpj ON empresas (cnpj)"
+      ]
+    },
+    {
+      "name": "empresas_socios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "empresa_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "empresas"
+        },
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "clientes"
+        },
+        {
+          "name": "percentual_participacao",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "pro_labore_mensal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "participa_lucros",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "participa_jcp",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_empresas_socios_empresa ON empresas_socios (empresa_id)",
+        "CREATE INDEX idx_empresas_socios_cliente ON empresas_socios (cliente_id)"
+      ]
+    },
+    {
+      "name": "empresas_faturamentos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "empresa_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "empresas"
+        },
+        {
+          "name": "ano_calendario",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "mes",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "receita_bruta",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "folha",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_faturamentos_empresa_ano ON empresas_faturamentos (empresa_id, ano_calendario)"
+      ]
+    },
+    {
+      "name": "tabelas_simples",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "update": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "delete": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "anexo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["I", "II", "III", "IV", "V"]
+        },
+        {
+          "name": "faixas",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "aliquota",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "parcela_deduzir",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_tabelas_simples_ano_anexo ON tabelas_simples (ano, anexo)"]
+    },
+    {
+      "name": "tabelas_presumido",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "update": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "delete": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "atividade",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "presuncao_irpj",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "presuncao_csll",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_tabelas_presumido_ano ON tabelas_presumido (ano)"]
+    },
+    {
+      "name": "tabelas_irpj_csll",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "update": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "delete": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "aliquota_irpj",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "adicional_irpj",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "limite_adicional",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "aliquota_csll",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_tabelas_irpj_csll_ano ON tabelas_irpj_csll (ano)"]
+    },
+    {
+      "name": "tabelas_iss",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "update": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\"",
+        "delete": "@request.auth.cargo = \"super_admin\" || @request.auth.cargo = \"admin\""
+      },
+      "fields": [
+        {
+          "name": "ano",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "aliquota",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "municipio",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "uf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_tabelas_iss_ano ON tabelas_iss (ano)"]
     }
   ]
 }

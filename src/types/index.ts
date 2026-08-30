@@ -346,3 +346,197 @@ export interface CenarioSimulacaoRecord {
   created: string
   updated: string
 }
+
+// ==========================================
+// MÓDULO PESSOA JURÍDICA (PJ) E TABELAS
+// ==========================================
+
+export type RegimeTributarioPJ = 'simples' | 'presumido' | 'real'
+export type AnexoSimplesNacional = 'I' | 'II' | 'III' | 'IV' | 'V'
+
+export interface EmpresaRecord {
+  id: string
+  escritorio_id: string
+  razao_social: string
+  cnpj: string
+  regime: RegimeTributarioPJ
+  atividade?: string
+  anexo_simples?: AnexoSimplesNacional
+  data_abertura?: string
+  created: string
+  updated: string
+  expand?: {
+    escritorio_id?: EscritorioRecord
+    'empresas_socios(empresa_id)'?: EmpresaSocioRecord[]
+  }
+}
+
+export interface EmpresaSocioRecord {
+  id: string
+  empresa_id: string
+  cliente_id: string
+  percentual_participacao: number
+  pro_labore_mensal?: number
+  participa_lucros?: boolean
+  participa_jcp?: boolean
+  created: string
+  updated: string
+  expand?: {
+    cliente_id?: ClienteRecord
+    empresa_id?: EmpresaRecord
+  }
+}
+
+export interface EmpresaFaturamentoRecord {
+  id: string
+  empresa_id: string
+  ano_calendario: number
+  mes: number
+  receita_bruta: number
+  folha?: number
+  created: string
+  updated: string
+}
+
+export interface FaixaSimplesNacional {
+  faixa?: number
+  faixa_inicial: number
+  faixa_final: number
+  aliquota: number
+  parcela_deduzir: number
+}
+
+export interface TabelaSimplesRecord {
+  id: string
+  ano: number
+  anexo: AnexoSimplesNacional
+  faixas: FaixaSimplesNacional[]
+  aliquota?: number
+  parcela_deduzir?: number
+  created: string
+  updated: string
+}
+
+export interface TabelaPresumidoRecord {
+  id: string
+  ano: number
+  atividade: string
+  presuncao_irpj: number
+  presuncao_csll: number
+  created: string
+  updated: string
+}
+
+export interface TabelaIrpjCsllRecord {
+  id: string
+  ano: number
+  aliquota_irpj: number
+  adicional_irpj: number
+  limite_adicional: number
+  aliquota_csll: number
+  created: string
+  updated: string
+}
+
+export interface TabelaIssRecord {
+  id: string
+  ano: number
+  aliquota: number
+  municipio?: string
+  uf?: string
+  created: string
+  updated: string
+}
+
+// Estruturas de Apuração e Distribuição PJ
+export interface ApuracaoSimplesMes {
+  mes: number
+  receita_bruta: number
+  folha: number
+  rbt12: number
+  folha12: number
+  fator_r?: number
+  anexo_aplicado: AnexoSimplesNacional
+  faixa: number
+  aliquota_nominal: number
+  parcela_deduzir: number
+  aliquota_efetiva: number
+  valor_das: number
+}
+
+export interface ApuracaoSimplesAnual {
+  ano_calendario: number
+  regime: 'simples'
+  receita_bruta_anual: number
+  folha_anual: number
+  total_das: number
+  aliquota_efetiva_media: number
+  meses: ApuracaoSimplesMes[]
+  lucro_apurado_estimado: number
+  lucro_distribuivel: number
+}
+
+export interface ApuracaoPresumidoTrimestre {
+  trimestre: number
+  meses: number[]
+  receita_bruta: number
+  presuncao_irpj_perc: number
+  base_calculo_irpj: number
+  irpj_basico: number
+  irpj_adicional: number
+  irpj_total: number
+  presuncao_csll_perc: number
+  base_calculo_csll: number
+  csll_total: number
+  pis_total: number // 0.65%
+  cofins_total: number // 3.00%
+  iss_total: number
+  total_tributos_trimestre: number
+  aliquota_efetiva_trimestre: number
+}
+
+export interface ApuracaoPresumidoAnual {
+  ano_calendario: number
+  regime: 'presumido'
+  receita_bruta_anual: number
+  folha_anual: number
+  total_irpj: number
+  total_csll: number
+  total_pis: number
+  total_cofins: number
+  total_iss: number
+  total_tributos_pj: number
+  aliquota_efetiva_anual: number
+  trimestres: ApuracaoPresumidoTrimestre[]
+  lucro_presumido_isento_maximo: number
+  lucro_apurado_estimado: number
+  lucro_distribuivel: number
+}
+
+export interface DistribuicaoSocioResultado {
+  socio_id: string
+  cliente_id: string
+  cliente_nome: string
+  cpf: string
+  percentual: number
+  pro_labore_anual: number // tipo = 'tributavel'
+  lucros_distribuidos: number // tipo = 'isento'
+  jcp_distribuido: number // tipo = 'exclusiva'
+  dividendos_altas_rendas: number // alimenta base IRPF-M
+  declaracao_id?: string
+  status_declaracao?: string
+}
+
+export interface IntegracaoDistribuicaoResponse {
+  success: boolean
+  total_socios_atualizados: number
+  rendimentos_criados: number
+  detalhes: {
+    socio_nome: string
+    cliente_id: string
+    declaracao_id: string
+    pro_labore: number
+    lucros: number
+    jcp: number
+  }[]
+}

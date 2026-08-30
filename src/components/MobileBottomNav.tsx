@@ -9,6 +9,7 @@ import {
   Settings,
   Calculator,
   LogOut,
+  Building2,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -26,8 +27,8 @@ export function MobileBottomNav() {
     : [
         { label: 'Inicio', path: '/app/dashboard', icon: LayoutDashboard },
         { label: 'Clientes', path: '/app/clientes', icon: Users },
+        { label: 'Empresas', path: '/app/empresas', icon: Building2 },
         { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
-        { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
       ]
 
   return (

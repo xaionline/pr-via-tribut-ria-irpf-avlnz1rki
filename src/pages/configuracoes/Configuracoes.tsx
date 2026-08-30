@@ -17,8 +17,21 @@ import { UsuariosTab } from './UsuariosTab'
 import { SegurancaTab } from './SegurancaTab'
 import { IbsCbsTab } from './IbsCbsTab'
 import { AltasRendasTab } from './AltasRendasTab'
+import { SimplesNacionalTab } from './SimplesNacionalTab'
+import { PresumidoTab } from './PresumidoTab'
+import { IrpjCsllTab } from './IrpjCsllTab'
+import { IssTab } from './IssTab'
 
-type TabKey = 'escritorio' | 'usuarios' | 'seguranca' | 'ibs-cbs' | 'altas-rendas'
+type TabKey =
+  | 'escritorio'
+  | 'usuarios'
+  | 'seguranca'
+  | 'altas-rendas'
+  | 'ibs-cbs'
+  | 'simples-nacional'
+  | 'lucro-presumido'
+  | 'irpj-csll'
+  | 'iss'
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'escritorio', label: 'Dados do Escritório', icon: Building2 },
@@ -26,9 +39,23 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'seguranca', label: 'Segurança e Políticas', icon: ShieldCheck },
   { key: 'altas-rendas', label: 'Altas Rendas (IRPF-M)', icon: Coins },
   { key: 'ibs-cbs', label: 'Parâmetros IBS/CBS', icon: Calculator },
+  { key: 'simples-nacional', label: 'Simples Nacional', icon: Calculator },
+  { key: 'lucro-presumido', label: 'Lucro Presumido', icon: Building2 },
+  { key: 'irpj-csll', label: 'IRPJ / CSLL', icon: Calculator },
+  { key: 'iss', label: 'Tabelas ISS', icon: Coins },
 ]
 
-const VALID_TABS: TabKey[] = ['escritorio', 'usuarios', 'seguranca', 'ibs-cbs', 'altas-rendas']
+const VALID_TABS: TabKey[] = [
+  'escritorio',
+  'usuarios',
+  'seguranca',
+  'altas-rendas',
+  'ibs-cbs',
+  'simples-nacional',
+  'lucro-presumido',
+  'irpj-csll',
+  'iss',
+]
 
 export default function Configuracoes() {
   const navigate = useNavigate()
@@ -118,6 +145,10 @@ export default function Configuracoes() {
           {activeTab === 'seguranca' && <SegurancaTab />}
           {activeTab === 'altas-rendas' && <AltasRendasTab />}
           {activeTab === 'ibs-cbs' && <IbsCbsTab />}
+          {activeTab === 'simples-nacional' && <SimplesNacionalTab />}
+          {activeTab === 'lucro-presumido' && <PresumidoTab />}
+          {activeTab === 'irpj-csll' && <IrpjCsllTab />}
+          {activeTab === 'iss' && <IssTab />}
         </div>
       </Tabs>
     </div>

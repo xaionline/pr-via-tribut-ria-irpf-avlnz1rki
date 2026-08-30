@@ -12,8 +12,11 @@ import Registro from '@/pages/Registro'
 import Cadastro from '@/pages/Cadastro'
 import Dashboard from '@/pages/Dashboard'
 import ClientesList from '@/pages/clientes/ClientesList'
-import ClienteForm from '@/pages/clientes/ClienteForm'
 import ClienteDetail from '@/pages/clientes/ClienteDetail'
+import ClienteForm from '@/pages/clientes/ClienteForm'
+import EmpresasList from '@/pages/empresas/EmpresasList'
+import EmpresaDetail from '@/pages/empresas/EmpresaDetail'
+import EmpresaForm from '@/pages/empresas/EmpresaForm'
 import DeclaracoesList from '@/pages/declaracoes/DeclaracoesList'
 import DeclaracaoForm from '@/pages/declaracoes/DeclaracaoForm'
 import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
@@ -46,6 +49,11 @@ const App = () => (
             <Route path="/app/clientes/novo" element={<ClienteForm />} />
             <Route path="/app/clientes/:id" element={<ClienteDetail />} />
             <Route path="/app/clientes/:id/editar" element={<ClienteForm />} />
+            {/* Empresas (Pessoa Jurídica) */}
+            <Route path="/app/empresas" element={<EmpresasList />} />
+            <Route path="/app/empresas/nova" element={<EmpresaForm />} />
+            <Route path="/app/empresas/:id" element={<EmpresaDetail />} />
+            <Route path="/app/empresas/:id/editar" element={<EmpresaForm />} />
             <Route path="/app/declaracoes" element={<DeclaracoesList />} />
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id/editar" element={<DeclaracaoForm />} />

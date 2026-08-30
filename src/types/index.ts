@@ -367,7 +367,6 @@ export interface EmpresaRecord {
   updated: string
   expand?: {
     escritorio_id?: EscritorioRecord
-    'empresas_socios(empresa_id)'?: EmpresaSocioRecord[]
   }
 }
 
@@ -394,6 +393,11 @@ export interface EmpresaFaturamentoRecord {
   mes: number
   receita_bruta: number
   folha?: number
+  lucro_contabil?: number
+  adicoes_lalur?: number
+  exclusoes_lalur?: number
+  compras_insumos?: number
+  outros_creditos_pis_cofins?: number
   created: string
   updated: string
 }
@@ -444,6 +448,18 @@ export interface TabelaIssRecord {
   aliquota: number
   municipio?: string
   uf?: string
+  created: string
+  updated: string
+}
+
+export interface TabelaPisCofinsRealRecord {
+  id: string
+  ano: number
+  aliquota_pis: number
+  aliquota_cofins: number
+  aliquota_credito_pis: number
+  aliquota_credito_cofins: number
+  observacao?: string
   created: string
   updated: string
 }
@@ -511,6 +527,134 @@ export interface ApuracaoPresumidoAnual {
   lucro_presumido_isento_maximo: number
   lucro_apurado_estimado: number
   lucro_distribuivel: number
+}
+
+export interface ApuracaoLucroRealTrimestre {
+  trimestre: number
+  meses: number[]
+  receita_bruta: number
+  lucro_contabil: number
+  adicoes_lalur: number
+  exclusoes_lalur: number
+  lucro_real_base: number // Lalur (Contábil + Adições - Exclusões)
+  irpj_basico: number // 15%
+  irpj_adicional: number // 10% sobre o que exceder R$ 60k
+  irpj_total: number
+  csll_total: number // 9% sobre Lalur
+  pis_debito: number // 1.65% s/ receita
+  pis_credito: number // 1.65% s/ insumos/compras
+  pis_liquido: number
+  cofins_debito: number // 7.60% s/ receita
+  cofins_credito: number // 7.60% s/ insumos/compras
+  cofins_liquido: number
+  iss_total: number
+  total_tributos_trimestre: number
+  aliquota_efetiva_trimestre: number
+}
+
+export interface ApuracaoLucroRealAnual {
+  ano_calendario: number
+  regime: 'real'
+  receita_bruta_anual: number
+  folha_anual: number
+  lucro_contabil_anual: number
+  total_adicoes: number
+  total_exclusoes: number
+  lucro_real_ajustado_anual: number
+  total_irpj: number
+  total_csll: number
+  total_pis_liquido: number
+  total_cofins_liquido: number
+  total_creditos_pis_cofins: number
+  total_iss: number
+  total_tributos_pj: number
+  aliquota_efetiva_anual: number
+  trimestres: ApuracaoLucroRealTrimestre[]
+  lucro_distribuivel: number
+  lucro_apurado_estimado: number
+}
+
+// Comparador de Regimes
+export interface ComparativoRegimeItem {
+  regime: RegimeTributarioPJ
+  nomeRegime: string
+  totalTributos: number
+  aliquotaEfetiva: number
+  lucroDistribuivel: number
+  detalheTributos: {
+    irpj?: number
+    csll?: number
+    pis?: number
+    cofins?: number
+    iss?: number
+    das?: number
+  }
+  isMaisVantajoso: boolean
+  diferencaParaMelhor: number
+  diferencaPercentual: number
+}
+
+export interface ComparativoRegimesResultado {
+  ano_calendario: number
+  receita_bruta_anual: number
+  melhorRegime: RegimeTributarioPJ
+  regimes: {
+    simples: ComparativoRegimeItem
+    presumido: ComparativoRegimeItem
+    real: ComparativoRegimeItem
+  }
+  economiaAnualEstimada: number
+}
+
+// Simulador PJ e Resumo
+export interface SimulacaoPjSocioParam {
+  socio_id: string
+  cliente_id: string
+  cliente_nome: string
+  pro_labore_mensal: number
+  percentual_distribuicao_lucros: number // % do lucro atribuído ao sócio a ser distribuído
+}
+
+export interface SimulacaoPjParams {
+  socios_params: SimulacaoPjSocioParam[]
+  percentual_distribuicao_geral?: number
+}
+
+export interface SimulacaoPjResultados {
+  empresa: {
+    tributos_pj_atual: number
+    carga_tributaria_atual: number
+    tributos_pj_otimizado: number
+    carga_tributaria_otimizada: number
+    economia_pj: number
+    folha_total_anual: number
+    lucro_distribuivel_total: number
+  }
+  socios: {
+    socio_id: string
+    cliente_nome: string
+    pro_labore_anual: number
+    lucros_distribuidos: number
+    irpf_estimado_socio: number
+    irpfm_altas_rendas_estimado: number
+    total_irpf_socio: number
+  }[]
+  consolidado: {
+    total_tributos_grupo: number // Tributos PJ + IRPF dos Sócios
+    economia_global: number
+    carga_global_perc: number
+  }
+}
+
+export interface CenarioSimulacaoPjRecord {
+  id: string
+  empresa_id: string
+  ano_calendario: number
+  nome: string
+  params: SimulacaoPjParams
+  resultados: SimulacaoPjResultados
+  created: string
+  updated: string
 }
 
 export interface DistribuicaoSocioResultado {

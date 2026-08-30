@@ -21,6 +21,7 @@ import { SimplesNacionalTab } from './SimplesNacionalTab'
 import { PresumidoTab } from './PresumidoTab'
 import { IrpjCsllTab } from './IrpjCsllTab'
 import { IssTab } from './IssTab'
+import { PisCofinsRealTab } from './PisCofinsRealTab'
 
 type TabKey =
   | 'escritorio'
@@ -30,6 +31,7 @@ type TabKey =
   | 'ibs-cbs'
   | 'simples-nacional'
   | 'lucro-presumido'
+  | 'lucro-real'
   | 'irpj-csll'
   | 'iss'
 
@@ -41,6 +43,7 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'ibs-cbs', label: 'Parâmetros IBS/CBS', icon: Calculator },
   { key: 'simples-nacional', label: 'Simples Nacional', icon: Calculator },
   { key: 'lucro-presumido', label: 'Lucro Presumido', icon: Building2 },
+  { key: 'lucro-real', label: 'Lucro Real (PIS/COFINS)', icon: Coins },
   { key: 'irpj-csll', label: 'IRPJ / CSLL', icon: Calculator },
   { key: 'iss', label: 'Tabelas ISS', icon: Coins },
 ]
@@ -53,6 +56,7 @@ const VALID_TABS: TabKey[] = [
   'ibs-cbs',
   'simples-nacional',
   'lucro-presumido',
+  'lucro-real',
   'irpj-csll',
   'iss',
 ]
@@ -147,6 +151,7 @@ export default function Configuracoes() {
           {activeTab === 'ibs-cbs' && <IbsCbsTab />}
           {activeTab === 'simples-nacional' && <SimplesNacionalTab />}
           {activeTab === 'lucro-presumido' && <PresumidoTab />}
+          {activeTab === 'lucro-real' && <PisCofinsRealTab />}
           {activeTab === 'irpj-csll' && <IrpjCsllTab />}
           {activeTab === 'iss' && <IssTab />}
         </div>

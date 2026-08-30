@@ -123,25 +123,38 @@ export async function upsertFaturamentoMes(
   mes: number,
   receitaBruta: number,
   folha: number,
+  lucroContabil?: number,
+  adicoesLalur?: number,
+  exclusoesLalur?: number,
+  comprasInsumos?: number,
+  outrosCreditos?: number,
 ): Promise<EmpresaFaturamentoRecord> {
+  const payload: Partial<EmpresaFaturamentoRecord> = {
+    receita_bruta: receitaBruta,
+    folha,
+    lucro_contabil: lucroContabil ?? 0,
+    adicoes_lalur: adicoesLalur ?? 0,
+    exclusoes_lalur: exclusoesLalur ?? 0,
+    compras_insumos: comprasInsumos ?? 0,
+    outros_creditos_pis_cofins: outrosCreditos ?? 0,
+  }
+
   try {
     const existing = await pb
       .collection('empresas_faturamentos')
       .getFirstListItem<EmpresaFaturamentoRecord>(
         `empresa_id = "${empresaId}" && ano_calendario = ${ano} && mes = ${mes}`,
       )
-    return pb.collection('empresas_faturamentos').update<EmpresaFaturamentoRecord>(existing.id, {
-      receita_bruta: receitaBruta,
-      folha,
-    })
+    return pb
+      .collection('empresas_faturamentos')
+      .update<EmpresaFaturamentoRecord>(existing.id, payload)
   } catch (_) {
     return pb.collection('empresas_faturamentos').create<EmpresaFaturamentoRecord>({
       empresa_id: empresaId,
       ano_calendario: ano,
       mes,
-      receita_bruta: receitaBruta,
-      folha,
-    })
+      ...payload,
+    } as any)
   }
 }
 

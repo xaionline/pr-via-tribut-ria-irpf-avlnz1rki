@@ -18,11 +18,20 @@ import type {
   RendimentoRecord,
   AnexoSimplesNacional,
 } from '@/types'
+import type {
+  ApuracaoLucroRealAnual,
+  ApuracaoLucroRealTrimestre,
+  TabelaPisCofinsRealRecord,
+  ComparativoRegimesResultado,
+  ComparativoRegimeItem,
+  RegimeTributarioPJ,
+} from '@/types'
 import {
   getTabelaSimplesPorAnoAnexo,
   getTabelaPresumidoPorAnoAtividade,
   getTabelaIrpjCsllPorAno,
   getTabelaIssPorAno,
+  getTabelaPisCofinsRealPorAno,
 } from './tabelasPj'
 import { getFaturamentosEmpresa, getSociosDaEmpresa } from './empresas'
 
@@ -310,6 +319,301 @@ export function calcularApuracaoPresumido(
 }
 
 /**
+ * Realiza os cálculos de Apuração do Lucro Real trimestral e anual.
+ *
+ * IRPJ: Base = Lucro Contábil + Adições LALUR - Exclusões LALUR (Lucro Real)
+ *       IRPJ Básico = Max(0, Base) × 15%
+ *       IRPJ Adicional = Max(0, Base - R$ 60.000 no trimestre) × 10%
+ * CSLL: Base = Lucro Real Ajustado
+ *       CSLL = Max(0, Base) × 9%
+ * PIS Não-Cumulativo:
+ *       Débito = Receita Bruta × 1.65%
+ *       Crédito = (Compras Insumos + Outros Créditos) × 1.65%
+ *       PIS Líquido = Max(0, Débito - Crédito)
+ * COFINS Não-Cumulativo:
+ *       Débito = Receita Bruta × 7.60%
+ *       Crédito = (Compras Insumos + Outros Créditos) × 7.60%
+ *       COFINS Líquido = Max(0, Débito - Crédito)
+ * ISS: Receita × Alíquota ISS (ex: 5.00%)
+ */
+export function calcularApuracaoReal(
+  faturamentos: EmpresaFaturamentoRecord[],
+  anoCalendario: number,
+  tabelaIrpjCsll: TabelaIrpjCsllRecord | null,
+  tabelaIss: TabelaIssRecord | null,
+  tabelaPisCofins: TabelaPisCofinsRealRecord | null,
+): ApuracaoLucroRealAnual {
+  const faturamentosAno = faturamentos.filter((f) => f.ano_calendario === anoCalendario)
+
+  const aliqIrpj = tabelaIrpjCsll?.aliquota_irpj ?? 15.0
+  const adicionalIrpj = tabelaIrpjCsll?.adicional_irpj ?? 10.0
+  const limiteTrimestralAdicional = (tabelaIrpjCsll?.limite_adicional ?? 20000) * 3 // R$ 60.000 / trimestre
+  const aliqCsll = tabelaIrpjCsll?.aliquota_csll ?? 9.0
+  const aliqIss = tabelaIss?.aliquota ?? 5.0
+  const aliqPis = tabelaPisCofins?.aliquota_pis ?? 1.65
+  const aliqCofins = tabelaPisCofins?.aliquota_cofins ?? 7.6
+  const aliqCredPis = tabelaPisCofins?.aliquota_credito_pis ?? 1.65
+  const aliqCredCofins = tabelaPisCofins?.aliquota_credito_cofins ?? 7.6
+
+  const trimestresConfig = [
+    { tri: 1, meses: [1, 2, 3] },
+    { tri: 2, meses: [4, 5, 6] },
+    { tri: 3, meses: [7, 8, 9] },
+    { tri: 4, meses: [10, 11, 12] },
+  ]
+
+  let receitaAnual = 0
+  let folhaAnual = 0
+  let lucroContabilAnual = 0
+  let totalAdicoes = 0
+  let totalExclusoes = 0
+  let lucroRealAjustadoAnual = 0
+
+  let totalIrpj = 0
+  let totalCsll = 0
+  let totalPisLiquido = 0
+  let totalCofinsLiquido = 0
+  let totalCreditosPisCofins = 0
+  let totalIss = 0
+
+  const trimestresApurados: ApuracaoLucroRealTrimestre[] = trimestresConfig.map((t) => {
+    const fatsTrimestre = faturamentosAno.filter((f) => t.meses.includes(f.mes))
+    const recTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.receita_bruta) || 0), 0)
+    const folhaTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.folha) || 0), 0)
+
+    // Se lucro contábil não foi preenchido mês a mês, estima como Receita - Folha - 25% custos
+    const lcTrimestrePreenchido = fatsTrimestre.reduce(
+      (s, f) => s + (Number(f.lucro_contabil) || 0),
+      0,
+    )
+    const adicTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.adicoes_lalur) || 0), 0)
+    const exclTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.exclusoes_lalur) || 0), 0)
+    const insumosTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.compras_insumos) || 0), 0)
+    const outrosCredTrimestre = fatsTrimestre.reduce(
+      (s, f) => s + (Number(f.outros_creditos_pis_cofins) || 0),
+      0,
+    )
+
+    // Estimativa inteligente se não houver dados contábeis explícitos
+    let lucroContabil = lcTrimestrePreenchido
+    if (lucroContabil === 0 && recTrimestre > 0) {
+      lucroContabil = Math.max(0, recTrimestre - folhaTrimestre - recTrimestre * 0.35)
+    }
+
+    // Lucro Real Base (LALUR)
+    const baseLucroReal = Math.max(0, lucroContabil + adicTrimestre - exclTrimestre)
+
+    const irpjBasico = (baseLucroReal * aliqIrpj) / 100
+    const excedente = Math.max(0, baseLucroReal - limiteTrimestralAdicional)
+    const irpjAdic = (excedente * adicionalIrpj) / 100
+    const irpjTot = irpjBasico + irpjAdic
+
+    const csllTot = (baseLucroReal * aliqCsll) / 100
+
+    // Créditos PIS/COFINS (compras de insumos + outros créditos operacionais)
+    // Se insumos não preenchidos, estima base de créditos em 30% da receita
+    const baseCreditos =
+      insumosTrimestre + outrosCredTrimestre > 0
+        ? insumosTrimestre + outrosCredTrimestre
+        : recTrimestre * 0.25
+
+    const pisDeb = (recTrimestre * aliqPis) / 100
+    const pisCred = (baseCreditos * aliqCredPis) / 100
+    const pisLiq = Math.max(0, pisDeb - pisCred)
+
+    const cofinsDeb = (recTrimestre * aliqCofins) / 100
+    const cofinsCred = (baseCreditos * aliqCredCofins) / 100
+    const cofinsLiq = Math.max(0, cofinsDeb - cofinsCred)
+
+    const issTot = (recTrimestre * aliqIss) / 100
+
+    const tributosTri = irpjTot + csllTot + pisLiq + cofinsLiq + issTot
+    const aliqEfetivaTri = recTrimestre > 0 ? (tributosTri / recTrimestre) * 100 : 0
+
+    receitaAnual += recTrimestre
+    folhaAnual += folhaTrimestre
+    lucroContabilAnual += lucroContabil
+    totalAdicoes += adicTrimestre
+    totalExclusoes += exclTrimestre
+    lucroRealAjustadoAnual += baseLucroReal
+
+    totalIrpj += irpjTot
+    totalCsll += csllTot
+    totalPisLiquido += pisLiq
+    totalCofinsLiquido += cofinsLiq
+    totalCreditosPisCofins += pisCred + cofinsCred
+    totalIss += issTot
+
+    return {
+      trimestre: t.tri,
+      meses: t.meses,
+      receita_bruta: Number(recTrimestre.toFixed(2)),
+      lucro_contabil: Number(lucroContabil.toFixed(2)),
+      adicoes_lalur: Number(adicTrimestre.toFixed(2)),
+      exclusoes_lalur: Number(exclTrimestre.toFixed(2)),
+      lucro_real_base: Number(baseLucroReal.toFixed(2)),
+      irpj_basico: Number(irpjBasico.toFixed(2)),
+      irpj_adicional: Number(irpjAdic.toFixed(2)),
+      irpj_total: Number(irpjTot.toFixed(2)),
+      csll_total: Number(csllTot.toFixed(2)),
+      pis_debito: Number(pisDeb.toFixed(2)),
+      pis_credito: Number(pisCred.toFixed(2)),
+      pis_liquido: Number(pisLiq.toFixed(2)),
+      cofins_debito: Number(cofinsDeb.toFixed(2)),
+      cofins_credito: Number(cofinsCred.toFixed(2)),
+      cofins_liquido: Number(cofinsLiq.toFixed(2)),
+      iss_total: Number(issTot.toFixed(2)),
+      total_tributos_trimestre: Number(tributosTri.toFixed(2)),
+      aliquota_efetiva_trimestre: Number(aliqEfetivaTri.toFixed(2)),
+    }
+  })
+
+  const totalTributosPj = totalIrpj + totalCsll + totalPisLiquido + totalCofinsLiquido + totalIss
+  const aliqEfetivaAnual = receitaAnual > 0 ? (totalTributosPj / receitaAnual) * 100 : 0
+
+  // Lucro Distribuível no Lucro Real = Lucro Contábil - Tributos PJ
+  const lucroDistribuivel = Math.max(0, lucroContabilAnual - totalTributosPj)
+
+  return {
+    ano_calendario: anoCalendario,
+    regime: 'real',
+    receita_bruta_anual: Number(receitaAnual.toFixed(2)),
+    folha_anual: Number(folhaAnual.toFixed(2)),
+    lucro_contabil_anual: Number(lucroContabilAnual.toFixed(2)),
+    total_adicoes: Number(totalAdicoes.toFixed(2)),
+    total_exclusoes: Number(totalExclusoes.toFixed(2)),
+    lucro_real_ajustado_anual: Number(lucroRealAjustadoAnual.toFixed(2)),
+    total_irpj: Number(totalIrpj.toFixed(2)),
+    total_csll: Number(totalCsll.toFixed(2)),
+    total_pis_liquido: Number(totalPisLiquido.toFixed(2)),
+    total_cofins_liquido: Number(totalCofinsLiquido.toFixed(2)),
+    total_creditos_pis_cofins: Number(totalCreditosPisCofins.toFixed(2)),
+    total_iss: Number(totalIss.toFixed(2)),
+    total_tributos_pj: Number(totalTributosPj.toFixed(2)),
+    aliquota_efetiva_anual: Number(aliqEfetivaAnual.toFixed(2)),
+    trimestres: trimestresApurados,
+    lucro_distribuivel: Number(lucroDistribuivel.toFixed(2)),
+    lucro_apurado_estimado: Number(lucroDistribuivel.toFixed(2)),
+  }
+}
+
+/**
+ * Comparador de Regimes Tributários (Simples vs Presumido vs Real)
+ */
+export function compararRegimesTributarios(
+  faturamentos: EmpresaFaturamentoRecord[],
+  anoCalendario: number,
+  anexoSimples: AnexoSimplesNacional = 'III',
+  atividadePresumido?: string,
+  tabelaSimples?: TabelaSimplesRecord | null,
+  tabelaPresumido?: TabelaPresumidoRecord | null,
+  tabelaIrpjCsll?: TabelaIrpjCsllRecord | null,
+  tabelaIss?: TabelaIssRecord | null,
+  tabelaPisCofins?: TabelaPisCofinsRealRecord | null,
+): ComparativoRegimesResultado {
+  const apSimples = calcularApuracaoSimples(
+    faturamentos,
+    anoCalendario,
+    anexoSimples,
+    tabelaSimples || null,
+  )
+  const apPresumido = calcularApuracaoPresumido(
+    faturamentos,
+    anoCalendario,
+    tabelaPresumido || null,
+    tabelaIrpjCsll || null,
+    tabelaIss || null,
+  )
+  const apReal = calcularApuracaoReal(
+    faturamentos,
+    anoCalendario,
+    tabelaIrpjCsll || null,
+    tabelaIss || null,
+    tabelaPisCofins || null,
+  )
+
+  const totSimples = apSimples.total_das
+  const totPresumido = apPresumido.total_tributos_pj
+  const totReal = apReal.total_tributos_pj
+
+  const menorTotal = Math.min(totSimples, totPresumido, totReal)
+  let melhorRegime: RegimeTributarioPJ = 'simples'
+  if (menorTotal === totPresumido) melhorRegime = 'presumido'
+  if (menorTotal === totReal) melhorRegime = 'real'
+
+  const receitaBruta = apSimples.receita_bruta_anual
+
+  const itemSimples: ComparativoRegimeItem = {
+    regime: 'simples',
+    nomeRegime: `Simples Nacional (Anexo ${anexoSimples})`,
+    totalTributos: totSimples,
+    aliquotaEfetiva: apSimples.aliquota_efetiva_media,
+    lucroDistribuivel: apSimples.lucro_distribuivel,
+    detalheTributos: {
+      das: totSimples,
+    },
+    isMaisVantajoso: melhorRegime === 'simples',
+    diferencaParaMelhor: Number((totSimples - menorTotal).toFixed(2)),
+    diferencaPercentual:
+      menorTotal > 0 ? Number((((totSimples - menorTotal) / menorTotal) * 100).toFixed(2)) : 0,
+  }
+
+  const itemPresumido: ComparativoRegimeItem = {
+    regime: 'presumido',
+    nomeRegime: 'Lucro Presumido',
+    totalTributos: totPresumido,
+    aliquotaEfetiva: apPresumido.aliquota_efetiva_anual,
+    lucroDistribuivel: apPresumido.lucro_distribuivel,
+    detalheTributos: {
+      irpj: apPresumido.total_irpj,
+      csll: apPresumido.total_csll,
+      pis: apPresumido.total_pis,
+      cofins: apPresumido.total_cofins,
+      iss: apPresumido.total_iss,
+    },
+    isMaisVantajoso: melhorRegime === 'presumido',
+    diferencaParaMelhor: Number((totPresumido - menorTotal).toFixed(2)),
+    diferencaPercentual:
+      menorTotal > 0 ? Number((((totPresumido - menorTotal) / menorTotal) * 100).toFixed(2)) : 0,
+  }
+
+  const itemReal: ComparativoRegimeItem = {
+    regime: 'real',
+    nomeRegime: 'Lucro Real (Não-Cumulativo)',
+    totalTributos: totReal,
+    aliquotaEfetiva: apReal.aliquota_efetiva_anual,
+    lucroDistribuivel: apReal.lucro_distribuivel,
+    detalheTributos: {
+      irpj: apReal.total_irpj,
+      csll: apReal.total_csll,
+      pis: apReal.total_pis_liquido,
+      cofins: apReal.total_cofins_liquido,
+      iss: apReal.total_iss,
+    },
+    isMaisVantajoso: melhorRegime === 'real',
+    diferencaParaMelhor: Number((totReal - menorTotal).toFixed(2)),
+    diferencaPercentual:
+      menorTotal > 0 ? Number((((totReal - menorTotal) / menorTotal) * 100).toFixed(2)) : 0,
+  }
+
+  // Maior diferença entre o pior e o melhor
+  const maiorTotal = Math.max(totSimples, totPresumido, totReal)
+  const economiaAnualEstimada = Number((maiorTotal - menorTotal).toFixed(2))
+
+  return {
+    ano_calendario: anoCalendario,
+    receita_bruta_anual: receitaBruta,
+    melhorRegime,
+    regimes: {
+      simples: itemSimples,
+      presumido: itemPresumido,
+      real: itemReal,
+    },
+    economiaAnualEstimada,
+  }
+}
+
+/**
  * Calcula a distribuição de lucros, pró-labore e JCP para os sócios da empresa.
  */
 export function calcularDistribuicaoSocios(
@@ -484,6 +788,82 @@ export async function sincronizarDistribuicaoComIRPF(
 /**
  * Retorna apuração completa da empresa para um ano especificado.
  */
+export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalendario: number) {
+  const [faturamentos, socios] = await Promise.all([
+    getFaturamentosEmpresa(empresa.id, anoCalendario),
+    getSociosDaEmpresa(empresa.id),
+  ])
+
+  let apuracaoSimples: ApuracaoSimplesAnual | null = null
+  let apuracaoPresumido: ApuracaoPresumidoAnual | null = null
+  let apuracaoReal: ApuracaoLucroRealAnual | null = null
+  let lucroDistribuivel = 0
+
+  const [tabelaSimplesRes, tabelaPresumidoRes, tabelaIrpjRes, tabelaIssRes, tabelaPisCofinsRes] =
+    await Promise.all([
+      getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
+      getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
+      getTabelaIrpjCsllPorAno(anoCalendario),
+      getTabelaIssPorAno(anoCalendario),
+      getTabelaPisCofinsRealPorAno(anoCalendario),
+    ])
+
+  if (empresa.regime === 'simples') {
+    apuracaoSimples = calcularApuracaoSimples(
+      faturamentos,
+      anoCalendario,
+      empresa.anexo_simples || 'III',
+      tabelaSimplesRes.tabela,
+    )
+    lucroDistribuivel = apuracaoSimples.lucro_distribuivel
+  } else if (empresa.regime === 'presumido') {
+    apuracaoPresumido = calcularApuracaoPresumido(
+      faturamentos,
+      anoCalendario,
+      tabelaPresumidoRes.tabela,
+      tabelaIrpjRes.tabela,
+      tabelaIssRes.tabela,
+    )
+    lucroDistribuivel = apuracaoPresumido.lucro_distribuivel
+  } else {
+    apuracaoReal = calcularApuracaoReal(
+      faturamentos,
+      anoCalendario,
+      tabelaIrpjRes.tabela,
+      tabelaIssRes.tabela,
+      tabelaPisCofinsRes.tabela,
+    )
+    lucroDistribuivel = apuracaoReal.lucro_distribuivel
+  }
+
+  const comparativoRegimes = compararRegimesTributarios(
+    faturamentos,
+    anoCalendario,
+    empresa.anexo_simples || 'III',
+    empresa.atividade,
+    tabelaSimplesRes.tabela,
+    tabelaPresumidoRes.tabela,
+    tabelaIrpjRes.tabela,
+    tabelaIssRes.tabela,
+    tabelaPisCofinsRes.tabela,
+  )
+
+  const distribuicoes = calcularDistribuicaoSocios(socios, lucroDistribuivel, anoCalendario)
+
+  return {
+    empresa,
+    faturamentos,
+    socios,
+    apuracaoSimples,
+    apuracaoPresumido,
+    apuracaoReal,
+    comparativoRegimes,
+    distribuicoes,
+    lucroDistribuivel,
+    anoCalendario,
+  }
+}
+
 export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendario: number) {
   const empresa = await pb.collection('empresas').getOne<EmpresaRecord>(empresaId, {
     expand: 'escritorio_id',
@@ -495,27 +875,27 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
 
   let apuracaoSimples: ApuracaoSimplesAnual | null = null
   let apuracaoPresumido: ApuracaoPresumidoAnual | null = null
+  let apuracaoReal: ApuracaoLucroRealAnual | null = null
   let lucroDistribuivel = 0
 
+  const [tabelaSimplesRes, tabelaPresumidoRes, tabelaIrpjRes, tabelaIssRes, tabelaPisCofinsRes] =
+    await Promise.all([
+      getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
+      getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
+      getTabelaIrpjCsllPorAno(anoCalendario),
+      getTabelaIssPorAno(anoCalendario),
+      getTabelaPisCofinsRealPorAno(anoCalendario),
+    ])
+
   if (empresa.regime === 'simples') {
-    const { tabela } = await getTabelaSimplesPorAnoAnexo(
-      anoCalendario,
-      empresa.anexo_simples || 'III',
-    )
     apuracaoSimples = calcularApuracaoSimples(
       faturamentos,
       anoCalendario,
       empresa.anexo_simples || 'III',
-      tabela,
+      tabelaSimplesRes.tabela,
     )
     lucroDistribuivel = apuracaoSimples.lucro_distribuivel
-  } else {
-    const [tabelaPresumidoRes, tabelaIrpjRes, tabelaIssRes] = await Promise.all([
-      getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
-      getTabelaIrpjCsllPorAno(anoCalendario),
-      getTabelaIssPorAno(anoCalendario),
-    ])
-
+  } else if (empresa.regime === 'presumido') {
     apuracaoPresumido = calcularApuracaoPresumido(
       faturamentos,
       anoCalendario,
@@ -524,7 +904,29 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
       tabelaIssRes.tabela,
     )
     lucroDistribuivel = apuracaoPresumido.lucro_distribuivel
+  } else {
+    apuracaoReal = calcularApuracaoReal(
+      faturamentos,
+      anoCalendario,
+      tabelaIrpjRes.tabela,
+      tabelaIssRes.tabela,
+      tabelaPisCofinsRes.tabela,
+    )
+    lucroDistribuivel = apuracaoReal.lucro_distribuivel
   }
+
+  // Comparador consolidado dos 3 regimes
+  const comparativoRegimes = compararRegimesTributarios(
+    faturamentos,
+    anoCalendario,
+    empresa.anexo_simples || 'III',
+    empresa.atividade,
+    tabelaSimplesRes.tabela,
+    tabelaPresumidoRes.tabela,
+    tabelaIrpjRes.tabela,
+    tabelaIssRes.tabela,
+    tabelaPisCofinsRes.tabela,
+  )
 
   const distribuicoes = calcularDistribuicaoSocios(socios, lucroDistribuivel, anoCalendario)
 
@@ -534,8 +936,17 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
     socios,
     apuracaoSimples,
     apuracaoPresumido,
+    apuracaoReal,
+    comparativoRegimes,
     distribuicoes,
     lucroDistribuivel,
     anoCalendario,
+    tabelas: {
+      simples: tabelaSimplesRes.tabela,
+      presumido: tabelaPresumidoRes.tabela,
+      irpjCsll: tabelaIrpjRes.tabela,
+      iss: tabelaIssRes.tabela,
+      pisCofins: tabelaPisCofinsRes.tabela,
+    },
   }
 }

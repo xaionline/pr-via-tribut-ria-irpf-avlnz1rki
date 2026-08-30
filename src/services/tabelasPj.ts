@@ -4,6 +4,7 @@ import type {
   TabelaPresumidoRecord,
   TabelaIrpjCsllRecord,
   TabelaIssRecord,
+  TabelaPisCofinsRealRecord,
   AnexoSimplesNacional,
 } from '@/types'
 
@@ -304,4 +305,79 @@ export async function updateTabelaIss(
 
 export async function deleteTabelaIss(id: string): Promise<boolean> {
   return pb.collection('tabelas_iss').delete(id)
+}
+
+// =========================================================================
+// TABELAS PIS / COFINS NÃO-CUMULATIVO (LUCRO REAL)
+// =========================================================================
+
+export async function getTabelasPisCofinsReal(): Promise<TabelaPisCofinsRealRecord[]> {
+  return pb.collection('tabelas_pis_cofins_real').getFullList<TabelaPisCofinsRealRecord>({
+    sort: '-ano',
+  })
+}
+
+export async function getTabelaPisCofinsRealPorAno(
+  ano: number,
+): Promise<{ tabela: TabelaPisCofinsRealRecord | null; isFallback: boolean }> {
+  try {
+    const direct = await pb
+      .collection('tabelas_pis_cofins_real')
+      .getFirstListItem<TabelaPisCofinsRealRecord>(`ano = ${ano}`)
+    return { tabela: direct, isFallback: false }
+  } catch (_) {
+    try {
+      const list = await pb
+        .collection('tabelas_pis_cofins_real')
+        .getList<TabelaPisCofinsRealRecord>(1, 1, {
+          sort: '-ano',
+        })
+      if (list.items.length > 0) {
+        return { tabela: list.items[0], isFallback: true }
+      }
+    } catch {
+      /* intentionally ignored */
+    }
+    return { tabela: null, isFallback: false }
+  }
+}
+
+export async function getTabelaPisCofinsRealAnoAnterior(
+  ano: number,
+): Promise<TabelaPisCofinsRealRecord | null> {
+  try {
+    return await pb
+      .collection('tabelas_pis_cofins_real')
+      .getFirstListItem<TabelaPisCofinsRealRecord>(`ano = ${ano - 1}`)
+  } catch (_) {
+    try {
+      const prevList = await pb
+        .collection('tabelas_pis_cofins_real')
+        .getList<TabelaPisCofinsRealRecord>(1, 1, {
+          filter: `ano < ${ano}`,
+          sort: '-ano',
+        })
+      if (prevList.items.length > 0) return prevList.items[0]
+    } catch {
+      /* intentionally ignored */
+    }
+    return null
+  }
+}
+
+export async function createTabelaPisCofinsReal(
+  data: Omit<TabelaPisCofinsRealRecord, 'id' | 'created' | 'updated'>,
+): Promise<TabelaPisCofinsRealRecord> {
+  return pb.collection('tabelas_pis_cofins_real').create<TabelaPisCofinsRealRecord>(data)
+}
+
+export async function updateTabelaPisCofinsReal(
+  id: string,
+  data: Partial<Omit<TabelaPisCofinsRealRecord, 'id' | 'created' | 'updated'>>,
+): Promise<TabelaPisCofinsRealRecord> {
+  return pb.collection('tabelas_pis_cofins_real').update<TabelaPisCofinsRealRecord>(id, data)
+}
+
+export async function deleteTabelaPisCofinsReal(id: string): Promise<boolean> {
+  return pb.collection('tabelas_pis_cofins_real').delete(id)
 }

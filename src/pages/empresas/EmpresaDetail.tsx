@@ -127,8 +127,8 @@ export default function EmpresaDetail() {
       <div className="text-center py-12">
         <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
         <h2 className="text-lg font-semibold text-slate-800">Empresa não encontrada</h2>
-        <Button asChild className="mt-4" variant="outline">
-          <Link to="/app/empresas">Voltar para Empresas</Link>
+        <Button className="mt-4" variant="outline" onClick={() => navigate('/app/empresas')}>
+          Voltar para Empresas
         </Button>
       </div>
     )
@@ -153,11 +153,14 @@ export default function EmpresaDetail() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="text-xs gap-1.5 h-9">
-            <Link to={`/app/empresas/${empresa.id}/editar`}>
-              <Pencil className="w-3.5 h-3.5" />
-              <span>Editar Cadastro</span>
-            </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5 h-9"
+            onClick={() => navigate(`/app/empresas/${empresa.id}/editar`)}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            <span>Editar Cadastro</span>
           </Button>
           <Button
             variant="ghost"

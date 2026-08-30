@@ -29,7 +29,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import {
   Dialog,
   DialogContent,
@@ -475,14 +476,12 @@ export function SimuladorResumoPjTab({
                           <span>Pró-Labore Mensal</span>
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
-                                >
-                                  <HelpCircle className="w-3.5 h-3.5 cursor-help" />
-                                </button>
-                              </TooltipTrigger>
+                              <TooltipPrimitive.Trigger
+                                type="button"
+                                className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                              >
+                                <HelpCircle className="w-3.5 h-3.5 cursor-help" />
+                              </TooltipPrimitive.Trigger>
                               <TooltipContent className="max-w-xs text-xs">
                                 Remuneração tributável mensal do sócio administrador. Dedutível na
                                 apuração PJ e compõe a folha para o Fator R.
@@ -520,14 +519,12 @@ export function SimuladorResumoPjTab({
                           <span>Distribuição da Cota de Lucros (%)</span>
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
-                                >
-                                  <HelpCircle className="w-3.5 h-3.5 cursor-help" />
-                                </button>
-                              </TooltipTrigger>
+                              <TooltipPrimitive.Trigger
+                                type="button"
+                                className="inline-flex items-center justify-center rounded-full p-0.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                              >
+                                <HelpCircle className="w-3.5 h-3.5 cursor-help" />
+                              </TooltipPrimitive.Trigger>
                               <TooltipContent className="max-w-xs text-xs">
                                 Percentual do lucro distribuível atribuído ao sócio que será
                                 repassado como rendimento isento no IRPF.

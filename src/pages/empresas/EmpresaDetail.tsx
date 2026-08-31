@@ -38,6 +38,7 @@ import { EmpresaSociosTab } from './EmpresaSociosTab'
 import { EmpresaApuracaoTab } from './EmpresaApuracaoTab'
 import { ComparadorRegimesTab } from './ComparadorRegimesTab'
 import { SimuladorResumoPjTab } from './SimuladorResumoPjTab'
+import PlanejadorRetiradas from './PlanejadorRetiradas'
 import { maskCnpj, formatDate } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type {
@@ -48,7 +49,7 @@ import type {
   ApuracaoEmpresaResultado,
 } from '@/types'
 
-type TabKey = 'resumo-simulador' | 'comparador' | 'apuracao' | 'socios'
+type TabKey = 'planejador' | 'resumo-simulador' | 'comparador' | 'apuracao' | 'socios'
 
 export default function EmpresaDetail() {
   const { id } = useParams<{ id: string }>()
@@ -63,7 +64,7 @@ export default function EmpresaDetail() {
   const [selectedAno, setSelectedAno] = useState<number>(new Date().getFullYear())
 
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabKey>('resumo-simulador')
+  const [activeTab, setActiveTab] = useState<TabKey>('planejador')
   const [deleting, setDeleting] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
@@ -216,8 +217,20 @@ export default function EmpresaDetail() {
         </div>
       </Card>
 
-      {/* NAVEGAÇÃO DE ABAS REESTRUTURADA COM SIMULADOR E COMPARADOR */}
+      {/* NAVEGAÇÃO DE ABAS REESTRUTURADA COM PLANEJADOR DE RETIRADAS */}
       <div className="flex border-b border-slate-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('planejador')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === 'planejador'
+              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/40 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Sliders className="w-4 h-4 text-emerald-600" />
+          Planejador de Retiradas
+        </button>
+
         <button
           onClick={() => setActiveTab('resumo-simulador')}
           className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
@@ -226,7 +239,7 @@ export default function EmpresaDetail() {
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Sliders className="w-4 h-4 text-emerald-600" />
+          <Calculator className="w-4 h-4 text-emerald-600" />
           Resumo & Simulador PJ
         </button>
 
@@ -268,6 +281,10 @@ export default function EmpresaDetail() {
       </div>
 
       {/* CONTEÚDO DAS ABAS */}
+      {activeTab === 'planejador' && (
+        <PlanejadorRetiradas empresaId={empresa.id} initialAno={selectedAno} isTab={true} />
+      )}
+
       {activeTab === 'resumo-simulador' && (
         <SimuladorResumoPjTab
           empresa={empresa}

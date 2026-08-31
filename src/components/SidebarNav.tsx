@@ -16,6 +16,7 @@ import {
   Percent,
   Landmark,
   Coins,
+  Sliders,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -154,7 +155,14 @@ export function SidebarNav() {
           id: 'analise_relatorios',
           title: 'ANÁLISE & RELATÓRIOS',
           iconEmoji: '📈',
-          items: [{ label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 }],
+          items: [
+            {
+              label: 'Planejador de Retiradas',
+              path: '/app/planejador-retiradas',
+              icon: Sliders,
+            },
+            { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+          ],
         },
         {
           id: 'administracao',

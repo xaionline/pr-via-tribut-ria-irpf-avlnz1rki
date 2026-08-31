@@ -177,17 +177,26 @@ export async function simularCenarioPj(
 
     const proLaboreAnual = (Number(sp.pro_labore_mensal) || 0) * 12
     const cotaLucroMaximo = (lucroDistribuivelTotal * percentualParticipacao) / 100
-    const pctDistribuicao = sp.percentual_distribuicao_lucros ?? 100
+    const pctDistribuicao = sp.percentual_distribuicao_lucros ?? percentualParticipacao ?? 100
+
+    // Se retiradas definidas globalmente, respeitamos a distribuição de lucros
     const lucrosDistribuidos = (cotaLucroMaximo * pctDistribuicao) / 100
+
+    // JCP se configurado
+    const jcpAnual =
+      params.considerar_jcp && params.jcp_mensal_total
+        ? (params.jcp_mensal_total * 12 * percentualParticipacao) / 100
+        : 0
+    const irpfJcp = jcpAnual * 0.15 // 15% na fonte (exclusiva)
 
     // IRPF sobre pró-labore
     const irpfProLabore = calcIRPFSocio(proLaboreAnual, faixasIRPF)
 
-    // Altas Rendas sobre dividendos se ultrapassar teto anual
+    // Altas Rendas sobre dividendos se ultrapassar teto anual (R$ 600k)
     const irpfmAltasRendas =
       lucrosDistribuidos > 600000 ? ((lucrosDistribuidos - 600000) * altasRendasAliq) / 100 : 0
 
-    const totalIrpfSocio = irpfProLabore + irpfmAltasRendas
+    const totalIrpfSocio = irpfProLabore + irpfmAltasRendas + irpfJcp
     totalIrpfSocios += totalIrpfSocio
 
     return {
@@ -195,6 +204,7 @@ export async function simularCenarioPj(
       cliente_nome: sp.cliente_nome,
       pro_labore_anual: Number(proLaboreAnual.toFixed(2)),
       lucros_distribuidos: Number(lucrosDistribuidos.toFixed(2)),
+      jcp_anual: Number(jcpAnual.toFixed(2)),
       irpf_estimado_socio: Number(irpfProLabore.toFixed(2)),
       irpfm_altas_rendas_estimado: Number(irpfmAltasRendas.toFixed(2)),
       total_irpf_socio: Number(totalIrpfSocio.toFixed(2)),
@@ -243,6 +253,13 @@ export async function createCenarioPj(
   data: Omit<CenarioSimulacaoPjRecord, 'id' | 'created' | 'updated'>,
 ): Promise<CenarioSimulacaoPjRecord> {
   return pb.collection('cenarios_simulacao_pj').create<CenarioSimulacaoPjRecord>(data)
+}
+
+export async function updateCenarioPj(
+  id: string,
+  data: Partial<Omit<CenarioSimulacaoPjRecord, 'id' | 'created' | 'updated'>>,
+): Promise<CenarioSimulacaoPjRecord> {
+  return pb.collection('cenarios_simulacao_pj').update<CenarioSimulacaoPjRecord>(id, data)
 }
 
 export async function deleteCenarioPj(id: string): Promise<boolean> {

@@ -716,11 +716,17 @@ export interface SimulacaoPjSocioParam {
   cliente_nome: string
   pro_labore_mensal: number
   percentual_distribuicao_lucros: number // % do lucro atribuído ao sócio a ser distribuído
+  percentual_participacao?: number
 }
 
 export interface SimulacaoPjParams {
   socios_params: SimulacaoPjSocioParam[]
   percentual_distribuicao_geral?: number
+  // Campos do Planejador de Retiradas
+  retirada_mensal_total?: number // Valor total mensal a retirar
+  split_pro_labore_perc?: number // 0-100% pró-labore vs dividendos
+  considerar_jcp?: boolean
+  jcp_mensal_total?: number
 }
 
 export interface SimulacaoPjResultados {
@@ -754,6 +760,7 @@ export interface CenarioSimulacaoPjRecord {
   empresa_id: string
   ano_calendario: number
   nome: string
+  recomendado?: boolean
   params: SimulacaoPjParams
   resultados: SimulacaoPjResultados
   created: string

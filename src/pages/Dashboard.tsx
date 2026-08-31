@@ -17,14 +17,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCard, KpiCarousel, type KpiCardProps } from '@/components/dashboard/KpiCard'
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable'
 import { AlertsSidebar } from '@/components/dashboard/AlertsSidebar'
+import { BlocoAlertasEmpresas } from '@/components/dashboard/BlocoAlertasEmpresas'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import { getClientes } from '@/services/clientes'
 import { getDeclaracoes, getAllResultados } from '@/services/declaracoes'
+import { calcularAlertasGlobaisDasEmpresas, getAlertasConfig } from '@/services/alertasGlobais'
 import { formatCurrency } from '@/lib/formatters'
 import { daysUntilDeadline, getNextDeadlineInfo } from '@/lib/irpf-calc'
-import type { ClienteRecord, DeclaracaoRecord, ResultadoRecord } from '@/types'
+import type {
+  ClienteRecord,
+  DeclaracaoRecord,
+  ResultadoRecord,
+  AlertaEmpresaGlobal,
+  AlertasConfigRecord,
+} from '@/types'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -39,6 +47,34 @@ export default function Dashboard() {
   const [declaracoes, setDeclaracoes] = useState<DeclaracaoRecord[]>([])
   const [resultados, setResultados] = useState<ResultadoRecord[]>([])
 
+  // Alertas Globais das Empresas
+  const [alertasGlobais, setAlertasGlobais] = useState<AlertaEmpresaGlobal[]>([])
+  const [alertasConfig, setAlertasConfig] = useState<AlertasConfigRecord | null>(null)
+  const [loadingAlertas, setLoadingAlertas] = useState(false)
+
+  const loadAlertas = async (empresasList: EmpresaRecord[], escritorioId?: string) => {
+    if (empresasList.length === 0) {
+      setAlertasGlobais([])
+      return
+    }
+    setLoadingAlertas(true)
+    try {
+      const currentYear = new Date().getFullYear()
+      const [alertasRes, configRes] = await Promise.all([
+        calcularAlertasGlobaisDasEmpresas(empresasList, currentYear),
+        escritorioId ? getAlertasConfig(escritorioId) : Promise.resolve(null),
+      ])
+      setAlertasGlobais(alertasRes.alertas)
+      if (configRes) {
+        setAlertasConfig(configRes)
+      }
+    } catch (err) {
+      console.error('Erro ao calcular alertas globais das empresas:', err)
+    } finally {
+      setLoadingAlertas(false)
+    }
+  }
+
   const loadData = async () => {
     try {
       const [cliRes, empRes, decs, res] = await Promise.all([
@@ -51,6 +87,9 @@ export default function Dashboard() {
       setEmpresas(empRes)
       setDeclaracoes(decs)
       setResultados(res)
+
+      // Carrega os alertas globais com a lista de empresas
+      loadAlertas(empRes, user?.escritorio_id)
     } catch {
       toast({
         title: 'Falha ao carregar dashboard',
@@ -68,6 +107,13 @@ export default function Dashboard() {
   useRealtime('declaracoes', () => loadData())
   useRealtime('clientes', () => loadData())
   useRealtime('empresas', () => loadData())
+  useRealtime('empresas_faturamentos', () => loadAlertas(empresas, user?.escritorio_id))
+  useRealtime('empresas_socios', () => loadAlertas(empresas, user?.escritorio_id))
+  useRealtime('alertas_config', () => {
+    if (user?.escritorio_id) {
+      getAlertasConfig(user.escritorio_id).then((cfg) => cfg && setAlertasConfig(cfg))
+    }
+  })
 
   const resultadosMap = useMemo(
     () => new Map(resultados.map((r) => [r.declaracao_id, r])),
@@ -240,6 +286,17 @@ export default function Dashboard() {
       <div className="lg:hidden">
         <KpiCarousel kpis={kpis} />
       </div>
+
+      {/* BLOCO DE ALERTAS AUTOMÁTICOS GLOBAIS DAS EMPRESAS */}
+      <BlocoAlertasEmpresas
+        alertas={alertasGlobais}
+        loading={loadingAlertas}
+        escritorioId={user?.escritorio_id}
+        config={alertasConfig}
+        proprietarioEmail={user?.email}
+        onRefresh={() => loadAlertas(empresas, user?.escritorio_id)}
+        onConfigUpdated={(cfg) => setAlertasConfig(cfg)}
+      />
 
       {/* Card de Destaque Módulo Pessoa Jurídica (PJ) */}
       <Card className="p-4 sm:p-5 border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white shadow-subtle">

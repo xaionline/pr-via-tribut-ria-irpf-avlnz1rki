@@ -818,3 +818,49 @@ export interface ApuracaoEmpresaResultado {
   anoCalendario: number
   tabelas: TabelasApuracaoPj
 }
+
+// ==========================================
+// ALERTAS AUTOMÁTICOS GLOBAIS DO ESCRITÓRIO
+// ==========================================
+
+export type SeveridadeAlerta = 'critico' | 'atencao' | 'informativo' | 'ok'
+export type TipoAlertaEmpresa =
+  | 'fator_r'
+  | 'pro_labore'
+  | 'altas_rendas'
+  | 'anexo_simples'
+  | 'regime_desvantajoso'
+  | 'outro'
+
+export interface AlertaEmpresaGlobal {
+  id: string
+  empresa_id: string
+  empresa_nome: string
+  empresa_cnpj: string
+  empresa_regime: RegimeTributarioPJ
+  tipo: TipoAlertaEmpresa
+  severidade: SeveridadeAlerta
+  titulo: string
+  descricao: string
+  impacto?: string
+  acao: string
+  link: string
+  valor_atual?: string | number
+  valor_meta?: string | number
+  destaque?: boolean
+  ano_calendario: number
+}
+
+export interface AlertasConfigRecord {
+  id: string
+  escritorio_id: string
+  email_proprietario?: string
+  enviar_email_geral?: boolean
+  enviar_fator_r?: boolean
+  enviar_pro_labore?: boolean
+  enviar_altas_rendas?: boolean
+  enviar_anexo_simples?: boolean
+  config_alertas_custom?: Record<string, boolean>
+  created: string
+  updated: string
+}

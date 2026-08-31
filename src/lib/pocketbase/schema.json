@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-31T23:31:44.666Z",
+  "generatedAt": "2026-08-31T23:48:32.084Z",
   "collections": [
     {
       "name": "users",
@@ -1988,6 +1988,85 @@
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_tabelas_produtos_agro_ano_cod ON tabelas_produtos_agro (ano, codigo)"
+      ]
+    },
+    {
+      "name": "alertas_config",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "escritorio_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "escritorios"
+        },
+        {
+          "name": "email_proprietario",
+          "type": "email",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "enviar_email_geral",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "enviar_fator_r",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "enviar_pro_labore",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "enviar_altas_rendas",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "enviar_anexo_simples",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "config_alertas_custom",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_alertas_config_escritorio ON alertas_config (escritorio_id)"
       ]
     }
   ]

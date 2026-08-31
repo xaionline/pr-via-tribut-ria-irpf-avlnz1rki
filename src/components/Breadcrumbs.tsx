@@ -25,6 +25,7 @@ export function Breadcrumbs() {
     ibs_cbs: 'IBS/CBS',
     'simples-nacional': 'Simples Nacional',
     'lucro-presumido': 'Lucro Presumido',
+    'lucro-real': 'Lucro Real (PIS/COFINS)',
     'irpj-csll': 'IRPJ / CSLL',
     iss: 'Tabelas ISS',
     simulador: 'Simulador',

@@ -84,12 +84,21 @@ export function Header() {
             icon: TableProperties,
           },
           {
+            label: 'Lucro Real (PIS/COFINS)',
+            path: '/app/configuracoes/lucro-real',
+            icon: TableProperties,
+          },
+          {
             label: 'IRPJ / CSLL',
             path: '/app/configuracoes/irpj-csll',
             icon: TableProperties,
           },
           { label: 'Tabelas ISS', path: '/app/configuracoes/iss', icon: TableProperties },
-          { label: 'Configurações', path: '/app/configuracoes/escritorio', icon: Settings },
+          {
+            label: 'Configurações do escritório',
+            path: '/app/configuracoes/escritorio',
+            icon: Settings,
+          },
         ]
       : []),
   ]

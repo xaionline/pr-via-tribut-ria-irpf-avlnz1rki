@@ -16,6 +16,11 @@ export function formatNumber(value: number | undefined | null): string {
   }).format(value)
 }
 
+export function formatPercent(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) return '0,00%'
+  return `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+}
+
 export function formatDate(dateStr?: string): string {
   if (!dateStr) return '-'
   try {

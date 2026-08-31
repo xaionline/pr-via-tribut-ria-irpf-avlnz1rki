@@ -386,6 +386,32 @@ export interface EmpresaSocioRecord {
   }
 }
 
+export type CategoriaInsumoReal = 'comercial_servico' | 'rural_agro' | 'monofasico' | 'imobilizado'
+
+export type TipoCreditoInsumo = 'padrao' | 'presumido' | 'isento_vedado' | 'depreciacao'
+
+export interface InsumoAgroItem {
+  produto_codigo: string // ex: 'soja', 'milho', 'cana_de_acucar'
+  produto_nome?: string
+  valor: number
+  percentual_presumido_pis?: number
+  percentual_presumido_cofins?: number
+  aliquota_efetiva_pis?: number
+  aliquota_efetiva_cofins?: number
+}
+
+export interface InsumosDetalhadosMes {
+  comercial_servico: number
+  rural_agro: {
+    total: number
+    itens: InsumoAgroItem[]
+  }
+  monofasico: number
+  imobilizado: number
+  outros_creditos?: number
+  observacao?: string
+}
+
 export interface EmpresaFaturamentoRecord {
   id: string
   empresa_id: string
@@ -398,6 +424,36 @@ export interface EmpresaFaturamentoRecord {
   exclusoes_lalur?: number
   compras_insumos?: number
   outros_creditos_pis_cofins?: number
+  insumos_detalhados?: InsumosDetalhadosMes
+  created: string
+  updated: string
+}
+
+export interface TabelaInsumoRealRecord {
+  id: string
+  ano: number
+  categoria: CategoriaInsumoReal
+  descricao: string
+  aliquota_credito_pis: number
+  aliquota_credito_cofins: number
+  permite_credito?: boolean
+  tipo_credito: TipoCreditoInsumo
+  observacao?: string
+  created: string
+  updated: string
+}
+
+export interface TabelaProdutoAgroRecord {
+  id: string
+  ano: number
+  codigo: string
+  nome: string
+  percentual_presumido_pis: number
+  percentual_presumido_cofins: number
+  aliquota_efetiva_pis: number
+  aliquota_efetiva_cofins: number
+  ncm?: string
+  base_legal?: string
   created: string
   updated: string
 }
@@ -529,6 +585,51 @@ export interface ApuracaoPresumidoAnual {
   lucro_distribuivel: number
 }
 
+export interface DetalheCreditosInsumos {
+  comercial_servico: {
+    base: number
+    aliquota_pis: number
+    aliquota_cofins: number
+    credito_pis: number
+    credito_cofins: number
+  }
+  rural_agro: {
+    base: number
+    credito_pis: number
+    credito_cofins: number
+    itens: {
+      produto_codigo: string
+      produto_nome: string
+      base: number
+      aliquota_efetiva_pis: number
+      aliquota_efetiva_cofins: number
+      credito_pis: number
+      credito_cofins: number
+    }[]
+  }
+  monofasico: {
+    base: number
+    credito_pis: number
+    credito_cofins: number
+  }
+  imobilizado: {
+    base: number
+    aliquota_pis: number
+    aliquota_cofins: number
+    credito_pis: number
+    credito_cofins: number
+  }
+  outros_creditos: {
+    base: number
+    credito_pis: number
+    credito_cofins: number
+  }
+  total_base_creditos: number
+  total_credito_pis: number
+  total_credito_cofins: number
+  total_creditos: number
+}
+
 export interface ApuracaoLucroRealTrimestre {
   trimestre: number
   meses: number[]
@@ -542,11 +643,12 @@ export interface ApuracaoLucroRealTrimestre {
   irpj_total: number
   csll_total: number // 9% sobre Lalur
   pis_debito: number // 1.65% s/ receita
-  pis_credito: number // 1.65% s/ insumos/compras
+  pis_credito: number // s/ insumos por categoria e produto agro
   pis_liquido: number
   cofins_debito: number // 7.60% s/ receita
-  cofins_credito: number // 7.60% s/ insumos/compras
+  cofins_credito: number // s/ insumos por categoria e produto agro
   cofins_liquido: number
+  detalhe_creditos?: DetalheCreditosInsumos
   iss_total: number
   total_tributos_trimestre: number
   aliquota_efetiva_trimestre: number
@@ -566,6 +668,7 @@ export interface ApuracaoLucroRealAnual {
   total_pis_liquido: number
   total_cofins_liquido: number
   total_creditos_pis_cofins: number
+  detalhe_creditos_anual?: DetalheCreditosInsumos
   total_iss: number
   total_tributos_pj: number
   aliquota_efetiva_anual: number

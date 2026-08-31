@@ -19,6 +19,8 @@ import {
   getTabelaIrpjCsllPorAno,
   getTabelaIssPorAno,
   getTabelaPisCofinsRealPorAno,
+  getTabelasInsumosRealPorAno,
+  getTabelasProdutosAgroPorAno,
 } from './tabelasPj'
 import { getTabelaPorAno } from './tabelas'
 
@@ -53,6 +55,8 @@ export async function simularCenarioPj(
     tabelaIrpjRes,
     tabelaIssRes,
     tabelaPisCofinsRes,
+    tabelasInsumosRes,
+    tabelasAgroRes,
     tabelaProgRes,
   ] = await Promise.all([
     getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
@@ -60,6 +64,8 @@ export async function simularCenarioPj(
     getTabelaIrpjCsllPorAno(anoCalendario),
     getTabelaIssPorAno(anoCalendario),
     getTabelaPisCofinsRealPorAno(anoCalendario),
+    getTabelasInsumosRealPorAno(anoCalendario),
+    getTabelasProdutosAgroPorAno(anoCalendario),
     getTabelaPorAno(anoCalendario).catch(() => null),
   ])
 
@@ -98,6 +104,8 @@ export async function simularCenarioPj(
       tabelaIrpjRes.tabela,
       tabelaIssRes.tabela,
       tabelaPisCofinsRes.tabela,
+      tabelasInsumosRes.tabelas,
+      tabelasAgroRes.produtos,
     )
     tributosPjAtual = ap.total_tributos_pj
     cargaAtual = ap.aliquota_efetiva_anual
@@ -151,6 +159,8 @@ export async function simularCenarioPj(
       tabelaIrpjRes.tabela,
       tabelaIssRes.tabela,
       tabelaPisCofinsRes.tabela,
+      tabelasInsumosRes.tabelas,
+      tabelasAgroRes.produtos,
     )
     tributosPjOtimizado = apReal.total_tributos_pj
     cargaOtimizada = apReal.aliquota_efetiva_anual

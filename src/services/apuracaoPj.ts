@@ -22,6 +22,9 @@ import type {
   ApuracaoLucroRealAnual,
   ApuracaoLucroRealTrimestre,
   TabelaPisCofinsRealRecord,
+  TabelaInsumoRealRecord,
+  TabelaProdutoAgroRecord,
+  DetalheCreditosInsumos,
   ComparativoRegimesResultado,
   ComparativoRegimeItem,
   RegimeTributarioPJ,
@@ -32,6 +35,8 @@ import {
   getTabelaIrpjCsllPorAno,
   getTabelaIssPorAno,
   getTabelaPisCofinsRealPorAno,
+  getTabelasInsumosRealPorAno,
+  getTabelasProdutosAgroPorAno,
 } from './tabelasPj'
 import { getFaturamentosEmpresa, getSociosDaEmpresa } from './empresas'
 
@@ -319,22 +324,192 @@ export function calcularApuracaoPresumido(
 }
 
 /**
- * Realiza os cálculos de Apuração do Lucro Real trimestral e anual.
- *
- * IRPJ: Base = Lucro Contábil + Adições LALUR - Exclusões LALUR (Lucro Real)
- *       IRPJ Básico = Max(0, Base) × 15%
- *       IRPJ Adicional = Max(0, Base - R$ 60.000 no trimestre) × 10%
- * CSLL: Base = Lucro Real Ajustado
- *       CSLL = Max(0, Base) × 9%
- * PIS Não-Cumulativo:
- *       Débito = Receita Bruta × 1.65%
- *       Crédito = (Compras Insumos + Outros Créditos) × 1.65%
- *       PIS Líquido = Max(0, Débito - Crédito)
- * COFINS Não-Cumulativo:
- *       Débito = Receita Bruta × 7.60%
- *       Crédito = (Compras Insumos + Outros Créditos) × 7.60%
- *       COFINS Líquido = Max(0, Débito - Crédito)
- * ISS: Receita × Alíquota ISS (ex: 5.00%)
+ * Calcula detalhadamente os créditos de PIS e COFINS por categoria de insumo e produto rural/agro.
+ */
+export function calcularCreditosInsumosMes(
+  fat: EmpresaFaturamentoRecord,
+  tabelasInsumos: TabelaInsumoRealRecord[] = [],
+  tabelasAgro: TabelaProdutoAgroRecord[] = [],
+  aliqPadraoPis: number = 1.65,
+  aliqPadraoCofins: number = 7.6,
+): { creditoPis: number; creditoCofins: number; detalhe: DetalheCreditosInsumos } {
+  // Configs por categoria
+  const catComercial = tabelasInsumos.find((t) => t.categoria === 'comercial_servico')
+  const catRural = tabelasInsumos.find((t) => t.categoria === 'rural_agro')
+  const catMonofasico = tabelasInsumos.find((t) => t.categoria === 'monofasico')
+  const catImobilizado = tabelasInsumos.find((t) => t.categoria === 'imobilizado')
+
+  const aliqComPis = catComercial ? catComercial.aliquota_credito_pis : aliqPadraoPis
+  const aliqComCofins = catComercial ? catComercial.aliquota_credito_cofins : aliqPadraoCofins
+
+  const aliqImoPis = catImobilizado ? catImobilizado.aliquota_credito_pis : aliqPadraoPis
+  const aliqImoCofins = catImobilizado ? catImobilizado.aliquota_credito_cofins : aliqPadraoCofins
+
+  const aliqMonoPis = catMonofasico ? catMonofasico.aliquota_credito_pis : 0
+  const aliqMonoCofins = catMonofasico ? catMonofasico.aliquota_credito_cofins : 0
+
+  const insDet = fat.insumos_detalhados
+
+  // Se houver detalhamento por categoria preenchido:
+  if (insDet) {
+    const baseComercial = Number(insDet.comercial_servico) || 0
+    const credComPis = (baseComercial * aliqComPis) / 100
+    const credComCofins = (baseComercial * aliqComCofins) / 100
+
+    const baseMonofasico = Number(insDet.monofasico) || 0
+    const credMonoPis = (baseMonofasico * aliqMonoPis) / 100
+    const credMonoCofins = (baseMonofasico * aliqMonoCofins) / 100
+
+    const baseImobilizado = Number(insDet.imobilizado) || 0
+    const credImoPis = (baseImobilizado * aliqImoPis) / 100
+    const credImoCofins = (baseImobilizado * aliqImoCofins) / 100
+
+    const baseOutros = Number(fat.outros_creditos_pis_cofins) || Number(insDet.outros_creditos) || 0
+    const credOutrosPis = (baseOutros * aliqPadraoPis) / 100
+    const credOutrosCofins = (baseOutros * aliqPadraoCofins) / 100
+
+    // Rural / Agro com tabela de produto
+    let baseRuralTotal = 0
+    let credRuralPisTotal = 0
+    let credRuralCofinsTotal = 0
+    const itensAgroCalculados: DetalheCreditosInsumos['rural_agro']['itens'] = []
+
+    const itensAgro = insDet.rural_agro?.itens || []
+    if (itensAgro.length > 0) {
+      for (const item of itensAgro) {
+        const itemVal = Number(item.valor) || 0
+        if (itemVal <= 0) continue
+
+        const agroCfg = tabelasAgro.find((p) => p.codigo === item.produto_codigo)
+        const aliqEffPis =
+          item.aliquota_efetiva_pis !== undefined
+            ? item.aliquota_efetiva_pis
+            : agroCfg
+              ? agroCfg.aliquota_efetiva_pis
+              : (catRural?.aliquota_credito_pis ?? aliqPadraoPis * 0.5)
+
+        const aliqEffCofins =
+          item.aliquota_efetiva_cofins !== undefined
+            ? item.aliquota_efetiva_cofins
+            : agroCfg
+              ? agroCfg.aliquota_efetiva_cofins
+              : (catRural?.aliquota_credito_cofins ?? aliqPadraoCofins * 0.5)
+
+        const cPis = (itemVal * aliqEffPis) / 100
+        const cCofins = (itemVal * aliqEffCofins) / 100
+
+        baseRuralTotal += itemVal
+        credRuralPisTotal += cPis
+        credRuralCofinsTotal += cCofins
+
+        itensAgroCalculados.push({
+          produto_codigo: item.produto_codigo,
+          produto_nome: item.produto_nome || agroCfg?.nome || item.produto_codigo,
+          base: Number(itemVal.toFixed(2)),
+          aliquota_efetiva_pis: aliqEffPis,
+          aliquota_efetiva_cofins: aliqEffCofins,
+          credito_pis: Number(cPis.toFixed(2)),
+          credito_cofins: Number(cCofins.toFixed(2)),
+        })
+      }
+    } else {
+      // Se não discriminou itens, mas informou rural_agro.total
+      baseRuralTotal = Number(insDet.rural_agro?.total) || 0
+      const aliqRuralPis = catRural ? catRural.aliquota_credito_pis : aliqPadraoPis * 0.5
+      const aliqRuralCofins = catRural ? catRural.aliquota_credito_cofins : aliqPadraoCofins * 0.5
+      credRuralPisTotal = (baseRuralTotal * aliqRuralPis) / 100
+      credRuralCofinsTotal = (baseRuralTotal * aliqRuralCofins) / 100
+    }
+
+    const totalBase = baseComercial + baseRuralTotal + baseMonofasico + baseImobilizado + baseOutros
+    const totalPis = credComPis + credRuralPisTotal + credMonoPis + credImoPis + credOutrosPis
+    const totalCofins =
+      credComCofins + credRuralCofinsTotal + credMonoCofins + credImoCofins + credOutrosCofins
+
+    return {
+      creditoPis: totalPis,
+      creditoCofins: totalCofins,
+      detalhe: {
+        comercial_servico: {
+          base: Number(baseComercial.toFixed(2)),
+          aliquota_pis: aliqComPis,
+          aliquota_cofins: aliqComCofins,
+          credito_pis: Number(credComPis.toFixed(2)),
+          credito_cofins: Number(credComCofins.toFixed(2)),
+        },
+        rural_agro: {
+          base: Number(baseRuralTotal.toFixed(2)),
+          credito_pis: Number(credRuralPisTotal.toFixed(2)),
+          credito_cofins: Number(credRuralCofinsTotal.toFixed(2)),
+          itens: itensAgroCalculados,
+        },
+        monofasico: {
+          base: Number(baseMonofasico.toFixed(2)),
+          credito_pis: Number(credMonoPis.toFixed(2)),
+          credito_cofins: Number(credMonoCofins.toFixed(2)),
+        },
+        imobilizado: {
+          base: Number(baseImobilizado.toFixed(2)),
+          aliquota_pis: aliqImoPis,
+          aliquota_cofins: aliqImoCofins,
+          credito_pis: Number(credImoPis.toFixed(2)),
+          credito_cofins: Number(credImoCofins.toFixed(2)),
+        },
+        outros_creditos: {
+          base: Number(baseOutros.toFixed(2)),
+          credito_pis: Number(credOutrosPis.toFixed(2)),
+          credito_cofins: Number(credOutrosCofins.toFixed(2)),
+        },
+        total_base_creditos: Number(totalBase.toFixed(2)),
+        total_credito_pis: Number(totalPis.toFixed(2)),
+        total_credito_cofins: Number(totalCofins.toFixed(2)),
+        total_creditos: Number((totalPis + totalCofins).toFixed(2)),
+      },
+    }
+  }
+
+  // Fallback caso não tenha detalhamento por categoria, mas tenha compras_insumos / outros_creditos
+  const comprasInsumos = Number(fat.compras_insumos) || 0
+  const outrosCreditos = Number(fat.outros_creditos_pis_cofins) || 0
+  const recMes = Number(fat.receita_bruta) || 0
+
+  const baseEstimada =
+    comprasInsumos + outrosCreditos > 0 ? comprasInsumos + outrosCreditos : recMes * 0.25
+  const cPis = (baseEstimada * aliqComPis) / 100
+  const cCofins = (baseEstimada * aliqComCofins) / 100
+
+  return {
+    creditoPis: cPis,
+    creditoCofins: cCofins,
+    detalhe: {
+      comercial_servico: {
+        base: Number(baseEstimada.toFixed(2)),
+        aliquota_pis: aliqComPis,
+        aliquota_cofins: aliqComCofins,
+        credito_pis: Number(cPis.toFixed(2)),
+        credito_cofins: Number(cCofins.toFixed(2)),
+      },
+      rural_agro: { base: 0, credito_pis: 0, credito_cofins: 0, itens: [] },
+      monofasico: { base: 0, credito_pis: 0, credito_cofins: 0 },
+      imobilizado: {
+        base: 0,
+        aliquota_pis: aliqImoPis,
+        aliquota_cofins: aliqImoCofins,
+        credito_pis: 0,
+        credito_cofins: 0,
+      },
+      outros_creditos: { base: 0, credito_pis: 0, credito_cofins: 0 },
+      total_base_creditos: Number(baseEstimada.toFixed(2)),
+      total_credito_pis: Number(cPis.toFixed(2)),
+      total_credito_cofins: Number(cCofins.toFixed(2)),
+      total_creditos: Number((cPis + cCofins).toFixed(2)),
+    },
+  }
+}
+
+/**
+ * Realiza os cálculos de Apuração do Lucro Real trimestral e anual com suporte
+ * a categorias de insumos e créditos presumidos agropecuários por produto.
  */
 export function calcularApuracaoReal(
   faturamentos: EmpresaFaturamentoRecord[],
@@ -342,6 +517,8 @@ export function calcularApuracaoReal(
   tabelaIrpjCsll: TabelaIrpjCsllRecord | null,
   tabelaIss: TabelaIssRecord | null,
   tabelaPisCofins: TabelaPisCofinsRealRecord | null,
+  tabelasInsumos: TabelaInsumoRealRecord[] = [],
+  tabelasAgro: TabelaProdutoAgroRecord[] = [],
 ): ApuracaoLucroRealAnual {
   const faturamentosAno = faturamentos.filter((f) => f.ano_calendario === anoCalendario)
 
@@ -352,8 +529,6 @@ export function calcularApuracaoReal(
   const aliqIss = tabelaIss?.aliquota ?? 5.0
   const aliqPis = tabelaPisCofins?.aliquota_pis ?? 1.65
   const aliqCofins = tabelaPisCofins?.aliquota_cofins ?? 7.6
-  const aliqCredPis = tabelaPisCofins?.aliquota_credito_pis ?? 1.65
-  const aliqCredCofins = tabelaPisCofins?.aliquota_credito_cofins ?? 7.6
 
   const trimestresConfig = [
     { tri: 1, meses: [1, 2, 3] },
@@ -376,25 +551,44 @@ export function calcularApuracaoReal(
   let totalCreditosPisCofins = 0
   let totalIss = 0
 
+  // Acumulador de detalhamento anual de créditos
+  const detalheAnualCreditos: DetalheCreditosInsumos = {
+    comercial_servico: {
+      base: 0,
+      aliquota_pis: 1.65,
+      aliquota_cofins: 7.6,
+      credito_pis: 0,
+      credito_cofins: 0,
+    },
+    rural_agro: { base: 0, credito_pis: 0, credito_cofins: 0, itens: [] },
+    monofasico: { base: 0, credito_pis: 0, credito_cofins: 0 },
+    imobilizado: {
+      base: 0,
+      aliquota_pis: 1.65,
+      aliquota_cofins: 7.6,
+      credito_pis: 0,
+      credito_cofins: 0,
+    },
+    outros_creditos: { base: 0, credito_pis: 0, credito_cofins: 0 },
+    total_base_creditos: 0,
+    total_credito_pis: 0,
+    total_credito_cofins: 0,
+    total_creditos: 0,
+  }
+
   const trimestresApurados: ApuracaoLucroRealTrimestre[] = trimestresConfig.map((t) => {
     const fatsTrimestre = faturamentosAno.filter((f) => t.meses.includes(f.mes))
     const recTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.receita_bruta) || 0), 0)
     const folhaTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.folha) || 0), 0)
 
-    // Se lucro contábil não foi preenchido mês a mês, estima como Receita - Folha - 25% custos
     const lcTrimestrePreenchido = fatsTrimestre.reduce(
       (s, f) => s + (Number(f.lucro_contabil) || 0),
       0,
     )
     const adicTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.adicoes_lalur) || 0), 0)
     const exclTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.exclusoes_lalur) || 0), 0)
-    const insumosTrimestre = fatsTrimestre.reduce((s, f) => s + (Number(f.compras_insumos) || 0), 0)
-    const outrosCredTrimestre = fatsTrimestre.reduce(
-      (s, f) => s + (Number(f.outros_creditos_pis_cofins) || 0),
-      0,
-    )
 
-    // Estimativa inteligente se não houver dados contábeis explícitos
+    // Estimativa se não houver lucro contábil explícito
     let lucroContabil = lcTrimestrePreenchido
     if (lucroContabil === 0 && recTrimestre > 0) {
       lucroContabil = Math.max(0, recTrimestre - folhaTrimestre - recTrimestre * 0.35)
@@ -410,21 +604,149 @@ export function calcularApuracaoReal(
 
     const csllTot = (baseLucroReal * aliqCsll) / 100
 
-    // Créditos PIS/COFINS (compras de insumos + outros créditos operacionais)
-    // Se insumos não preenchidos, estima base de créditos em 30% da receita
-    const baseCreditos =
-      insumosTrimestre + outrosCredTrimestre > 0
-        ? insumosTrimestre + outrosCredTrimestre
-        : recTrimestre * 0.25
-
+    // Débitos PIS / COFINS sobre a receita
     const pisDeb = (recTrimestre * aliqPis) / 100
-    const pisCred = (baseCreditos * aliqCredPis) / 100
-    const pisLiq = Math.max(0, pisDeb - pisCred)
-
     const cofinsDeb = (recTrimestre * aliqCofins) / 100
-    const cofinsCred = (baseCreditos * aliqCredCofins) / 100
-    const cofinsLiq = Math.max(0, cofinsDeb - cofinsCred)
 
+    // Créditos PIS / COFINS calculados mês a mês por categoria de insumo
+    let pisCredTri = 0
+    let cofinsCredTri = 0
+
+    const detalheTriCreditos: DetalheCreditosInsumos = {
+      comercial_servico: {
+        base: 0,
+        aliquota_pis: 1.65,
+        aliquota_cofins: 7.6,
+        credito_pis: 0,
+        credito_cofins: 0,
+      },
+      rural_agro: { base: 0, credito_pis: 0, credito_cofins: 0, itens: [] },
+      monofasico: { base: 0, credito_pis: 0, credito_cofins: 0 },
+      imobilizado: {
+        base: 0,
+        aliquota_pis: 1.65,
+        aliquota_cofins: 7.6,
+        credito_pis: 0,
+        credito_cofins: 0,
+      },
+      outros_creditos: { base: 0, credito_pis: 0, credito_cofins: 0 },
+      total_base_creditos: 0,
+      total_credito_pis: 0,
+      total_credito_cofins: 0,
+      total_creditos: 0,
+    }
+
+    for (const fatMes of fatsTrimestre) {
+      const resCred = calcularCreditosInsumosMes(
+        fatMes,
+        tabelasInsumos,
+        tabelasAgro,
+        aliqPis,
+        aliqCofins,
+      )
+      pisCredTri += resCred.creditoPis
+      cofinsCredTri += resCred.creditoCofins
+
+      // Somatório no trimestre
+      detalheTriCreditos.comercial_servico.base += resCred.detalhe.comercial_servico.base
+      detalheTriCreditos.comercial_servico.credito_pis +=
+        resCred.detalhe.comercial_servico.credito_pis
+      detalheTriCreditos.comercial_servico.credito_cofins +=
+        resCred.detalhe.comercial_servico.credito_cofins
+      detalheTriCreditos.comercial_servico.aliquota_pis =
+        resCred.detalhe.comercial_servico.aliquota_pis
+      detalheTriCreditos.comercial_servico.aliquota_cofins =
+        resCred.detalhe.comercial_servico.aliquota_cofins
+
+      detalheTriCreditos.rural_agro.base += resCred.detalhe.rural_agro.base
+      detalheTriCreditos.rural_agro.credito_pis += resCred.detalhe.rural_agro.credito_pis
+      detalheTriCreditos.rural_agro.credito_cofins += resCred.detalhe.rural_agro.credito_cofins
+
+      for (const itemAgro of resCred.detalhe.rural_agro.itens) {
+        const exist = detalheTriCreditos.rural_agro.itens.find(
+          (i) => i.produto_codigo === itemAgro.produto_codigo,
+        )
+        if (exist) {
+          exist.base += itemAgro.base
+          exist.credito_pis += itemAgro.credito_pis
+          exist.credito_cofins += itemAgro.credito_cofins
+        } else {
+          detalheTriCreditos.rural_agro.itens.push({ ...itemAgro })
+        }
+      }
+
+      detalheTriCreditos.monofasico.base += resCred.detalhe.monofasico.base
+      detalheTriCreditos.monofasico.credito_pis += resCred.detalhe.monofasico.credito_pis
+      detalheTriCreditos.monofasico.credito_cofins += resCred.detalhe.monofasico.credito_cofins
+
+      detalheTriCreditos.imobilizado.base += resCred.detalhe.imobilizado.base
+      detalheTriCreditos.imobilizado.credito_pis += resCred.detalhe.imobilizado.credito_pis
+      detalheTriCreditos.imobilizado.credito_cofins += resCred.detalhe.imobilizado.credito_cofins
+      detalheTriCreditos.imobilizado.aliquota_pis = resCred.detalhe.imobilizado.aliquota_pis
+      detalheTriCreditos.imobilizado.aliquota_cofins = resCred.detalhe.imobilizado.aliquota_cofins
+
+      detalheTriCreditos.outros_creditos.base += resCred.detalhe.outros_creditos.base
+      detalheTriCreditos.outros_creditos.credito_pis += resCred.detalhe.outros_creditos.credito_pis
+      detalheTriCreditos.outros_creditos.credito_cofins +=
+        resCred.detalhe.outros_creditos.credito_cofins
+
+      detalheTriCreditos.total_base_creditos += resCred.detalhe.total_base_creditos
+      detalheTriCreditos.total_credito_pis += resCred.detalhe.total_credito_pis
+      detalheTriCreditos.total_credito_cofins += resCred.detalhe.total_credito_cofins
+      detalheTriCreditos.total_creditos += resCred.detalhe.total_creditos
+
+      // Somatório no anual
+      detalheAnualCreditos.comercial_servico.base += resCred.detalhe.comercial_servico.base
+      detalheAnualCreditos.comercial_servico.credito_pis +=
+        resCred.detalhe.comercial_servico.credito_pis
+      detalheAnualCreditos.comercial_servico.credito_cofins +=
+        resCred.detalhe.comercial_servico.credito_cofins
+      detalheAnualCreditos.comercial_servico.aliquota_pis =
+        resCred.detalhe.comercial_servico.aliquota_pis
+      detalheAnualCreditos.comercial_servico.aliquota_cofins =
+        resCred.detalhe.comercial_servico.aliquota_cofins
+
+      detalheAnualCreditos.rural_agro.base += resCred.detalhe.rural_agro.base
+      detalheAnualCreditos.rural_agro.credito_pis += resCred.detalhe.rural_agro.credito_pis
+      detalheAnualCreditos.rural_agro.credito_cofins += resCred.detalhe.rural_agro.credito_cofins
+
+      for (const itemAgro of resCred.detalhe.rural_agro.itens) {
+        const exist = detalheAnualCreditos.rural_agro.itens.find(
+          (i) => i.produto_codigo === itemAgro.produto_codigo,
+        )
+        if (exist) {
+          exist.base += itemAgro.base
+          exist.credito_pis += itemAgro.credito_pis
+          exist.credito_cofins += itemAgro.credito_cofins
+        } else {
+          detalheAnualCreditos.rural_agro.itens.push({ ...itemAgro })
+        }
+      }
+
+      detalheAnualCreditos.monofasico.base += resCred.detalhe.monofasico.base
+      detalheAnualCreditos.monofasico.credito_pis += resCred.detalhe.monofasico.credito_pis
+      detalheAnualCreditos.monofasico.credito_cofins += resCred.detalhe.monofasico.credito_cofins
+
+      detalheAnualCreditos.imobilizado.base += resCred.detalhe.imobilizado.base
+      detalheAnualCreditos.imobilizado.credito_pis += resCred.detalhe.imobilizado.credito_pis
+      detalheAnualCreditos.imobilizado.credito_cofins += resCred.detalhe.imobilizado.credito_cofins
+      detalheAnualCreditos.imobilizado.aliquota_pis = resCred.detalhe.imobilizado.aliquota_pis
+      detalheAnualCreditos.imobilizado.aliquota_cofins = resCred.detalhe.imobilizado.aliquota_cofins
+
+      detalheAnualCreditos.outros_creditos.base += resCred.detalhe.outros_creditos.base
+      detalheAnualCreditos.outros_creditos.credito_pis +=
+        resCred.detalhe.outros_creditos.credito_pis
+      detalheAnualCreditos.outros_creditos.credito_cofins +=
+        resCred.detalhe.outros_creditos.credito_cofins
+
+      detalheAnualCreditos.total_base_creditos += resCred.detalhe.total_base_creditos
+      detalheAnualCreditos.total_credito_pis += resCred.detalhe.total_credito_pis
+      detalheAnualCreditos.total_credito_cofins += resCred.detalhe.total_credito_cofins
+      detalheAnualCreditos.total_creditos += resCred.detalhe.total_creditos
+    }
+
+    const pisLiq = Math.max(0, pisDeb - pisCredTri)
+    const cofinsLiq = Math.max(0, cofinsDeb - cofinsCredTri)
     const issTot = (recTrimestre * aliqIss) / 100
 
     const tributosTri = irpjTot + csllTot + pisLiq + cofinsLiq + issTot
@@ -441,7 +763,7 @@ export function calcularApuracaoReal(
     totalCsll += csllTot
     totalPisLiquido += pisLiq
     totalCofinsLiquido += cofinsLiq
-    totalCreditosPisCofins += pisCred + cofinsCred
+    totalCreditosPisCofins += pisCredTri + cofinsCredTri
     totalIss += issTot
 
     return {
@@ -457,11 +779,12 @@ export function calcularApuracaoReal(
       irpj_total: Number(irpjTot.toFixed(2)),
       csll_total: Number(csllTot.toFixed(2)),
       pis_debito: Number(pisDeb.toFixed(2)),
-      pis_credito: Number(pisCred.toFixed(2)),
+      pis_credito: Number(pisCredTri.toFixed(2)),
       pis_liquido: Number(pisLiq.toFixed(2)),
       cofins_debito: Number(cofinsDeb.toFixed(2)),
-      cofins_credito: Number(cofinsCred.toFixed(2)),
+      cofins_credito: Number(cofinsCredTri.toFixed(2)),
       cofins_liquido: Number(cofinsLiq.toFixed(2)),
+      detalhe_creditos: detalheTriCreditos,
       iss_total: Number(issTot.toFixed(2)),
       total_tributos_trimestre: Number(tributosTri.toFixed(2)),
       aliquota_efetiva_trimestre: Number(aliqEfetivaTri.toFixed(2)),
@@ -488,6 +811,7 @@ export function calcularApuracaoReal(
     total_pis_liquido: Number(totalPisLiquido.toFixed(2)),
     total_cofins_liquido: Number(totalCofinsLiquido.toFixed(2)),
     total_creditos_pis_cofins: Number(totalCreditosPisCofins.toFixed(2)),
+    detalhe_creditos_anual: detalheAnualCreditos,
     total_iss: Number(totalIss.toFixed(2)),
     total_tributos_pj: Number(totalTributosPj.toFixed(2)),
     aliquota_efetiva_anual: Number(aliqEfetivaAnual.toFixed(2)),
@@ -510,6 +834,8 @@ export function compararRegimesTributarios(
   tabelaIrpjCsll?: TabelaIrpjCsllRecord | null,
   tabelaIss?: TabelaIssRecord | null,
   tabelaPisCofins?: TabelaPisCofinsRealRecord | null,
+  tabelasInsumos?: TabelaInsumoRealRecord[],
+  tabelasAgro?: TabelaProdutoAgroRecord[],
 ): ComparativoRegimesResultado {
   const apSimples = calcularApuracaoSimples(
     faturamentos,
@@ -530,6 +856,8 @@ export function compararRegimesTributarios(
     tabelaIrpjCsll || null,
     tabelaIss || null,
     tabelaPisCofins || null,
+    tabelasInsumos || [],
+    tabelasAgro || [],
   )
 
   const totSimples = apSimples.total_das
@@ -799,14 +1127,23 @@ export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalend
   let apuracaoReal: ApuracaoLucroRealAnual | null = null
   let lucroDistribuivel = 0
 
-  const [tabelaSimplesRes, tabelaPresumidoRes, tabelaIrpjRes, tabelaIssRes, tabelaPisCofinsRes] =
-    await Promise.all([
-      getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
-      getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
-      getTabelaIrpjCsllPorAno(anoCalendario),
-      getTabelaIssPorAno(anoCalendario),
-      getTabelaPisCofinsRealPorAno(anoCalendario),
-    ])
+  const [
+    tabelaSimplesRes,
+    tabelaPresumidoRes,
+    tabelaIrpjRes,
+    tabelaIssRes,
+    tabelaPisCofinsRes,
+    tabelasInsumosRes,
+    tabelasAgroRes,
+  ] = await Promise.all([
+    getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
+    getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
+    getTabelaIrpjCsllPorAno(anoCalendario),
+    getTabelaIssPorAno(anoCalendario),
+    getTabelaPisCofinsRealPorAno(anoCalendario),
+    getTabelasInsumosRealPorAno(anoCalendario),
+    getTabelasProdutosAgroPorAno(anoCalendario),
+  ])
 
   if (empresa.regime === 'simples') {
     apuracaoSimples = calcularApuracaoSimples(
@@ -832,6 +1169,8 @@ export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalend
       tabelaIrpjRes.tabela,
       tabelaIssRes.tabela,
       tabelaPisCofinsRes.tabela,
+      tabelasInsumosRes.tabelas,
+      tabelasAgroRes.produtos,
     )
     lucroDistribuivel = apuracaoReal.lucro_distribuivel
   }
@@ -846,6 +1185,8 @@ export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalend
     tabelaIrpjRes.tabela,
     tabelaIssRes.tabela,
     tabelaPisCofinsRes.tabela,
+    tabelasInsumosRes.tabelas,
+    tabelasAgroRes.produtos,
   )
 
   const distribuicoes = calcularDistribuicaoSocios(socios, lucroDistribuivel, anoCalendario)
@@ -878,14 +1219,23 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
   let apuracaoReal: ApuracaoLucroRealAnual | null = null
   let lucroDistribuivel = 0
 
-  const [tabelaSimplesRes, tabelaPresumidoRes, tabelaIrpjRes, tabelaIssRes, tabelaPisCofinsRes] =
-    await Promise.all([
-      getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
-      getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
-      getTabelaIrpjCsllPorAno(anoCalendario),
-      getTabelaIssPorAno(anoCalendario),
-      getTabelaPisCofinsRealPorAno(anoCalendario),
-    ])
+  const [
+    tabelaSimplesRes,
+    tabelaPresumidoRes,
+    tabelaIrpjRes,
+    tabelaIssRes,
+    tabelaPisCofinsRes,
+    tabelasInsumosRes,
+    tabelasAgroRes,
+  ] = await Promise.all([
+    getTabelaSimplesPorAnoAnexo(anoCalendario, empresa.anexo_simples || 'III'),
+    getTabelaPresumidoPorAnoAtividade(anoCalendario, empresa.atividade),
+    getTabelaIrpjCsllPorAno(anoCalendario),
+    getTabelaIssPorAno(anoCalendario),
+    getTabelaPisCofinsRealPorAno(anoCalendario),
+    getTabelasInsumosRealPorAno(anoCalendario),
+    getTabelasProdutosAgroPorAno(anoCalendario),
+  ])
 
   if (empresa.regime === 'simples') {
     apuracaoSimples = calcularApuracaoSimples(
@@ -911,6 +1261,8 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
       tabelaIrpjRes.tabela,
       tabelaIssRes.tabela,
       tabelaPisCofinsRes.tabela,
+      tabelasInsumosRes.tabelas,
+      tabelasAgroRes.produtos,
     )
     lucroDistribuivel = apuracaoReal.lucro_distribuivel
   }
@@ -926,6 +1278,8 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
     tabelaIrpjRes.tabela,
     tabelaIssRes.tabela,
     tabelaPisCofinsRes.tabela,
+    tabelasInsumosRes.tabelas,
+    tabelasAgroRes.produtos,
   )
 
   const distribuicoes = calcularDistribuicaoSocios(socios, lucroDistribuivel, anoCalendario)
@@ -947,6 +1301,8 @@ export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendari
       irpjCsll: tabelaIrpjRes.tabela,
       iss: tabelaIssRes.tabela,
       pisCofins: tabelaPisCofinsRes.tabela,
+      insumos: tabelasInsumosRes.tabelas,
+      produtosAgro: tabelasAgroRes.produtos,
     },
   }
 }

@@ -381,3 +381,195 @@ export async function updateTabelaPisCofinsReal(
 export async function deleteTabelaPisCofinsReal(id: string): Promise<boolean> {
   return pb.collection('tabelas_pis_cofins_real').delete(id)
 }
+
+// =========================================================================
+// TABELAS CATEGORIAS DE INSUMOS REAL (CRUD ANUAL COM HERANÇA)
+// =========================================================================
+
+import type { TabelaInsumoRealRecord, TabelaProdutoAgroRecord } from '@/types'
+
+export async function getTabelasInsumosReal(ano?: number): Promise<TabelaInsumoRealRecord[]> {
+  const filter = ano ? `ano = ${ano}` : undefined
+  return pb.collection('tabelas_insumos_real').getFullList<TabelaInsumoRealRecord>({
+    filter,
+    sort: '-ano,categoria',
+  })
+}
+
+export async function getTabelasInsumosRealPorAno(
+  ano: number,
+): Promise<{ tabelas: TabelaInsumoRealRecord[]; isFallback: boolean }> {
+  try {
+    const direct = await pb.collection('tabelas_insumos_real').getFullList<TabelaInsumoRealRecord>({
+      filter: `ano = ${ano}`,
+      sort: 'categoria',
+    })
+    if (direct.length > 0) return { tabelas: direct, isFallback: false }
+  } catch {
+    /* intentionally ignored */
+  }
+
+  // Fallback para ano mais recente
+  try {
+    const list = await pb
+      .collection('tabelas_insumos_real')
+      .getList<TabelaInsumoRealRecord>(1, 10, {
+        sort: '-ano,categoria',
+      })
+    if (list.items.length > 0) {
+      const fallbackAno = list.items[0].ano
+      const fallbackList = await pb
+        .collection('tabelas_insumos_real')
+        .getFullList<TabelaInsumoRealRecord>({
+          filter: `ano = ${fallbackAno}`,
+          sort: 'categoria',
+        })
+      return { tabelas: fallbackList, isFallback: true }
+    }
+  } catch {
+    /* intentionally ignored */
+  }
+
+  return { tabelas: [], isFallback: false }
+}
+
+export async function createTabelaInsumoReal(
+  data: Omit<TabelaInsumoRealRecord, 'id' | 'created' | 'updated'>,
+): Promise<TabelaInsumoRealRecord> {
+  return pb.collection('tabelas_insumos_real').create<TabelaInsumoRealRecord>(data)
+}
+
+export async function updateTabelaInsumoReal(
+  id: string,
+  data: Partial<Omit<TabelaInsumoRealRecord, 'id' | 'created' | 'updated'>>,
+): Promise<TabelaInsumoRealRecord> {
+  return pb.collection('tabelas_insumos_real').update<TabelaInsumoRealRecord>(id, data)
+}
+
+export async function deleteTabelaInsumoReal(id: string): Promise<boolean> {
+  return pb.collection('tabelas_insumos_real').delete(id)
+}
+
+// =========================================================================
+// TABELAS PRODUTOS AGRO (CRÉDITO PRESUMIDO POR PRODUTO)
+// =========================================================================
+
+export async function getTabelasProdutosAgro(ano?: number): Promise<TabelaProdutoAgroRecord[]> {
+  const filter = ano ? `ano = ${ano}` : undefined
+  return pb.collection('tabelas_produtos_agro').getFullList<TabelaProdutoAgroRecord>({
+    filter,
+    sort: '-ano,nome',
+  })
+}
+
+export async function getTabelasProdutosAgroPorAno(
+  ano: number,
+): Promise<{ produtos: TabelaProdutoAgroRecord[]; isFallback: boolean }> {
+  try {
+    const direct = await pb
+      .collection('tabelas_produtos_agro')
+      .getFullList<TabelaProdutoAgroRecord>({
+        filter: `ano = ${ano}`,
+        sort: 'nome',
+      })
+    if (direct.length > 0) return { produtos: direct, isFallback: false }
+  } catch {
+    /* intentionally ignored */
+  }
+
+  // Fallback para ano mais recente
+  try {
+    const list = await pb
+      .collection('tabelas_produtos_agro')
+      .getList<TabelaProdutoAgroRecord>(1, 10, {
+        sort: '-ano,nome',
+      })
+    if (list.items.length > 0) {
+      const fallbackAno = list.items[0].ano
+      const fallbackList = await pb
+        .collection('tabelas_produtos_agro')
+        .getFullList<TabelaProdutoAgroRecord>({
+          filter: `ano = ${fallbackAno}`,
+          sort: 'nome',
+        })
+      return { produtos: fallbackList, isFallback: true }
+    }
+  } catch {
+    /* intentionally ignored */
+  }
+
+  return { produtos: [], isFallback: false }
+}
+
+export async function createTabelaProdutoAgro(
+  data: Omit<TabelaProdutoAgroRecord, 'id' | 'created' | 'updated'>,
+): Promise<TabelaProdutoAgroRecord> {
+  return pb.collection('tabelas_produtos_agro').create<TabelaProdutoAgroRecord>(data)
+}
+
+export async function updateTabelaProdutoAgro(
+  id: string,
+  data: Partial<Omit<TabelaProdutoAgroRecord, 'id' | 'created' | 'updated'>>,
+): Promise<TabelaProdutoAgroRecord> {
+  return pb.collection('tabelas_produtos_agro').update<TabelaProdutoAgroRecord>(id, data)
+}
+
+export async function deleteTabelaProdutoAgro(id: string): Promise<boolean> {
+  return pb.collection('tabelas_produtos_agro').delete(id)
+}
+
+export async function clonarTabelasInsumosEAgroDeAnoAnterior(
+  anoDestino: number,
+  anoOrigem: number,
+): Promise<{ insumosClonados: number; produtosAgroClonados: number }> {
+  const [insumosOrigem, produtosAgroOrigem] = await Promise.all([
+    pb.collection('tabelas_insumos_real').getFullList<TabelaInsumoRealRecord>({
+      filter: `ano = ${anoOrigem}`,
+    }),
+    pb.collection('tabelas_produtos_agro').getFullList<TabelaProdutoAgroRecord>({
+      filter: `ano = ${anoOrigem}`,
+    }),
+  ])
+
+  let insumosClonados = 0
+  let produtosAgroClonados = 0
+
+  for (const item of insumosOrigem) {
+    try {
+      await pb.collection('tabelas_insumos_real').create({
+        ano: anoDestino,
+        categoria: item.categoria,
+        descricao: item.descricao,
+        aliquota_credito_pis: item.aliquota_credito_pis,
+        aliquota_credito_cofins: item.aliquota_credito_cofins,
+        permite_credito: item.permite_credito,
+        tipo_credito: item.tipo_credito,
+        observacao: item.observacao,
+      })
+      insumosClonados++
+    } catch {
+      /* ignore unique conflict */
+    }
+  }
+
+  for (const item of produtosAgroOrigem) {
+    try {
+      await pb.collection('tabelas_produtos_agro').create({
+        ano: anoDestino,
+        codigo: item.codigo,
+        nome: item.nome,
+        percentual_presumido_pis: item.percentual_presumido_pis,
+        percentual_presumido_cofins: item.percentual_presumido_cofins,
+        aliquota_efetiva_pis: item.aliquota_efetiva_pis,
+        aliquota_efetiva_cofins: item.aliquota_efetiva_cofins,
+        ncm: item.ncm,
+        base_legal: item.base_legal,
+      })
+      produtosAgroClonados++
+    } catch {
+      /* ignore unique conflict */
+    }
+  }
+
+  return { insumosClonados, produtosAgroClonados }
+}

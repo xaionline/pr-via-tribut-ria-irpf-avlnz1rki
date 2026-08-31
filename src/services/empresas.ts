@@ -8,6 +8,7 @@ import type {
   TabelaIrpjCsllRecord,
   TabelaIssRecord,
   AnexoSimplesNacional,
+  InsumosDetalhadosMes,
 } from '@/types'
 
 // =========================================================================
@@ -128,6 +129,7 @@ export async function upsertFaturamentoMes(
   exclusoesLalur?: number,
   comprasInsumos?: number,
   outrosCreditos?: number,
+  insumosDetalhados?: InsumosDetalhadosMes,
 ): Promise<EmpresaFaturamentoRecord> {
   const payload: Partial<EmpresaFaturamentoRecord> = {
     receita_bruta: receitaBruta,
@@ -137,6 +139,7 @@ export async function upsertFaturamentoMes(
     exclusoes_lalur: exclusoesLalur ?? 0,
     compras_insumos: comprasInsumos ?? 0,
     outros_creditos_pis_cofins: outrosCreditos ?? 0,
+    insumos_detalhados: insumosDetalhados,
   }
 
   try {

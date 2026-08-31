@@ -45,6 +45,7 @@ import type {
   EmpresaSocioRecord,
   EmpresaFaturamentoRecord,
   ComparativoRegimesResultado,
+  ApuracaoEmpresaResultado,
 } from '@/types'
 
 type TabKey = 'resumo-simulador' | 'comparador' | 'apuracao' | 'socios'
@@ -57,7 +58,7 @@ export default function EmpresaDetail() {
   const [empresa, setEmpresa] = useState<EmpresaRecord | null>(null)
   const [socios, setSocios] = useState<EmpresaSocioRecord[]>([])
   const [faturamentos, setFaturamentos] = useState<EmpresaFaturamentoRecord[]>([])
-  const [apuracaoCompleta, setApuracaoCompleta] = useState<any | null>(null)
+  const [apuracaoCompleta, setApuracaoCompleta] = useState<ApuracaoEmpresaResultado | null>(null)
   const [comparativo, setComparativo] = useState<ComparativoRegimesResultado | null>(null)
   const [selectedAno, setSelectedAno] = useState<number>(new Date().getFullYear())
 

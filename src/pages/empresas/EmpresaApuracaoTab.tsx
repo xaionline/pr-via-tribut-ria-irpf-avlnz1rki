@@ -45,11 +45,11 @@ import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type {
   EmpresaRecord,
   EmpresaFaturamentoRecord,
-  ApuracaoLucroRealTrimestre,
   InsumosDetalhadosMes,
   InsumoAgroItem,
   TabelaInsumoRealRecord,
   TabelaProdutoAgroRecord,
+  ApuracaoEmpresaResultado,
 } from '@/types'
 
 const MESES = [
@@ -71,7 +71,7 @@ interface EmpresaApuracaoTabProps {
   empresa: EmpresaRecord
   anoCalendario: number
   faturamentos: EmpresaFaturamentoRecord[]
-  apuracaoCompleta: any | null
+  apuracaoCompleta: ApuracaoEmpresaResultado | null
   onAnoChange: (ano: number) => void
   onFaturamentosUpdated: () => void
 }
@@ -103,9 +103,8 @@ export function EmpresaApuracaoTab({
   const [insumosAgroItens, setInsumosAgroItens] = useState<InsumoAgroItem[]>([])
 
   // Tabelas do ano atual carregadas pelo serviço de apuração
-  const tabelasInsumos: TabelaInsumoRealRecord[] = (apuracaoCompleta?.tabelas as any)?.insumos || []
-  const tabelasAgro: TabelaProdutoAgroRecord[] =
-    (apuracaoCompleta?.tabelas as any)?.produtosAgro || []
+  const tabelasInsumos: TabelaInsumoRealRecord[] = apuracaoCompleta?.tabelas?.insumos || []
+  const tabelasAgro: TabelaProdutoAgroRecord[] = apuracaoCompleta?.tabelas?.produtosAgro || []
 
   // Mapa de faturamentos existentes indexados por mês
   const faturamentosMap = useMemo(() => {

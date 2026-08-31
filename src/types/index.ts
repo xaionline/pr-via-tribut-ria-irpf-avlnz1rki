@@ -787,3 +787,27 @@ export interface IntegracaoDistribuicaoResponse {
     jcp: number
   }[]
 }
+
+export interface TabelasApuracaoPj {
+  simples: TabelaSimplesRecord | null
+  presumido: TabelaPresumidoRecord | null
+  irpjCsll: TabelaIrpjCsllRecord | null
+  iss: TabelaIssRecord | null
+  pisCofins: TabelaPisCofinsRealRecord | null
+  insumos: TabelaInsumoRealRecord[]
+  produtosAgro: TabelaProdutoAgroRecord[]
+}
+
+export interface ApuracaoEmpresaResultado {
+  empresa: EmpresaRecord
+  faturamentos: EmpresaFaturamentoRecord[]
+  socios: EmpresaSocioRecord[]
+  apuracaoSimples: ApuracaoSimplesAnual | null
+  apuracaoPresumido: ApuracaoPresumidoAnual | null
+  apuracaoReal: ApuracaoLucroRealAnual | null
+  comparativoRegimes: ComparativoRegimesResultado
+  distribuicoes: DistribuicaoSocioResultado[]
+  lucroDistribuivel: number
+  anoCalendario: number
+  tabelas: TabelasApuracaoPj
+}

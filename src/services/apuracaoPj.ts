@@ -17,8 +17,6 @@ import type {
   FontePagadoraRecord,
   RendimentoRecord,
   AnexoSimplesNacional,
-} from '@/types'
-import type {
   ApuracaoLucroRealAnual,
   ApuracaoLucroRealTrimestre,
   TabelaPisCofinsRealRecord,
@@ -28,6 +26,7 @@ import type {
   ComparativoRegimesResultado,
   ComparativoRegimeItem,
   RegimeTributarioPJ,
+  ApuracaoEmpresaResultado,
 } from '@/types'
 import {
   getTabelaSimplesPorAnoAnexo,
@@ -1116,7 +1115,10 @@ export async function sincronizarDistribuicaoComIRPF(
 /**
  * Retorna apuração completa da empresa para um ano especificado.
  */
-export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalendario: number) {
+export async function processarApuracaoEmpresa(
+  empresa: EmpresaRecord,
+  anoCalendario: number,
+): Promise<ApuracaoEmpresaResultado> {
   const [faturamentos, socios] = await Promise.all([
     getFaturamentosEmpresa(empresa.id, anoCalendario),
     getSociosDaEmpresa(empresa.id),
@@ -1202,10 +1204,22 @@ export async function processarApuracaoEmpresa(empresa: EmpresaRecord, anoCalend
     distribuicoes,
     lucroDistribuivel,
     anoCalendario,
+    tabelas: {
+      simples: tabelaSimplesRes.tabela,
+      presumido: tabelaPresumidoRes.tabela,
+      irpjCsll: tabelaIrpjRes.tabela,
+      iss: tabelaIssRes.tabela,
+      pisCofins: tabelaPisCofinsRes.tabela,
+      insumos: tabelasInsumosRes.tabelas,
+      produtosAgro: tabelasAgroRes.produtos,
+    },
   }
 }
 
-export async function getApuracaoEmpresaCompleta(empresaId: string, anoCalendario: number) {
+export async function getApuracaoEmpresaCompleta(
+  empresaId: string,
+  anoCalendario: number,
+): Promise<ApuracaoEmpresaResultado> {
   const empresa = await pb.collection('empresas').getOne<EmpresaRecord>(empresaId, {
     expand: 'escritorio_id',
   })

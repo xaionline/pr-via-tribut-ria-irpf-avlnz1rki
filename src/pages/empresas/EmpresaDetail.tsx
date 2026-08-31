@@ -57,8 +57,9 @@ export default function EmpresaDetail() {
   const [empresa, setEmpresa] = useState<EmpresaRecord | null>(null)
   const [socios, setSocios] = useState<EmpresaSocioRecord[]>([])
   const [faturamentos, setFaturamentos] = useState<EmpresaFaturamentoRecord[]>([])
+  const [apuracaoCompleta, setApuracaoCompleta] = useState<any | null>(null)
   const [comparativo, setComparativo] = useState<ComparativoRegimesResultado | null>(null)
-  const [selectedAno] = useState<number>(new Date().getFullYear())
+  const [selectedAno, setSelectedAno] = useState<number>(new Date().getFullYear())
 
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabKey>('resumo-simulador')
@@ -79,6 +80,7 @@ export default function EmpresaDetail() {
       setFaturamentos(fats)
 
       const apRes = await processarApuracaoEmpresa(emp, selectedAno)
+      setApuracaoCompleta(apRes)
       setComparativo(apRes.comparativoRegimes)
     } catch (err) {
       toast({
@@ -283,7 +285,16 @@ export default function EmpresaDetail() {
         />
       )}
 
-      {activeTab === 'apuracao' && <EmpresaApuracaoTab empresa={empresa} />}
+      {activeTab === 'apuracao' && (
+        <EmpresaApuracaoTab
+          empresa={empresa}
+          anoCalendario={selectedAno}
+          faturamentos={faturamentos}
+          apuracaoCompleta={apuracaoCompleta}
+          onAnoChange={(ano) => setSelectedAno(ano)}
+          onFaturamentosUpdated={carregar}
+        />
+      )}
       {activeTab === 'socios' && <EmpresaSociosTab empresa={empresa} />}
 
       {/* MODAL EXCLUIR */}

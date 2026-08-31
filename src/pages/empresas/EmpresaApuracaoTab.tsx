@@ -45,7 +45,6 @@ import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type {
   EmpresaRecord,
   EmpresaFaturamentoRecord,
-  ApuracaoPjCompleta,
   ApuracaoLucroRealTrimestre,
   InsumosDetalhadosMes,
   InsumoAgroItem,
@@ -72,7 +71,7 @@ interface EmpresaApuracaoTabProps {
   empresa: EmpresaRecord
   anoCalendario: number
   faturamentos: EmpresaFaturamentoRecord[]
-  apuracaoCompleta: ApuracaoPjCompleta | null
+  apuracaoCompleta: any | null
   onAnoChange: (ano: number) => void
   onFaturamentosUpdated: () => void
 }

@@ -1,5 +1,5 @@
 /* Main App Component - Handles routing (using react-router-dom), query client and other providers - use this file to add all routes */
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -30,7 +30,6 @@ import Configuracoes from '@/pages/configuracoes/Configuracoes'
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 import AdminEscritorios from '@/pages/Admin'
-import AdminTabelas from '@/pages/admin/AdminTabelas'
 import { SuperAdminRouteGuard } from '@/components/SuperAdminRouteGuard'
 
 const App = () => (
@@ -77,13 +76,10 @@ const App = () => (
                 </SuperAdminRouteGuard>
               }
             />
+            {/* Redirecionamento canônico de rota legada para a tela única de Tabela Progressiva */}
             <Route
               path="/app/admin/tabelas"
-              element={
-                <SuperAdminRouteGuard>
-                  <AdminTabelas />
-                </SuperAdminRouteGuard>
-              }
+              element={<Navigate to="/app/tabela-progressiva" replace />}
             />
             {/* Rotas do perfil de cliente (somente leitura) */}
             <Route path="/app/cliente" element={<ClienteDashboard />} />

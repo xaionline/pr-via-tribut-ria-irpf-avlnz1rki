@@ -68,7 +68,7 @@ export function MobileBottomNav() {
             <SheetTitle className="text-base font-semibold text-slate-900">Mais Opções</SheetTitle>
           </SheetHeader>
           <div className="space-y-2">
-            {isAdmin && (
+            {(isAdmin || user?.cargo === 'super_admin') && (
               <Link
                 to="/app/tabela-progressiva"
                 onClick={() => setDrawerOpen(false)}

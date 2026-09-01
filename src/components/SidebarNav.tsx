@@ -169,10 +169,7 @@ export function SidebarNav() {
           title: 'ADMINISTRAÇÃO',
           iconEmoji: '🛡️',
           superAdminOnly: true,
-          items: [
-            { label: 'Administração', path: '/app/admin', icon: ShieldCheck, exact: true },
-            { label: 'Tabelas IRPF (global)', path: '/app/admin/tabelas', icon: Calculator },
-          ],
+          items: [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck, exact: true }],
         },
         {
           id: 'configuracoes',

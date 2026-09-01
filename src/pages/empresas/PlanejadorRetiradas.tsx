@@ -1392,7 +1392,7 @@ export default function PlanejadorRetiradas({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Tributos PJ
                 </span>
-                <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 mt-1.5">
+                <div className="font-black font-mono text-slate-900 mt-1.5 text-[1.24rem]">
                   {formatCurrency(resultados?.empresa.tributos_pj_otimizado || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1 font-mono">
@@ -1405,7 +1405,7 @@ export default function PlanejadorRetiradas({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   IRPF dos Sócios ({socios.length})
                 </span>
-                <div className="text-xl sm:text-2xl font-black font-mono text-purple-700 mt-1.5">
+                <div className="font-black font-mono text-purple-700 mt-1.5 text-[1.24rem]">
                   {formatCurrency(
                     resultados?.socios.reduce((s, r) => s + r.total_irpf_socio, 0) || 0,
                   )}
@@ -1418,7 +1418,7 @@ export default function PlanejadorRetiradas({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Total Grupo (PJ + Sócios)
                 </span>
-                <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 mt-1.5">
+                <div className="font-black font-mono text-slate-900 mt-1.5 text-[1.24rem]">
                   {formatCurrency(tributosGrupoAtual)}
                 </div>
                 <div className="text-xs text-emerald-700 mt-1 font-bold">
@@ -1431,7 +1431,7 @@ export default function PlanejadorRetiradas({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
                   Economia Estimada
                 </span>
-                <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 mt-1.5">
+                <div className="font-black font-mono text-emerald-700 mt-1.5 text-[1.24rem]">
                   {formatCurrency(economiaPjValor)}
                 </div>
                 <div className="text-xs text-emerald-800 mt-1 font-bold">

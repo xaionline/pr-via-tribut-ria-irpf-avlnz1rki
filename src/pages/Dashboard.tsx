@@ -109,6 +109,7 @@ export default function Dashboard() {
   useRealtime('empresas', () => loadData())
   useRealtime('empresas_faturamentos', () => loadAlertas(empresas, user?.escritorio_id))
   useRealtime('empresas_socios', () => loadAlertas(empresas, user?.escritorio_id))
+  useRealtime('empresas_obrigacoes', () => loadAlertas(empresas, user?.escritorio_id))
   useRealtime('alertas_config', () => {
     if (user?.escritorio_id) {
       getAlertasConfig(user.escritorio_id).then((cfg) => cfg && setAlertasConfig(cfg))

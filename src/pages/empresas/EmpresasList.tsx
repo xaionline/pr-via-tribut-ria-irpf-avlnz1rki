@@ -271,11 +271,17 @@ export default function EmpresasList() {
                                 <span>Ver Sócios</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                onClick={() => navigate(`/app/empresas/${emp.id}/obrigacoes`)}
+                              >
+                                <Calendar className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                                <span>Obrigações Acessórias</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => navigate(`/app/empresas/${emp.id}?tab=apuracao`)}
                               >
                                 <Calculator className="w-3.5 h-3.5 mr-2" />
                                 <span>Apuração PJ</span>
-                              </DropdownMenuItem>
+                              </DropdownMenuItem>{' '}
                               <DropdownMenuItem
                                 onClick={() => navigate(`/app/empresas/${emp.id}/editar`)}
                               >
@@ -361,9 +367,9 @@ export default function EmpresasList() {
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs text-blue-700 bg-blue-50 border-blue-200"
-                    onClick={() => navigate(`/app/empresas/${emp.id}?tab=apuracao`)}
+                    onClick={() => navigate(`/app/empresas/${emp.id}/obrigacoes`)}
                   >
-                    <Calculator className="w-3.5 h-3.5 mr-1" /> Apuração
+                    <Calendar className="w-3.5 h-3.5 mr-1" /> Obrigações
                   </Button>
                 </div>
               </Card>

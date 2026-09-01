@@ -85,6 +85,9 @@ export function BlocoAlertasEmpresas({
   const [envioProLabore, setEnvioProLabore] = useState(config?.enviar_pro_labore !== false)
   const [envioAltasRendas, setEnvioAltasRendas] = useState(config?.enviar_altas_rendas !== false)
   const [envioAnexoSimples, setEnvioAnexoSimples] = useState(config?.enviar_anexo_simples !== false)
+  const [envioObrigacoes, setEnvioObrigacoes] = useState(
+    config?.enviar_obrigacoes_acessorias !== false,
+  )
   const [customAlertsMap, setCustomAlertsMap] = useState<Record<string, boolean>>(
     config?.config_alertas_custom || {},
   )
@@ -99,6 +102,7 @@ export function BlocoAlertasEmpresas({
       setEnvioProLabore(config.enviar_pro_labore !== false)
       setEnvioAltasRendas(config.enviar_altas_rendas !== false)
       setEnvioAnexoSimples(config.enviar_anexo_simples !== false)
+      setEnvioObrigacoes(config.enviar_obrigacoes_acessorias !== false)
       setCustomAlertsMap(config.config_alertas_custom || {})
     }
   }, [config, proprietarioEmail])
@@ -126,6 +130,7 @@ export function BlocoAlertasEmpresas({
     if (alerta.tipo === 'pro_labore') return envioProLabore
     if (alerta.tipo === 'altas_rendas') return envioAltasRendas
     if (alerta.tipo === 'anexo_simples') return envioAnexoSimples
+    if (alerta.tipo === 'obrigacao_acessoria') return envioObrigacoes
     return true
   }
 
@@ -245,6 +250,7 @@ export function BlocoAlertasEmpresas({
         enviar_pro_labore: envioProLabore,
         enviar_altas_rendas: envioAltasRendas,
         enviar_anexo_simples: envioAnexoSimples,
+        enviar_obrigacoes_acessorias: envioObrigacoes,
         config_alertas_custom: customAlertsMap,
       })
       onConfigUpdated(updated)
@@ -275,6 +281,8 @@ export function BlocoAlertasEmpresas({
         return <Flame className="w-5 h-5 text-purple-500" />
       case 'anexo_simples':
         return <Sparkles className="w-5 h-5 text-emerald-500" />
+      case 'obrigacao_acessoria':
+        return <Bell className="w-5 h-5 text-rose-500 animate-pulse" />
       default:
         return <AlertTriangle className="w-5 h-5 text-amber-500" />
     }
@@ -404,6 +412,7 @@ export function BlocoAlertasEmpresas({
               { id: 'todos', label: 'Todos os Alertas' },
               { id: 'fator_r', label: 'Fator R (28%)' },
               { id: 'pro_labore', label: 'Pró-labore Mínimo' },
+              { id: 'obrigacao_acessoria', label: 'Obrigações Acessórias' },
               { id: 'altas_rendas', label: 'Altas Rendas' },
               { id: 'anexo_simples', label: 'Regime / Anexo' },
             ].map((f) => (
@@ -626,8 +635,7 @@ export function BlocoAlertasEmpresas({
                           </TooltipContent>
                         </Tooltip>
                       </div>
-
-                      {/* Botão para Abrir o Planejador da Empresa */}
+                      {/* Botão para Acessar Módulo / Empresa */}
                       <Button
                         size="sm"
                         onClick={(e) => {
@@ -640,9 +648,13 @@ export function BlocoAlertasEmpresas({
                             : 'bg-slate-900 hover:bg-slate-800 text-white'
                         }`}
                       >
-                        <span>Abrir Planejador</span>
+                        <span>
+                          {alerta.tipo === 'obrigacao_acessoria'
+                            ? 'Ver Calendário'
+                            : 'Abrir Planejador'}
+                        </span>
                         <ArrowRight className="w-3.5 h-3.5" />
-                      </Button>
+                      </Button>{' '}
                     </div>
                   </div>
                 </div>
@@ -784,7 +796,7 @@ export function BlocoAlertasEmpresas({
                   </div>
 
                   {/* Anexo Simples / Regime */}
-                  <div className="flex items-center justify-between py-1">
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-emerald-500" />
                       <div>
@@ -804,6 +816,30 @@ export function BlocoAlertasEmpresas({
                       checked={envioAnexoSimples}
                       disabled={!envioGeral}
                       onCheckedChange={setEnvioAnexoSimples}
+                    />
+                  </div>
+
+                  {/* Obrigações Acessórias (DAS, DCTF, REINF, ECD, ECF) */}
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-rose-500" />
+                      <div>
+                        <Label
+                          htmlFor="switch-obrigacoes"
+                          className="text-xs font-semibold text-slate-800 cursor-pointer"
+                        >
+                          Obrigações Acessórias (DAS, DCTF, ECD, etc)
+                        </Label>
+                        <p className="text-[10px] text-slate-400">
+                          Alertas de prazos expirados ou vencimento em até 5 dias
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="switch-obrigacoes"
+                      checked={envioObrigacoes}
+                      disabled={!envioGeral}
+                      onCheckedChange={setEnvioObrigacoes}
                     />
                   </div>
                 </div>

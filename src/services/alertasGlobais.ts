@@ -2,13 +2,14 @@ import pb from '@/lib/pocketbase/client'
 import { getAllEmpresas, getSociosDaEmpresa, getFaturamentosEmpresa } from './empresas'
 import { getCenariosPj } from './simulacaoPj'
 import { processarApuracaoEmpresa } from './apuracaoPj'
+import { getObrigacoesEmpresa } from './obrigacoes'
 import type {
   EmpresaRecord,
   AlertaEmpresaGlobal,
   AlertasConfigRecord,
   TipoAlertaEmpresa,
 } from '@/types'
-import { formatCurrency, formatNumber, maskCnpj } from '@/lib/formatters'
+import { formatCurrency, formatNumber, maskCnpj, formatDate } from '@/lib/formatters'
 
 const SALARIO_MINIMO_2025 = 1518
 
@@ -42,6 +43,7 @@ export async function saveAlertasConfig(
     enviar_pro_labore: true,
     enviar_altas_rendas: true,
     enviar_anexo_simples: true,
+    enviar_obrigacoes_acessorias: true,
     config_alertas_custom: {},
     ...data,
   })
@@ -98,11 +100,12 @@ export async function calcularAlertasGlobaisDasEmpresas(
   await Promise.all(
     empresas.map(async (empresa) => {
       try {
-        const [socios, faturamentos, cenarios, apuracao] = await Promise.all([
+        const [socios, faturamentos, cenarios, apuracao, obrigacoes] = await Promise.all([
           getSociosDaEmpresa(empresa.id).catch(() => []),
           getFaturamentosEmpresa(empresa.id, anoCalendario).catch(() => []),
           getCenariosPj(empresa.id, anoCalendario).catch(() => []),
           processarApuracaoEmpresa(empresa, anoCalendario).catch(() => null),
+          getObrigacoesEmpresa(empresa.id, anoCalendario).catch(() => []),
         ])
 
         const faturamentosAno = faturamentos.filter((f) => f.ano_calendario === anoCalendario)
@@ -275,6 +278,84 @@ export async function calcularAlertasGlobaisDasEmpresas(
               link: `/app/empresas/${empresa.id}/planejador`,
               valor_atual: regimeAtualNome,
               valor_meta: melhorRegimeNome,
+              destaque: false,
+              ano_calendario: anoCalendario,
+            })
+          }
+        }
+
+        // 5. INDICADOR DE OBRIGAÇÕES ACESSÓRIAS (ATRASADAS E PRÓXIMAS DO VENCIMENTO)
+        if (obrigacoes.length > 0) {
+          const atrasadas = obrigacoes.filter((o) => o.statusCalculado === 'atrasado')
+          const hoje = obrigacoes.filter((o) => o.statusCalculado === 'vence_hoje')
+          const emBreve = obrigacoes.filter(
+            (o) => o.statusCalculado === 'vence_em_breve' && o.diasAteVencimento <= 5,
+          )
+
+          if (atrasadas.length > 0) {
+            const listaNomes = atrasadas
+              .map(
+                (o) => `${o.tipo} (${o.competencia}) - Venceu em ${formatDate(o.data_vencimento)}`,
+              )
+              .slice(0, 3)
+              .join('; ')
+            const totalAtrasadas = atrasadas.length
+
+            todosAlertas.push({
+              id: `obrigacoes_atrasadas_${empresa.id}_${anoCalendario}`,
+              empresa_id: empresa.id,
+              empresa_nome: empresa.razao_social,
+              empresa_cnpj: maskCnpj(empresa.cnpj),
+              empresa_regime: empresa.regime,
+              tipo: 'obrigacao_acessoria',
+              severidade: 'critico',
+              titulo: `${totalAtrasadas} Obrigação(ões) Acessória(s) ATRASADA(S)!`,
+              descricao: `A empresa possui ${totalAtrasadas} obrigação(ões) com prazo expirado e ainda não transmitida(s): ${listaNomes}${totalAtrasadas > 3 ? '...' : ''}. Sujeito a multas por atraso da Receita Federal (MAED).`,
+              impacto: 'Risco de multas automáticas (MAED) e bloqueio de CND Federal',
+              acao: 'Transmitir obrigação e marcar como entregue no Calendário',
+              link: `/app/empresas/${empresa.id}/obrigacoes`,
+              valor_atual: `${totalAtrasadas} pendente(s) atrasada(s)`,
+              valor_meta: '0 em atraso',
+              destaque: true,
+              ano_calendario: anoCalendario,
+            })
+          } else if (hoje.length > 0) {
+            const nomesHoje = hoje.map((o) => `${o.tipo} (${o.competencia})`).join(', ')
+            todosAlertas.push({
+              id: `obrigacoes_hoje_${empresa.id}_${anoCalendario}`,
+              empresa_id: empresa.id,
+              empresa_nome: empresa.razao_social,
+              empresa_cnpj: maskCnpj(empresa.cnpj),
+              empresa_regime: empresa.regime,
+              tipo: 'obrigacao_acessoria',
+              severidade: 'critico',
+              titulo: `Obrigação VENCE HOJE: ${nomesHoje}`,
+              descricao: `A transmissão de ${nomesHoje} vence hoje. Conclua o envio até as 23:59 para evitar incidência de penalidades e juros de mora.`,
+              impacto: 'Evitar aplicação de multa no fechamento do expediente',
+              acao: 'Emitir guia ou recibo no Calendário de Obrigações',
+              link: `/app/empresas/${empresa.id}/obrigacoes`,
+              valor_atual: 'Vence HOJE',
+              valor_meta: 'Entregar hoje',
+              destaque: true,
+              ano_calendario: anoCalendario,
+            })
+          } else if (emBreve.length > 0) {
+            const proxima = emBreve[0]
+            todosAlertas.push({
+              id: `obrigacoes_em_breve_${empresa.id}_${anoCalendario}`,
+              empresa_id: empresa.id,
+              empresa_nome: empresa.razao_social,
+              empresa_cnpj: maskCnpj(empresa.cnpj),
+              empresa_regime: empresa.regime,
+              tipo: 'obrigacao_acessoria',
+              severidade: 'atencao',
+              titulo: `Vencimento Próximo: ${proxima.tipo} (${proxima.competencia}) em ${proxima.diasAteVencimento} dias`,
+              descricao: `Prazo de entrega da declaração ${proxima.tipo} previsto para ${formatDate(proxima.data_vencimento)}. Restam ${proxima.diasAteVencimento} dia(s) para conferência e envio.`,
+              impacto: 'Conferência prévia de documentos para transmissão em lote',
+              acao: 'Acessar Calendário de Obrigações Acessórias',
+              link: `/app/empresas/${empresa.id}/obrigacoes`,
+              valor_atual: `${proxima.diasAteVencimento} dias restantes`,
+              valor_meta: 'Transmitir no prazo',
               destaque: false,
               ano_calendario: anoCalendario,
             })

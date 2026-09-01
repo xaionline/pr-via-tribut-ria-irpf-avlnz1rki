@@ -18,6 +18,7 @@ import EmpresasList from '@/pages/empresas/EmpresasList'
 import EmpresaDetail from '@/pages/empresas/EmpresaDetail'
 import EmpresaForm from '@/pages/empresas/EmpresaForm'
 import PlanejadorRetiradas from '@/pages/empresas/PlanejadorRetiradas'
+import CalendarioObrigacoesGlobal from '@/pages/empresas/CalendarioObrigacoesGlobal'
 import DeclaracoesList from '@/pages/declaracoes/DeclaracoesList'
 import DeclaracaoForm from '@/pages/declaracoes/DeclaracaoForm'
 import DeclaracaoDetail from '@/pages/declaracoes/DeclaracaoDetail'
@@ -53,8 +54,10 @@ const App = () => (
             <Route path="/app/empresas" element={<EmpresasList />} />
             <Route path="/app/empresas/nova" element={<EmpresaForm />} />
             <Route path="/app/empresas/:id" element={<EmpresaDetail />} />
+            <Route path="/app/empresas/:id/obrigacoes" element={<EmpresaDetail />} />
             <Route path="/app/empresas/:id/planejador" element={<PlanejadorRetiradas />} />
             <Route path="/app/empresas/:id/editar" element={<EmpresaForm />} />
+            <Route path="/app/obrigacoes" element={<CalendarioObrigacoesGlobal />} />
             <Route path="/app/planejador-retiradas" element={<PlanejadorRetiradas />} />
             <Route path="/app/declaracoes" element={<DeclaracoesList />} />
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />

@@ -831,6 +831,7 @@ export type TipoAlertaEmpresa =
   | 'altas_rendas'
   | 'anexo_simples'
   | 'regime_desvantajoso'
+  | 'obrigacao_acessoria'
   | 'outro'
 
 export interface AlertaEmpresaGlobal {
@@ -861,7 +862,69 @@ export interface AlertasConfigRecord {
   enviar_pro_labore?: boolean
   enviar_altas_rendas?: boolean
   enviar_anexo_simples?: boolean
+  enviar_obrigacoes_acessorias?: boolean
   config_alertas_custom?: Record<string, boolean>
   created: string
   updated: string
+}
+
+// ==========================================
+// CALENDÁRIO DE OBRIGAÇÕES ACESSÓRIAS PJ
+// ==========================================
+
+export type TipoObrigacaoAcessoria = 'DAS' | 'DCTF' | 'EFD_REINF' | 'ECD' | 'ECF'
+export type StatusObrigacaoAcessoria = 'pendente' | 'entregue' | 'dispensada'
+export type StatusCalculadoObrigacao =
+  | 'entregue'
+  | 'atrasado'
+  | 'vence_hoje'
+  | 'vence_em_breve'
+  | 'em_dia'
+  | 'dispensada'
+
+export interface ObrigacaoAcessoriaRecord {
+  id: string
+  empresa_id: string
+  escritorio_id: string
+  tipo: TipoObrigacaoAcessoria
+  nome: string
+  ano_calendario: number
+  competencia: string // ex: "01/2025", "Anual/2024"
+  mes_competencia?: number // 1..12 ou 0
+  data_vencimento: string
+  data_vencimento_original?: string
+  status: StatusObrigacaoAcessoria
+  data_entrega?: string | null
+  observacao?: string
+  codigo_recibo?: string
+  valor_guia?: number
+  created: string
+  updated: string
+  expand?: {
+    empresa_id?: EmpresaRecord
+    escritorio_id?: EscritorioRecord
+  }
+}
+
+export interface ObrigacaoAcessoriaComStatus extends ObrigacaoAcessoriaRecord {
+  statusCalculado: StatusCalculadoObrigacao
+  diasAteVencimento: number
+  isAtrasado: boolean
+  isVenceHoje: boolean
+  isVenceEmBreve: boolean
+  urgenciaBadge: {
+    label: string
+    cor: string
+    severidade: 'critico' | 'atencao' | 'ok' | 'neutro'
+  }
+}
+
+export interface ResumoObrigacoesAno {
+  total: number
+  entregues: number
+  atrasadas: number
+  venceHoje: number
+  venceEmBreve: number
+  emDia: number
+  taxaConformidade: number // %
 }

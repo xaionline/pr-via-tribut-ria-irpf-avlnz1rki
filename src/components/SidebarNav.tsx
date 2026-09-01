@@ -17,6 +17,7 @@ import {
   Landmark,
   Coins,
   Sliders,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -109,6 +110,11 @@ export function SidebarNav() {
           items: [
             { label: 'Clientes PF', path: '/app/clientes', icon: Users },
             { label: 'Empresas PJ', path: '/app/empresas', icon: Building2 },
+            {
+              label: 'Obrigações Acessórias',
+              path: '/app/obrigacoes',
+              icon: CalendarDays,
+            },
             { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
           ],
         },

@@ -11,6 +11,7 @@ import {
   Scale,
   Loader2,
   CheckCircle2,
+  CalendarDays,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,8 @@ import { EmpresaApuracaoTab } from './EmpresaApuracaoTab'
 import { ComparadorRegimesTab } from './ComparadorRegimesTab'
 import { SimuladorResumoPjTab } from './SimuladorResumoPjTab'
 import PlanejadorRetiradas from './PlanejadorRetiradas'
+import { EmpresaObrigacoesTab } from './EmpresaObrigacoesTab'
+import { getObrigacoesEmpresa, calcularResumoObrigacoes } from '@/services/obrigacoes'
 import { maskCnpj, formatDate } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type {
@@ -47,9 +50,17 @@ import type {
   EmpresaFaturamentoRecord,
   ComparativoRegimesResultado,
   ApuracaoEmpresaResultado,
+  ObrigacaoAcessoriaComStatus,
+  ResumoObrigacoesAno,
 } from '@/types'
 
-type TabKey = 'planejador' | 'resumo-simulador' | 'comparador' | 'apuracao' | 'socios'
+type TabKey =
+  | 'obrigacoes'
+  | 'planejador'
+  | 'resumo-simulador'
+  | 'comparador'
+  | 'apuracao'
+  | 'socios'
 
 export default function EmpresaDetail() {
   const { id } = useParams<{ id: string }>()
@@ -59,12 +70,25 @@ export default function EmpresaDetail() {
   const [empresa, setEmpresa] = useState<EmpresaRecord | null>(null)
   const [socios, setSocios] = useState<EmpresaSocioRecord[]>([])
   const [faturamentos, setFaturamentos] = useState<EmpresaFaturamentoRecord[]>([])
+  const [obrigacoes, setObrigacoes] = useState<ObrigacaoAcessoriaComStatus[]>([])
+  const [resumoObrigacoes, setResumoObrigacoes] = useState<ResumoObrigacoesAno>({
+    total: 0,
+    entregues: 0,
+    atrasadas: 0,
+    venceHoje: 0,
+    venceEmBreve: 0,
+    emDia: 0,
+    taxaConformidade: 100,
+  })
   const [apuracaoCompleta, setApuracaoCompleta] = useState<ApuracaoEmpresaResultado | null>(null)
   const [comparativo, setComparativo] = useState<ComparativoRegimesResultado | null>(null)
   const [selectedAno, setSelectedAno] = useState<number>(new Date().getFullYear())
 
+  // Sincronizar se a rota veio com /obrigacoes
+  const isRotaObrigacoes = window.location.pathname.endsWith('/obrigacoes')
+
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabKey>('planejador')
+  const [activeTab, setActiveTab] = useState<TabKey>(isRotaObrigacoes ? 'obrigacoes' : 'planejador')
   const [deleting, setDeleting] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
@@ -72,14 +96,17 @@ export default function EmpresaDetail() {
     if (!id) return
     setLoading(true)
     try {
-      const [emp, socs, fats] = await Promise.all([
+      const [emp, socs, fats, obrs] = await Promise.all([
         getEmpresa(id),
         getSociosDaEmpresa(id),
         getFaturamentosEmpresa(id, selectedAno),
+        getObrigacoesEmpresa(id, selectedAno),
       ])
       setEmpresa(emp)
       setSocios(socs)
       setFaturamentos(fats)
+      setObrigacoes(obrs)
+      setResumoObrigacoes(calcularResumoObrigacoes(obrs))
 
       const apRes = await processarApuracaoEmpresa(emp, selectedAno)
       setApuracaoCompleta(apRes)
@@ -217,8 +244,25 @@ export default function EmpresaDetail() {
         </div>
       </Card>
 
-      {/* NAVEGAÇÃO DE ABAS REESTRUTURADA COM PLANEJADOR DE RETIRADAS */}
+      {/* NAVEGAÇÃO DE ABAS REESTRUTURADA COM OBRIGAÇÕES ACESSÓRIAS & PLANEJADOR */}
       <div className="flex border-b border-slate-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('obrigacoes')}
+          className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === 'obrigacoes'
+              ? 'border-blue-600 text-blue-700 bg-blue-50/40 font-bold'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <CalendarDays className="w-4 h-4 text-blue-600" />
+          <span>Obrigações Acessórias</span>
+          {resumoObrigacoes.atrasadas > 0 && (
+            <Badge className="bg-rose-600 text-white text-[10px] px-1.5 py-0 font-extrabold animate-pulse">
+              {resumoObrigacoes.atrasadas}
+            </Badge>
+          )}
+        </button>
+
         <button
           onClick={() => setActiveTab('planejador')}
           className={`flex items-center gap-2 px-4 sm:px-5 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-colors ${
@@ -281,6 +325,18 @@ export default function EmpresaDetail() {
       </div>
 
       {/* CONTEÚDO DAS ABAS */}
+      {activeTab === 'obrigacoes' && (
+        <EmpresaObrigacoesTab
+          empresa={empresa}
+          anoCalendario={selectedAno}
+          obrigacoes={obrigacoes}
+          resumo={resumoObrigacoes}
+          loading={loading}
+          onRefresh={carregar}
+          onAnoChange={(ano) => setSelectedAno(ano)}
+        />
+      )}
+
       {activeTab === 'planejador' && (
         <PlanejadorRetiradas empresaId={empresa.id} initialAno={selectedAno} isTab={true} />
       )}

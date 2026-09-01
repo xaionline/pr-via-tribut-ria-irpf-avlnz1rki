@@ -319,7 +319,9 @@ export async function calcularAlertasGlobaisDasEmpresas(
               destaque: true,
               ano_calendario: anoCalendario,
             })
-          } else if (hoje.length > 0) {
+          }
+
+          if (hoje.length > 0) {
             const nomesHoje = hoje.map((o) => `${o.tipo} (${o.competencia})`).join(', ')
             todosAlertas.push({
               id: `obrigacoes_hoje_${empresa.id}_${anoCalendario}`,
@@ -339,7 +341,9 @@ export async function calcularAlertasGlobaisDasEmpresas(
               destaque: true,
               ano_calendario: anoCalendario,
             })
-          } else if (emBreve.length > 0) {
+          }
+
+          if (emBreve.length > 0) {
             const proxima = emBreve[0]
             todosAlertas.push({
               id: `obrigacoes_em_breve_${empresa.id}_${anoCalendario}`,

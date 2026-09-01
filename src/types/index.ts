@@ -744,6 +744,7 @@ export interface SimulacaoPjResultados {
     cliente_nome: string
     pro_labore_anual: number
     lucros_distribuidos: number
+    jcp_anual?: number
     irpf_estimado_socio: number
     irpfm_altas_rendas_estimado: number
     total_irpf_socio: number

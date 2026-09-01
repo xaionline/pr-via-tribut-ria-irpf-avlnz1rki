@@ -66,6 +66,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency, formatNumber, maskCnpj } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { useAuth } from '@/hooks/use-auth'
+import { getLogoUrl } from '@/services/escritorio'
+import {
+  imprimirRelatorioPlanejador,
+  downloadRelatorioPlanejadorHtml,
+  type DadosRelatorioPlanejadorPDF,
+} from '@/services/planejadorPdf'
+import { RelatorioPlanejadorModal } from './RelatorioPlanejadorModal'
 import {
   getEmpresa,
   getAllEmpresas,
@@ -106,6 +114,7 @@ export default function PlanejadorRetiradas({
   const routeParams = useParams<{ id?: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { escritorio } = useAuth()
 
   const currentEmpresaId = propEmpresaId || routeParams.id || ''
 
@@ -155,6 +164,7 @@ export default function PlanejadorRetiradas({
   // Modais
   const [saveModalOpen, setSaveModalOpen] = useState(false)
   const [compareModalOpen, setCompareModalOpen] = useState(false)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
   const [scenarioToCompare, setScenarioToCompare] = useState<CenarioSimulacaoPjRecord | null>(null)
   const [cenarioNomeInput, setCenarioNomeInput] = useState('')
   const [marcarRecomendadoInput, setMarcarRecomendadoInput] = useState(false)
@@ -575,11 +585,81 @@ export default function PlanejadorRetiradas({
     }
   }
 
-  const handlePrintPdf = () => {
-    window.print()
-  }
+  // Cenário recomendado cadastrado (se houver)
+  const cenarioRecomendado = useMemo(() => {
+    return cenarios.find((c) => c.recomendado) || null
+  }, [cenarios])
 
   const activeCenario = cenarios.find((c) => c.id === selectedCenarioId)
+
+  // Montagem do payload estruturado do relatório
+  const dadosRelatorio: DadosRelatorioPlanejadorPDF | null = useMemo(() => {
+    if (!empresa || !resultados) return null
+
+    const logoUrl = escritorio ? getLogoUrl(escritorio) : null
+    const nomeAtivo = activeCenario ? activeCenario.nome : 'Cenário Ativo (Sliders)'
+
+    return {
+      empresa,
+      ano: selectedAno,
+      escritorio: escritorio || empresa.expand?.escritorio_id || null,
+      logoUrl,
+      cenarioAtivoNome: nomeAtivo,
+      cenarioRecomendado,
+      resultados,
+      comparativoRegimes: apuracao?.comparativoRegimes || null,
+      sociosConfig,
+      socios,
+      retiradaMensal,
+      splitProLabore,
+      considerarJcp,
+      jcpMensal,
+      indicadores: {
+        fatorR: fatorRSimulado,
+        atingiuFatorR,
+        minProLaboreAtingido,
+        alertaAltasRendas,
+        anexoSimplesInfo,
+      },
+    }
+  }, [
+    empresa,
+    selectedAno,
+    escritorio,
+    activeCenario,
+    cenarioRecomendado,
+    resultados,
+    apuracao,
+    sociosConfig,
+    socios,
+    retiradaMensal,
+    splitProLabore,
+    considerarJcp,
+    jcpMensal,
+    fatorRSimulado,
+    atingiuFatorR,
+    minProLaboreAtingido,
+    alertaAltasRendas,
+    anexoSimplesInfo,
+  ])
+
+  const handleGerarPdf = (cenarioEspecifico?: CenarioSimulacaoPjRecord) => {
+    if (cenarioEspecifico) {
+      handleCarregarCenario(cenarioEspecifico)
+    }
+    setReportModalOpen(true)
+  }
+
+  const handlePrintPdfDireto = (cenarioEspecifico?: CenarioSimulacaoPjRecord) => {
+    if (cenarioEspecifico) {
+      handleCarregarCenario(cenarioEspecifico)
+    }
+    if (dadosRelatorio) {
+      imprimirRelatorioPlanejador(dadosRelatorio)
+    } else {
+      setReportModalOpen(true)
+    }
+  }
 
   // Economia em relação ao cenário base (ou tributos PJ originais)
   const tributosPjBase = resultados?.empresa.tributos_pj_atual || 0
@@ -898,9 +978,10 @@ export default function PlanejadorRetiradas({
                             variant="ghost"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handlePrintPdf()
+                              handleGerarPdf(c)
                             }}
                             className="h-6 text-[11px] px-1.5 text-slate-700 hover:text-slate-900 gap-1"
+                            title="Visualizar e Gerar Relatório PDF deste cenário"
                           >
                             <FileDown className="w-3 h-3" /> PDF
                           </Button>
@@ -1461,10 +1542,20 @@ export default function PlanejadorRetiradas({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePrintPdf}
-                className="text-xs gap-1.5 h-9 flex-1 sm:flex-initial"
+                onClick={() => handleGerarPdf()}
+                className="text-xs gap-1.5 h-9 flex-1 sm:flex-initial border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
               >
-                <FileDown className="w-4 h-4" />
+                <FileText className="w-4 h-4 text-emerald-600" />
+                Visualizar Relatório
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePrintPdfDireto()}
+                className="text-xs gap-1.5 h-9 flex-1 sm:flex-initial border-emerald-300 text-emerald-800 bg-emerald-50/60 hover:bg-emerald-100 font-semibold"
+              >
+                <FileDown className="w-4 h-4 text-emerald-700" />
                 Gerar PDF
               </Button>
 
@@ -1684,6 +1775,12 @@ export default function PlanejadorRetiradas({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* MODAL DE RELATÓRIO PDF EXECUTIVO E PROFISSIONAL */}
+      <RelatorioPlanejadorModal
+        open={reportModalOpen}
+        onOpenChange={setReportModalOpen}
+        dados={dadosRelatorio}
+      />
     </div>
   )
 }

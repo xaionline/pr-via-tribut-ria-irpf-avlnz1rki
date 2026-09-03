@@ -48,9 +48,9 @@ export default function Registro() {
     } else {
       toast({
         title: 'Escritório criado com sucesso!',
-        description: 'Bem-vindo ao Prévia Tributária IRPF.',
+        description: 'Seu período de teste grátis de 14 dias está ativo.',
       })
-      navigate('/app/dashboard')
+      navigate('/app/planos')
     }
   }
 

@@ -144,12 +144,16 @@ export default function Cadastro() {
         variant: 'destructive',
       })
     } else {
-      toast({ title: 'Escritório criado', description: 'Acesso liberado.' })
-      navigate('/app/dashboard')
+      toast({
+        title: 'Escritório criado com sucesso!',
+        description: 'Seu período de teste grátis de 14 dias está ativo.',
+      })
+      navigate('/app/planos')
     }
   }
 
   const beneficios = [
+    '14 dias de teste grátis com acesso completo',
     'Prévia tributária do IRPF para seus clientes',
     'Gestão de declarações e clientes em um só lugar',
     'Isolamento total entre escritórios',
@@ -205,9 +209,13 @@ export default function Cadastro() {
           </div>
 
           <div className="mb-6">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 mb-2">
+              Teste grátis de 14 dias
+            </div>
             <h2 className="text-2xl font-bold text-slate-900">Cadastro de escritório</h2>
             <p className="text-sm text-slate-500 mt-1">
-              Informe os dados do escritório e do administrador responsável.
+              Informe os dados do escritório e do administrador responsável para iniciar seu trial
+              de 14 dias.
             </p>
           </div>
 
@@ -401,7 +409,7 @@ export default function Cadastro() {
                 'Criando escritório...'
               ) : (
                 <>
-                  <span>Criar escritório e acessar</span>
+                  <span>Criar escritório e iniciar teste grátis</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

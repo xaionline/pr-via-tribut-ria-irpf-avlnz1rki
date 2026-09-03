@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Building2, ArrowRight, Lock, Mail } from 'lucide-react'
+import { Building2, ArrowRight, Lock, Mail, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -157,8 +157,16 @@ export default function Login() {
               )}
             </Button>
 
-            <div className="text-center pt-3 border-t border-slate-100">
-              <p className="text-xs text-slate-500">Ainda não tem conta para o escritório? </p>
+            <div className="text-center pt-4 border-t border-slate-100 space-y-3">
+              <p className="text-xs text-slate-500">Ainda não tem conta para o seu escritório?</p>
+              <Link
+                to="/cadastro"
+                className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-lg border border-emerald-500/30 bg-emerald-50/80 hover:bg-emerald-100/80 text-emerald-800 text-xs font-semibold transition-colors group"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span>Criar escritório — teste grátis de 14 dias</span>
+                <ArrowRight className="w-3.5 h-3.5 text-emerald-600 ml-auto" />
+              </Link>
             </div>
           </form>
         </CardContent>

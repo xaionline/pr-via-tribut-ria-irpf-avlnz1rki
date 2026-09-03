@@ -90,11 +90,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, pass: string, name: string, nomeEscritorio: string) => {
     try {
+      const trialAte = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
       // 1. Create escritorio
       const esc = await pb.collection('escritorios').create<EscritorioRecord>({
         nome: nomeEscritorio,
         plano: 'pro',
-        limite_clientes: 100,
+        limite_clientes: 150,
+        limite_empresas: 50,
+        ativo: true,
+        assinatura_status: 'trial',
+        trial_ate: trialAte.toISOString().replace('T', ' '),
       })
 
       // 2. Create user with escritorio_id and admin cargo

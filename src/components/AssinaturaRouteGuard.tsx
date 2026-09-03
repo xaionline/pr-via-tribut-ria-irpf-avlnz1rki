@@ -14,19 +14,21 @@ import type { EscritorioRecord } from '@/types'
  * Guarda de rota de assinatura: valida `ativo` + `assinatura_status` do
  * escritório antes de renderizar o app. Se bloqueado/atrasado além do prazo,
  * exibe a TELA DE REATIVAÇÃO com link para o Customer Portal / pagamento.
+ * Recebe `children` (a shell da área logada) para poder renderizá-la quando
+ * o acesso está liberado — sem isso a tela ficaria sem menu lateral/header.
  */
-export function AssinaturaRouteGuard() {
+export function AssinaturaRouteGuard({ children }: { children: React.ReactNode }) {
   const { escritorio, isSuperAdmin, signOut } = useAuth()
   const location = useLocation()
   const [portalAbrindo, setPortalAbrindo] = useState(false)
 
   // Super administrador da plataforma nunca é bloqueado
-  if (isSuperAdmin) return <Outlet />
+  if (isSuperAdmin) return <>{children}</>
 
   const situacao: SituacaoAcesso = calcularSituacaoAcesso(escritorio as EscritorioRecord | null)
 
   // A tela de planos/checkout fica sempre acessível para permitir a reativação
-  if (situacao.liberado || location.pathname.startsWith('/app/planos')) return <Outlet />
+  if (situacao.liberado || location.pathname.startsWith('/app/planos')) return <>{children}</>
 
   const abrirPortal = async () => {
     setPortalAbrindo(true)

@@ -31,28 +31,31 @@ export default function Layout() {
     return <Navigate to="/app/cliente" replace />
   }
 
-  // Guarda de assinatura: bloqueia escritórios atrasados/bloqueados/cancelados
+  // Shell completa da área logada: menu lateral + header + conteúdo
+  const shell = (
+    <div className="min-h-screen bg-slate-50 flex">
+      <SidebarNav />
+      <div className="flex-1 md:pl-[68px] lg:pl-[250px] flex flex-col min-w-0 pb-20 lg:pb-0">
+        <Header />
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8 max-w-[1440px] w-full mx-auto animate-fade-in">
+          <Outlet />
+        </main>
+      </div>
+      <Fab />
+      <MobileBottomNav />
+    </div>
+  )
+
+  // Guarda de assinatura: bloqueia escritórios atrasados/bloqueados/cancelados.
+  // A shell (com o menu lateral) é passada como children para que seja
+  // renderizada normalmente quando a assinatura estiver liberada.
   if (!isCliente) {
     return (
       <ClienteRouteGuard>
-        <AssinaturaRouteGuard />
+        <AssinaturaRouteGuard>{shell}</AssinaturaRouteGuard>
       </ClienteRouteGuard>
     )
   }
 
-  return (
-    <ClienteRouteGuard>
-      <div className="min-h-screen bg-slate-50 flex">
-        <SidebarNav />
-        <div className="flex-1 md:pl-[68px] lg:pl-[250px] flex flex-col min-w-0 pb-20 lg:pb-0">
-          <Header />
-          <main className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8 max-w-[1440px] w-full mx-auto animate-fade-in">
-            <Outlet />
-          </main>
-        </div>
-        <Fab />
-        <MobileBottomNav />
-      </div>
-    </ClienteRouteGuard>
-  )
+  return <ClienteRouteGuard>{shell}</ClienteRouteGuard>
 }

@@ -67,7 +67,7 @@ routerAdd(
       })
 
       var j = res.json || {}
-      if (res.status >= 200 && res.status < 300 && j.url) {
+      if (res.statusCode >= 200 && res.statusCode < 300 && j.url) {
         return e.json(200, {
           success: true,
           stripe_configurado: true,
@@ -75,7 +75,7 @@ routerAdd(
         })
       }
 
-      var err = j.error && j.error.message ? j.error.message : 'status ' + res.status
+      var err = j.error && j.error.message ? j.error.message : 'statusCode ' + res.statusCode
       $app.logger().error('stripe portal failed', 'error', err)
       return e.json(502, {
         success: false,

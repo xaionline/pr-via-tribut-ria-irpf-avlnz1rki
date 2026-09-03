@@ -21,7 +21,22 @@ routerAdd(
       return e.notFoundError('Escritório não encontrado.')
     }
 
-    var stripeConfigurado = !!($os.getenv('STRIPE_SECRET_KEY') || '')
+    var linkStarter = $os.getenv('STRIPE_PAYMENT_LINK_STARTER') || ''
+    var linkPro = $os.getenv('STRIPE_PAYMENT_LINK_PRO') || ''
+    var linkEnterprise = $os.getenv('STRIPE_PAYMENT_LINK_ENTERPRISE') || ''
+
+    var paymentLinks = {
+      starter: linkStarter,
+      pro: linkPro,
+      enterprise: linkEnterprise,
+    }
+
+    var stripeConfigurado = !!(
+      linkStarter ||
+      linkPro ||
+      linkEnterprise ||
+      $os.getenv('STRIPE_SECRET_KEY')
+    )
 
     var plano = esc.getString('plano') || 'starter'
     var status = esc.getString('assinatura_status') || 'trial'
@@ -84,6 +99,8 @@ routerAdd(
         stripe_customer_id: esc.getString('stripe_customer_id'),
         stripe_subscription_id: esc.getString('stripe_subscription_id'),
       },
+      payment_links: paymentLinks,
+      payment_links_configurados: !!(linkStarter || linkPro || linkEnterprise),
       limites: {
         empresas: limiteEmpresas, // 0 = ilimitado (Enterprise)
         clientes: limiteClientes, // 0 = ilimitado (Enterprise)

@@ -73,6 +73,12 @@ export interface AssinaturaRecord {
 export interface AssinaturaStatusDTO {
   success: boolean
   stripe_configurado: boolean
+  payment_links?: {
+    starter: string
+    pro: string
+    enterprise: string
+  }
+  payment_links_configurados?: boolean
   escritorio: {
     id: string
     nome: string

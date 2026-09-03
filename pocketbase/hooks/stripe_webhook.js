@@ -62,24 +62,48 @@ routerAdd('POST', '/backend/v1/stripe/webhook', (e) => {
 
   var eventId = evento.id || ''
 
-  // ---- Resolve o escritório pelo ID do customer ---------------------------
+  // ---- Resolve o escritório por client_reference_id, customer ou metadata --
   var customerId =
     obj.customer || (obj.subscription_details && obj.subscription_details.customer) || ''
   var metadata = obj.metadata || {}
-  var escId = metadata.escritorio_id || ''
+  var escId =
+    metadata.escritorio_id ||
+    obj.client_reference_id ||
+    (obj.subscription_details &&
+      obj.subscription_details.metadata &&
+      obj.subscription_details.metadata.escritorio_id) ||
+    ''
   var esc = null
 
-  if (!escId && customerId) {
+  // 1. Tenta buscar direto por escId (id do escritório vindo do client_reference_id / metadata)
+  if (escId) {
+    try {
+      esc = $app.findRecordById('escritorios', escId)
+    } catch (_) {
+      esc = null
+    }
+  }
+
+  // 2. Se não encontrou por escId, tenta buscar pelo stripe_customer_id
+  if (!esc && customerId) {
     try {
       esc = $app.findFirstRecordByData('escritorios', 'stripe_customer_id', customerId)
       escId = esc.id
     } catch (_) {}
   }
-  if (!esc && escId) {
-    try {
-      esc = $app.findRecordById('escritorios', escId)
-    } catch (_) {
-      esc = null
+
+  // 3. Se ainda não encontrou, tenta buscar pelo customer_email do checkout/invoice
+  if (!esc) {
+    var emailCliente =
+      obj.customer_email ||
+      (obj.customer_details && obj.customer_details.email) ||
+      (obj.billing_details && obj.billing_details.email) ||
+      ''
+    if (emailCliente) {
+      try {
+        esc = $app.findFirstRecordByData('escritorios', 'email', emailCliente)
+        escId = esc.id
+      } catch (_) {}
     }
   }
 

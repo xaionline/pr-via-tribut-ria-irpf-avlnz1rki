@@ -30,8 +30,9 @@ export interface PortalResult {
 }
 
 /**
- * Cria uma sessão de Checkout do Stripe para o plano informado
- * (cartão + PIX, trial de 14 dias). Retorna a URL do Stripe Hosted Checkout.
+ * Obtém a URL do Stripe Payment Link para o plano informado.
+ * O backend formata o link incluindo client_reference_id e prefilled_email
+ * sem realizar chamadas de rede de saída síncronas para a api.stripe.com.
  */
 export async function criarCheckout(plano: PlanoAssinatura): Promise<CheckoutResult> {
   return pb.send<CheckoutResult>('/backend/v1/stripe/checkout', {
@@ -39,6 +40,31 @@ export async function criarCheckout(plano: PlanoAssinatura): Promise<CheckoutRes
     body: JSON.stringify({ plano }),
     headers: { 'Content-Type': 'application/json' },
   })
+}
+
+/**
+ * Constrói a URL do Stripe Payment Link diretamente no cliente caso as URLs
+ * já estejam disponíveis (ex.: vindas de getAssinaturaStatus ou fallback).
+ */
+export function buildPaymentLinkUrl(
+  baseLink: string,
+  escritorioId?: string,
+  email?: string,
+): string {
+  if (!baseLink) return ''
+  const separator = baseLink.includes('?') ? '&' : '?'
+  let url = baseLink
+  const params: string[] = []
+  if (escritorioId) {
+    params.push(`client_reference_id=${encodeURIComponent(escritorioId)}`)
+  }
+  if (email) {
+    params.push(`prefilled_email=${encodeURIComponent(email)}`)
+  }
+  if (params.length > 0) {
+    url += separator + params.join('&')
+  }
+  return url
 }
 
 /**

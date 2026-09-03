@@ -16,7 +16,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
-import { criarCheckout, criarPortalSession, getAssinaturaStatus } from '@/services/assinatura'
+import {
+  buildPaymentLinkUrl,
+  criarCheckout,
+  criarPortalSession,
+  getAssinaturaStatus,
+} from '@/services/assinatura'
 import { PLANOS_ASSINATURA, type AssinaturaStatusDTO, type PlanoAssinatura } from '@/types'
 
 const iconesPlanos = [Zap, Crown, Sparkles] as const
@@ -57,24 +62,39 @@ export default function PlanosPage() {
   const handleAssinar = async (plano: PlanoAssinatura) => {
     setPlanoSelecionado(plano)
     try {
+      // 1. Verifica se já temos o Payment Link retornado no status
+      const directLink = status?.payment_links?.[plano]
+      if (directLink) {
+        const fullUrl = buildPaymentLinkUrl(
+          directLink,
+          escritorio?.id,
+          escritorio?.email || user?.email,
+        )
+        window.location.href = fullUrl
+        return
+      }
+
+      // 2. Se não estiver no cache local do status, chama a rota de checkout (que monta o link)
       const res = await criarCheckout(plano)
       if (res.success && res.checkout_url) {
         window.location.href = res.checkout_url
         return
       }
+
       toast({
-        title: 'Pagamento via Stripe não disponível',
+        title: 'Payment Link não configurado',
         description:
           res.message ||
-          'As chaves do Stripe ainda não foram configuradas neste ambiente. O checkout será liberado assim que forem cadastradas.',
+          `O Payment Link para o plano ${plano.toUpperCase()} ainda não foi configurado no ambiente. Crie o link no painel do Stripe e adicione a variável STRIPE_PAYMENT_LINK_${plano.toUpperCase()}.`,
         variant: 'destructive',
         duration: 8000,
       })
     } catch {
       toast({
-        title: 'Erro ao iniciar checkout',
-        description: 'Não foi possível contatar o servidor de pagamentos.',
+        title: 'Payment Link não configurado',
+        description: `O link de pagamento para o plano ${plano.toUpperCase()} ainda não foi cadastrado no ambiente. Configure a variável STRIPE_PAYMENT_LINK_${plano.toUpperCase()} no painel.`,
         variant: 'destructive',
+        duration: 8000,
       })
     } finally {
       setPlanoSelecionado(null)
@@ -119,20 +139,26 @@ export default function PlanosPage() {
         </p>
       </div>
 
-      {/* Aviso quando Stripe não está configurado */}
-      {status && !status.stripe_configurado && (
+      {/* Aviso quando Stripe Payment Links não estão configurados */}
+      {status && !status.payment_links_configurados && !status.stripe_configurado && (
         <Card className="border-amber-300 bg-amber-50/80">
           <CardContent className="p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-bold text-amber-900">Checkout temporariamente indisponível</p>
+              <p className="font-bold text-amber-900">Configuração de Payment Links do Stripe</p>
               <p className="text-amber-800 mt-0.5 text-xs leading-relaxed">
-                As chaves{' '}
-                <code className="font-mono bg-amber-100 px-1 rounded">STRIPE_SECRET_KEY</code> e{' '}
-                <code className="font-mono bg-amber-100 px-1 rounded">STRIPE_PUBLISHABLE_KEY</code>{' '}
-                ainda não foram cadastradas neste ambiente. Todo o fluxo de assinatura já está
-                pronto — assim que as chaves forem adicionadas, o checkout cartão + PIX funciona
-                automaticamente.
+                Para habilitar a assinatura com 1 clique, crie os Payment Links no painel do Stripe
+                e adicione as variáveis de ambiente:{' '}
+                <code className="font-mono bg-amber-100 px-1 rounded">
+                  STRIPE_PAYMENT_LINK_STARTER
+                </code>
+                ,{' '}
+                <code className="font-mono bg-amber-100 px-1 rounded">STRIPE_PAYMENT_LINK_PRO</code>{' '}
+                e{' '}
+                <code className="font-mono bg-amber-100 px-1 rounded">
+                  STRIPE_PAYMENT_LINK_ENTERPRISE
+                </code>
+                . O redirecionamento é instantâneo e não depende de chamadas de saída do servidor.
               </p>
             </div>
           </CardContent>

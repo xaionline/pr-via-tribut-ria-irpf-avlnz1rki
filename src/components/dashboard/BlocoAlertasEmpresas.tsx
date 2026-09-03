@@ -22,6 +22,7 @@ import {
   Settings,
   Bell,
   RefreshCw,
+  CreditCard,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -88,6 +89,7 @@ export function BlocoAlertasEmpresas({
   const [envioObrigacoes, setEnvioObrigacoes] = useState(
     config?.enviar_obrigacoes_acessorias !== false,
   )
+  const [envioMensalidade, setEnvioMensalidade] = useState(config?.enviar_mensalidade !== false)
   const [customAlertsMap, setCustomAlertsMap] = useState<Record<string, boolean>>(
     config?.config_alertas_custom || {},
   )
@@ -103,6 +105,7 @@ export function BlocoAlertasEmpresas({
       setEnvioAltasRendas(config.enviar_altas_rendas !== false)
       setEnvioAnexoSimples(config.enviar_anexo_simples !== false)
       setEnvioObrigacoes(config.enviar_obrigacoes_acessorias !== false)
+      setEnvioMensalidade(config.enviar_mensalidade !== false)
       setCustomAlertsMap(config.config_alertas_custom || {})
     }
   }, [config, proprietarioEmail])
@@ -251,6 +254,7 @@ export function BlocoAlertasEmpresas({
         enviar_altas_rendas: envioAltasRendas,
         enviar_anexo_simples: envioAnexoSimples,
         enviar_obrigacoes_acessorias: envioObrigacoes,
+        enviar_mensalidade: envioMensalidade,
         config_alertas_custom: customAlertsMap,
       })
       onConfigUpdated(updated)
@@ -840,6 +844,30 @@ export function BlocoAlertasEmpresas({
                       checked={envioObrigacoes}
                       disabled={!envioGeral}
                       onCheckedChange={setEnvioObrigacoes}
+                    />
+                  </div>
+
+                  {/* Mensalidade / Assinatura (Stripe) */}
+                  <div className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-red-500" />
+                      <div>
+                        <Label
+                          htmlFor="switch-mensalidade"
+                          className="text-xs font-semibold text-slate-800 cursor-pointer"
+                        >
+                          Mensalidade/Assinatura (Stripe)
+                        </Label>
+                        <p className="text-[10px] text-slate-400">
+                          Vencimento próximo, vencida (24h) e trial expirando
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="switch-mensalidade"
+                      checked={envioMensalidade}
+                      disabled={!envioGeral}
+                      onCheckedChange={setEnvioMensalidade}
                     />
                   </div>
                 </div>

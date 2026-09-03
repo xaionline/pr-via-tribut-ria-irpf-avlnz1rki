@@ -5,6 +5,7 @@ import { Header } from '@/components/Header'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { Fab } from '@/components/Fab'
 import { ClienteRouteGuard } from '@/components/ClienteRouteGuard'
+import { AssinaturaRouteGuard } from '@/components/AssinaturaRouteGuard'
 
 export default function Layout() {
   const { isAuthenticated, loading, isCliente } = useAuth()
@@ -28,6 +29,15 @@ export default function Layout() {
   // Clientes só navegam dentro de /app/cliente.
   if (isCliente && !location.pathname.startsWith('/app/cliente')) {
     return <Navigate to="/app/cliente" replace />
+  }
+
+  // Guarda de assinatura: bloqueia escritórios atrasados/bloqueados/cancelados
+  if (!isCliente) {
+    return (
+      <ClienteRouteGuard>
+        <AssinaturaRouteGuard />
+      </ClienteRouteGuard>
+    )
   }
 
   return (

@@ -48,6 +48,10 @@ routerAdd(
         body.limite_clientes !== undefined
           ? Number(body.limite_clientes)
           : Number(esc.get('limite_clientes')) || 100
+      var limiteEmpresas =
+        body.limite_empresas !== undefined
+          ? Number(body.limite_empresas)
+          : Number(esc.get('limite_empresas')) || 0
       var ativo =
         body.ativo !== undefined
           ? body.ativo === true || body.ativo === 'true'
@@ -77,6 +81,10 @@ routerAdd(
         erros.limite_clientes = 'Limite de clientes deve ser no mínimo 1.'
       }
 
+      if (isNaN(limiteEmpresas) || limiteEmpresas < 0) {
+        erros.limite_empresas = 'Limite de empresas deve ser no mínimo 0 (0 = ilimitado).'
+      }
+
       if (Object.keys(erros).length > 0) {
         return e.json(400, { success: false, errors: erros })
       }
@@ -102,6 +110,8 @@ routerAdd(
       if (esc.getString('plano') !== plano) diff.plano = { de: esc.getString('plano'), para: plano }
       if (Number(esc.get('limite_clientes')) !== limiteClientes)
         diff.limite_clientes = { de: Number(esc.get('limite_clientes')), para: limiteClientes }
+      if (Number(esc.get('limite_empresas') || 0) !== limiteEmpresas)
+        diff.limite_empresas = { de: Number(esc.get('limite_empresas') || 0), para: limiteEmpresas }
       if (esc.getBool('ativo') !== ativo) diff.ativo = { de: esc.getBool('ativo'), para: ativo }
 
       esc.set('nome', nome)
@@ -109,7 +119,22 @@ routerAdd(
       esc.set('email', email)
       esc.set('plano', plano)
       esc.set('limite_clientes', limiteClientes)
+      esc.set('limite_empresas', limiteEmpresas)
       esc.set('ativo', ativo)
+
+      // Alteração de plano pelo super_admin ajusta os limites-padrão e o estado da assinatura
+      if (esc.original().getString('plano') !== plano) {
+        if (plano === 'starter') {
+          esc.set('limite_empresas', 10)
+          esc.set('limite_clientes', 20)
+        } else if (plano === 'pro') {
+          esc.set('limite_empresas', 50)
+          esc.set('limite_clientes', 150)
+        } else {
+          esc.set('limite_empresas', 0) // ilimitado
+          esc.set('limite_clientes', 0) // ilimitado
+        }
+      }
 
       $app.save(esc)
 
@@ -141,6 +166,7 @@ routerAdd(
           email: esc.getString('email'),
           plano: esc.getString('plano'),
           limite_clientes: Number(esc.get('limite_clientes')),
+          limite_empresas: Number(esc.get('limite_empresas') || 0),
           ativo: esc.getBool('ativo'),
           created: createdDateStr,
         },

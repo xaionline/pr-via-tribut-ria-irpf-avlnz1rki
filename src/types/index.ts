@@ -12,6 +12,11 @@ export interface UserRecord {
   updated: string
 }
 
+export type PlanoAssinatura = 'starter' | 'pro' | 'enterprise'
+
+/** Estado da assinatura do escritório (SaaS). */
+export type StatusAssinatura = 'trial' | 'ativo' | 'atrasado' | 'cancelado' | 'bloqueado'
+
 export interface EscritorioRecord {
   id: string
   nome: string
@@ -27,14 +32,118 @@ export interface EscritorioRecord {
   estado?: string
   cep?: string
   logo?: string
-  plano: 'starter' | 'pro' | 'enterprise'
+  plano: PlanoAssinatura
   limite_clientes: number
+  limite_empresas?: number
+  assinatura_status?: StatusAssinatura
+  data_vencimento?: string
+  data_bloqueio?: string
+  trial_ate?: string
+  stripe_customer_id?: string
+  stripe_subscription_id?: string
   sessao_inatividade_min?: number
   ultima_revisao_politicas?: string
   ultimo_backup_status?: string
   created: string
   updated: string
 }
+
+/** Registro do histórico de assinaturas / eventos Stripe. */
+export interface AssinaturaRecord {
+  id: string
+  escritorio_id: string
+  stripe_event_id?: string
+  stripe_customer_id?: string
+  stripe_subscription_id?: string
+  stripe_invoice_id?: string
+  tipo_evento?: string
+  plano?: PlanoAssinatura
+  valor?: number
+  moeda?: string
+  status?: 'pago' | 'falha' | 'pendente' | 'cancelado' | 'info'
+  periodo_inicio?: string
+  periodo_fim?: string
+  descricao?: string
+  dados_evento?: Record<string, unknown>
+  created: string
+  updated: string
+}
+
+/** Estado completo de assinatura/limites retornado por /backend/v1/stripe/status */
+export interface AssinaturaStatusDTO {
+  success: boolean
+  stripe_configurado: boolean
+  escritorio: {
+    id: string
+    nome: string
+    plano: PlanoAssinatura
+    ativo: boolean
+    assinatura_status: StatusAssinatura
+    data_vencimento: string
+    data_bloqueio: string
+    trial_ate: string
+    stripe_customer_id: string
+    stripe_subscription_id: string
+  }
+  limites: {
+    /** 0 = ilimitado (Enterprise) */
+    empresas: number
+    /** 0 = ilimitado (Enterprise) */
+    clientes: number
+    empresas_usadas: number
+    clientes_usados: number
+  }
+  ultima_fatura: {
+    id: string
+    tipo_evento: string
+    status: string
+    valor: number
+    moeda: string
+    created: string
+  } | null
+  acesso_liberado: boolean
+}
+
+/** Configuração dos 3 planos comercializados — textos e limites exatamente como o produto define. */
+export const PLANOS_ASSINATURA: {
+  id: PlanoAssinatura
+  nome: string
+  preco: number
+  precoTexto: string
+  destaque?: boolean
+  limiteEmpresas: number | null // null = ilimitado
+  limiteClientes: number | null // null = ilimitado
+  features: string[]
+}[] = [
+  {
+    id: 'starter',
+    nome: 'Starter',
+    preco: 49,
+    precoTexto: 'R$ 49/mês',
+    limiteEmpresas: 10,
+    limiteClientes: 20,
+    features: ['10 empresas', '20 clientes PF'],
+  },
+  {
+    id: 'pro',
+    nome: 'Pro',
+    preco: 129,
+    precoTexto: 'R$ 129/mês',
+    destaque: true,
+    limiteEmpresas: 50,
+    limiteClientes: 150,
+    features: ['50 empresas', '150 clientes PF', 'Todos os regimes', '5 usuários'],
+  },
+  {
+    id: 'enterprise',
+    nome: 'Enterprise',
+    preco: 299,
+    precoTexto: 'R$ 299/mês',
+    limiteEmpresas: null,
+    limiteClientes: null,
+    features: ['Ilimitado', 'Chat IA', 'CSV'],
+  },
+]
 
 /** Membro de equipe retornado pela rota de configurações. */
 export interface MembroEquipeDTO {
@@ -863,6 +972,7 @@ export interface AlertasConfigRecord {
   enviar_altas_rendas?: boolean
   enviar_anexo_simples?: boolean
   enviar_obrigacoes_acessorias?: boolean
+  enviar_mensalidade?: boolean
   config_alertas_custom?: Record<string, boolean>
   created: string
   updated: string

@@ -18,6 +18,7 @@ import { KpiCard, KpiCarousel, type KpiCardProps } from '@/components/dashboard/
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable'
 import { AlertsSidebar } from '@/components/dashboard/AlertsSidebar'
 import { BlocoAlertasEmpresas } from '@/components/dashboard/BlocoAlertasEmpresas'
+import { BlocoAlertaMensalidade } from '@/components/dashboard/BlocoAlertaMensalidade'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
@@ -35,7 +36,7 @@ import type {
 } from '@/types'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, escritorio, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
@@ -253,6 +254,13 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
+        {/* ALERTA MENSALIDADE/ASSINATURA (apenas proprietário/admin) */}
+        {isAdmin && (
+          <BlocoAlertaMensalidade
+            escritorio={escritorio}
+            onIrParaPlanos={() => navigate('/app/planos')}
+          />
+        )}
         <div className="hidden lg:grid lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="border border-slate-200">

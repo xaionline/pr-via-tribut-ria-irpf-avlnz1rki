@@ -18,6 +18,7 @@ import {
   Coins,
   Sliders,
   CalendarDays,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -176,6 +177,12 @@ export function SidebarNav() {
           iconEmoji: '🛡️',
           superAdminOnly: true,
           items: [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck, exact: true }],
+        },
+        {
+          id: 'assinatura',
+          title: 'ASSINATURA',
+          iconEmoji: '💳',
+          items: [{ label: 'Planos e Assinatura', path: '/app/planos', icon: CreditCard }],
         },
         {
           id: 'configuracoes',

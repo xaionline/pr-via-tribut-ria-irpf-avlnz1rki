@@ -11,6 +11,7 @@ import Login from '@/pages/Login'
 import Registro from '@/pages/Registro'
 import Cadastro from '@/pages/Cadastro'
 import Dashboard from '@/pages/Dashboard'
+import PlanosPage from '@/pages/PlanosPage'
 import ClientesList from '@/pages/clientes/ClientesList'
 import ClienteDetail from '@/pages/clientes/ClienteDetail'
 import ClienteForm from '@/pages/clientes/ClienteForm'
@@ -46,6 +47,7 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/app/dashboard" element={<Dashboard />} />
+            <Route path="/app/planos" element={<PlanosPage />} />
             <Route path="/app/clientes" element={<ClientesList />} />
             <Route path="/app/clientes/novo" element={<ClienteForm />} />
             <Route path="/app/clientes/:id" element={<ClienteDetail />} />

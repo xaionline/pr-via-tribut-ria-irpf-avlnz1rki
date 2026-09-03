@@ -44,6 +44,7 @@ export async function saveAlertasConfig(
     enviar_altas_rendas: true,
     enviar_anexo_simples: true,
     enviar_obrigacoes_acessorias: true,
+    enviar_mensalidade: true,
     config_alertas_custom: {},
     ...data,
   })

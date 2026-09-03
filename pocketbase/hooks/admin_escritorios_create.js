@@ -98,9 +98,15 @@ routerAdd(
       esc.set('nome', nomeEscritorio)
       esc.set('cnpj', cnpjDigitos)
       esc.set('email', emailAdmin)
+      // Plano inicial Pro com trial de 14 dias. Limites por plano:
+      // Starter 10 empresas / 20 clientes PF · Pro 50 / 150 · Enterprise ilimitado (0)
+      var trialAte = new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000)
       esc.set('plano', 'pro')
-      esc.set('limite_clientes', 100)
+      esc.set('limite_clientes', 150)
+      esc.set('limite_empresas', 50)
       esc.set('ativo', true)
+      esc.set('assinatura_status', 'trial')
+      esc.set('trial_ate', trialAte.toISOString().replace('T', ' '))
       $app.save(esc)
       console.log('[DEBUG] Escritorio criado com sucesso. ID:', esc.id)
 

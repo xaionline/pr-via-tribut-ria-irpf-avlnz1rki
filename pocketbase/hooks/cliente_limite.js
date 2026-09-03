@@ -7,7 +7,7 @@ onRecordCreateRequest((e) => {
 
   try {
     const esc = $app.findRecordById('escritorios', escId)
-    const limite = esc.getNumber('limite_clientes') || 0
+    const limite = Number(esc.get('limite_clientes')) || 0
     const count = $app.countRecords(
       'clientes',
       "escritorio_id = '" + escId + "' && status = 'ativo'",

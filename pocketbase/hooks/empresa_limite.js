@@ -10,7 +10,7 @@ onRecordCreateRequest((e) => {
 
   try {
     var esc = $app.findRecordById('escritorios', escId)
-    var limite = esc.getNumber('limite_empresas') || 0
+    var limite = Number(esc.get('limite_empresas')) || 0
     if (limite <= 0) return e.next() // ilimitado (Enterprise)
 
     var count = $app.countRecords('empresas', "escritorio_id = '" + escId + "'")

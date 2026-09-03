@@ -96,7 +96,7 @@ routerAdd(
         declaracoes: declaracoes.map(function (r) {
           return {
             id: r.id,
-            ano_calendario: r.getInt('ano_calendario'),
+            ano_calendario: Number(r.get('ano_calendario')) || 0,
             status: r.getString('status'),
             modalidade: r.getString('modalidade'),
             created: r.getString('created'),

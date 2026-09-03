@@ -16,16 +16,16 @@ onRecordAfterUpdateSuccess((e) => {
       before = {
         status: orig.getString('status'),
         modalidade: orig.getString('modalidade'),
-        progresso: orig.getNumber('progresso'),
-        ano_calendario: orig.getNumber('ano_calendario'),
+        progresso: Number(orig.get('progresso')) || 0,
+        ano_calendario: Number(orig.get('ano_calendario')) || 0,
       }
     } catch (_) {}
     try {
       after = {
         status: e.record.getString('status'),
         modalidade: e.record.getString('modalidade'),
-        progresso: e.record.getNumber('progresso'),
-        ano_calendario: e.record.getNumber('ano_calendario'),
+        progresso: Number(e.record.get('progresso')) || 0,
+        ano_calendario: Number(e.record.get('ano_calendario')) || 0,
       }
     } catch (_) {}
     auditRec.set('diff', JSON.stringify({ before: before, after: after }))

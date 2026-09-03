@@ -25,8 +25,8 @@ routerAdd(
 
     var plano = esc.getString('plano') || 'starter'
     var status = esc.getString('assinatura_status') || 'trial'
-    var limiteEmpresas = esc.getNumber('limite_empresas') || 0
-    var limiteClientes = esc.getNumber('limite_clientes') || 0
+    var limiteEmpresas = Number(esc.get('limite_empresas')) || 0
+    var limiteClientes = Number(esc.get('limite_clientes')) || 0
 
     var countEmpresas = 0
     var countClientes = 0
@@ -59,7 +59,7 @@ routerAdd(
           id: fat[0].id,
           tipo_evento: fat[0].getString('tipo_evento'),
           status: fat[0].getString('status'),
-          valor: fat[0].getNumber('valor'),
+          valor: Number(fat[0].get('valor')) || 0,
           moeda: fat[0].getString('moeda'),
           created: fat[0].getString('created'),
         }

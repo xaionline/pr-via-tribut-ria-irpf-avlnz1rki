@@ -24,7 +24,7 @@ export default function EmpresaForm() {
   const { id } = useParams<{ id: string }>()
   const isEditing = Boolean(id)
   const navigate = useNavigate()
-  const { escritorio } = useAuth()
+  const { escritorio, isStarterPFOnly } = useAuth()
   const { toast } = useToast()
 
   const [loading, setLoading] = useState(isEditing)
@@ -74,6 +74,17 @@ export default function EmpresaForm() {
     const cleanCnpj = cnpj.replace(/\D/g, '')
     if (cleanCnpj.length !== 14) {
       toast({ title: 'Informe um CNPJ válido com 14 dígitos', variant: 'destructive' })
+      return
+    }
+
+    if (isStarterPFOnly) {
+      toast({
+        title: 'Recurso exclusivo do plano Pro',
+        description:
+          'O cadastro de empresas PJ está restrito no plano Starter. Faça upgrade para o Pro para cadastrar empresas.',
+        variant: 'destructive',
+      })
+      navigate('/app/planos')
       return
     }
 

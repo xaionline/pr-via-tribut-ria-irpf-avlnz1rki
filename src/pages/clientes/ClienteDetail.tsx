@@ -40,7 +40,7 @@ import type { ClienteRecord, DeclaracaoRecord, EmpresaSocioRecord } from '@/type
 export default function ClienteDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAdmin, isConsultor } = useAuth()
+  const { isAdmin, isConsultor, podeAcessarPJ } = useAuth()
   const { toast } = useToast()
 
   const podeConvidar = isAdmin || isConsultor
@@ -200,10 +200,12 @@ export default function ClienteDetail() {
             <FileText className="w-3.5 h-3.5" />
             <span>Declarações ({declaracoes.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="empresas" className="text-xs gap-2">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Empresas PJ ({empresasSocietarias.length})</span>
-          </TabsTrigger>
+          {podeAcessarPJ && (
+            <TabsTrigger value="empresas" className="text-xs gap-2">
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Empresas PJ ({empresasSocietarias.length})</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="dados" className="text-xs gap-2">
             <User className="w-3.5 h-3.5" />
             <span>Dados cadastrais</span>
@@ -259,76 +261,78 @@ export default function ClienteDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="empresas" className="space-y-4">
-          <Card className="border border-slate-200/80">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-sm font-bold">
-                  Vínculos Societários em Empresas (PJ)
-                </CardTitle>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Empresas onde este cliente atua como sócio, administrador ou cotista.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/app/empresas')}
-                className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50"
-              >
-                Gerenciar empresas
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {empresasSocietarias.length === 0 ? (
-                <div className="text-center py-8 text-xs text-slate-500">
-                  Este cliente ainda não está vinculado como sócio em nenhuma empresa PJ.
+        {podeAcessarPJ && (
+          <TabsContent value="empresas" className="space-y-4">
+            <Card className="border border-slate-200/80">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div>
+                  <CardTitle className="text-sm font-bold">
+                    Vínculos Societários em Empresas (PJ)
+                  </CardTitle>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Empresas onde este cliente atua como sócio, administrador ou cotista.
+                  </p>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {empresasSocietarias.map((es) => {
-                    const emp = es.expand?.empresa_id
-                    return (
-                      <div
-                        key={es.id}
-                        className="p-3.5 border rounded-lg bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <Link
-                              to={`/app/empresas/${emp?.id}`}
-                              className="font-bold text-xs text-slate-900 hover:text-blue-600 block"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/app/empresas')}
+                  className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50"
+                >
+                  Gerenciar empresas
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {empresasSocietarias.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-slate-500">
+                    Este cliente ainda não está vinculado como sócio em nenhuma empresa PJ.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {empresasSocietarias.map((es) => {
+                      const emp = es.expand?.empresa_id
+                      return (
+                        <div
+                          key={es.id}
+                          className="p-3.5 border rounded-lg bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Link
+                                to={`/app/empresas/${emp?.id}`}
+                                className="font-bold text-xs text-slate-900 hover:text-blue-600 block"
+                              >
+                                {emp?.razao_social || 'Empresa PJ'}
+                              </Link>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                {emp?.cnpj ? maskCnpj(emp.cnpj) : ''}
+                              </span>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] bg-blue-50 text-blue-800 font-bold"
                             >
-                              {emp?.razao_social || 'Empresa PJ'}
-                            </Link>
-                            <span className="text-[10px] font-mono text-slate-500">
-                              {emp?.cnpj ? maskCnpj(emp.cnpj) : ''}
-                            </span>
+                              {es.percentual_participacao}%
+                            </Badge>
                           </div>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] bg-blue-50 text-blue-800 font-bold"
-                          >
-                            {es.percentual_participacao}%
-                          </Badge>
+                          <div className="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-600">
+                            <span>Pró-Labore: {formatCurrency(es.pro_labore_mensal || 0)}/mês</span>
+                            <Link
+                              to={`/app/empresas/${emp?.id}?tab=apuracao`}
+                              className="text-blue-600 hover:underline font-semibold"
+                            >
+                              Ver Apuração PJ &rarr;
+                            </Link>
+                          </div>
                         </div>
-                        <div className="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-600">
-                          <span>Pró-Labore: {formatCurrency(es.pro_labore_mensal || 0)}/mês</span>
-                          <Link
-                            to={`/app/empresas/${emp?.id}?tab=apuracao`}
-                            className="text-blue-600 hover:underline font-semibold"
-                          >
-                            Ver Apuração PJ &rarr;
-                          </Link>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="dados">
           <Card className="border border-slate-200/80">

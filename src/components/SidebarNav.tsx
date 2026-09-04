@@ -38,6 +38,7 @@ interface NavItem {
   path: string
   icon: LucideIcon
   exact?: boolean
+  pjOnly?: boolean
 }
 
 interface NavGroup {
@@ -47,6 +48,7 @@ interface NavGroup {
   superAdminOnly?: boolean
   adminOnly?: boolean
   clienteOnly?: boolean
+  pjOnly?: boolean
   items: NavItem[]
 }
 
@@ -54,7 +56,7 @@ const STORAGE_KEY = 'sidebar_nav_collapsed_groups_v1'
 
 export function SidebarNav() {
   const location = useLocation()
-  const { user, escritorio, isAdmin, isCliente, isSuperAdmin, signOut } = useAuth()
+  const { user, escritorio, isAdmin, isCliente, isSuperAdmin, podeAcessarPJ, signOut } = useAuth()
   const [hovered, setHovered] = useState(false)
 
   // Estado dos grupos abertos/fechados persistido em localStorage
@@ -110,12 +112,17 @@ export function SidebarNav() {
           iconEmoji: '👥',
           items: [
             { label: 'Clientes PF', path: '/app/clientes', icon: Users },
-            { label: 'Empresas PJ', path: '/app/empresas', icon: Building2 },
-            {
-              label: 'Obrigações Acessórias',
-              path: '/app/obrigacoes',
-              icon: CalendarDays,
-            },
+            ...(podeAcessarPJ
+              ? [
+                  { label: 'Empresas PJ', path: '/app/empresas', icon: Building2, pjOnly: true },
+                  {
+                    label: 'Obrigações Acessórias',
+                    path: '/app/obrigacoes',
+                    icon: CalendarDays,
+                    pjOnly: true,
+                  },
+                ]
+              : []),
             { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
           ],
         },
@@ -163,11 +170,16 @@ export function SidebarNav() {
           title: 'ANÁLISE & RELATÓRIOS',
           iconEmoji: '📈',
           items: [
-            {
-              label: 'Planejador de Retiradas',
-              path: '/app/planejador-retiradas',
-              icon: Sliders,
-            },
+            ...(podeAcessarPJ
+              ? [
+                  {
+                    label: 'Planejador de Retiradas',
+                    path: '/app/planejador-retiradas',
+                    icon: Sliders,
+                    pjOnly: true,
+                  },
+                ]
+              : []),
             { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
           ],
         },
@@ -203,7 +215,8 @@ export function SidebarNav() {
     if (g.superAdminOnly && !isSuperAdmin) return false
     if (g.adminOnly && !isAdmin && !isSuperAdmin) return false
     if (g.clienteOnly && !isCliente) return false
-    return true
+    if (g.pjOnly && !podeAcessarPJ) return false
+    return g.items.length > 0
   })
 
   const isItemActive = (item: NavItem) => {

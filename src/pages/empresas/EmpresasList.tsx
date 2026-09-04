@@ -54,7 +54,7 @@ export default function EmpresasList() {
   const [deleting, setDeleting] = useState(false)
 
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { isAdmin, isStarterPFOnly } = useAuth()
   const { toast } = useToast()
 
   const loadData = async () => {
@@ -145,7 +145,19 @@ export default function EmpresasList() {
         </div>
 
         <Button
-          onClick={() => navigate('/app/empresas/nova')}
+          onClick={() => {
+            if (isStarterPFOnly) {
+              toast({
+                title: 'Recurso exclusivo do plano Pro',
+                description:
+                  'O cadastro de empresas PJ está restrito no plano Starter. Faça upgrade para o Pro para cadastrar empresas.',
+                variant: 'destructive',
+              })
+              navigate('/app/planos')
+              return
+            }
+            navigate('/app/empresas/nova')
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium gap-1.5 shadow-sm text-xs"
         >
           <Plus className="w-4 h-4" />
@@ -202,7 +214,19 @@ export default function EmpresasList() {
           </p>
           {!search && (
             <Button
-              onClick={() => navigate('/app/empresas/nova')}
+              onClick={() => {
+                if (isStarterPFOnly) {
+                  toast({
+                    title: 'Recurso exclusivo do plano Pro',
+                    description:
+                      'O cadastro de empresas PJ está restrito no plano Starter. Faça upgrade para o Pro para cadastrar empresas.',
+                    variant: 'destructive',
+                  })
+                  navigate('/app/planos')
+                  return
+                }
+                navigate('/app/empresas/nova')
+              }}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
             >
               <Plus className="w-4 h-4" />

@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 
 export function MobileBottomNav() {
   const location = useLocation()
-  const { isAdmin, isCliente, signOut, user } = useAuth()
+  const { isAdmin, isCliente, podeAcessarPJ, signOut, user } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const mainTabs = isCliente
@@ -27,7 +27,7 @@ export function MobileBottomNav() {
     : [
         { label: 'Inicio', path: '/app/dashboard', icon: LayoutDashboard },
         { label: 'Clientes', path: '/app/clientes', icon: Users },
-        { label: 'Empresas', path: '/app/empresas', icon: Building2 },
+        ...(podeAcessarPJ ? [{ label: 'Empresas', path: '/app/empresas', icon: Building2 }] : []),
         { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
       ]
 

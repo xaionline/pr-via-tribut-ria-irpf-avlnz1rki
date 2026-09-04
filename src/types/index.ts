@@ -117,37 +117,64 @@ export const PLANOS_ASSINATURA: {
   preco: number
   precoTexto: string
   destaque?: boolean
-  limiteEmpresas: number | null // null = ilimitado
+  limiteEmpresas: number | null // null = ilimitado; 0 = sem empresas (PF apenas)
   limiteClientes: number | null // null = ilimitado
   features: string[]
+  subtitulo?: string
 }[] = [
   {
     id: 'starter',
     nome: 'Starter',
+    subtitulo: 'IRPF completo (PF apenas)',
     preco: 49,
     precoTexto: 'R$ 49/mês',
-    limiteEmpresas: 10,
+    limiteEmpresas: 0,
     limiteClientes: 20,
-    features: ['10 empresas', '20 clientes PF'],
+    features: [
+      'IRPF completo (PF apenas)',
+      'Até 20 clientes Pessoa Física',
+      'Declarações IRPF & Comparativo Legal × Simplificada',
+      'Demonstrativo e Simulador Tributário',
+      'Parâmetros Altas Rendas (IRPF-M) e IBS/CBS',
+      'Sem módulo PJ (Empresas PJ exclusivas do Pro)',
+    ],
   },
   {
     id: 'pro',
     nome: 'Pro',
+    subtitulo: '+ Módulo PJ completo',
     preco: 129,
     precoTexto: 'R$ 129/mês',
     destaque: true,
     limiteEmpresas: 50,
     limiteClientes: 150,
-    features: ['50 empresas', '150 clientes PF', 'Todos os regimes', '5 usuários'],
+    features: [
+      '+ Módulo PJ completo incluído',
+      'Até 50 Empresas PJ cadastradas',
+      'Até 150 clientes PF',
+      'Comparador de Regimes (Simples vs Presumido vs Real)',
+      'Simulador PJ e Apuração de Faturamentos',
+      'Planejador de Retiradas (Pró-labore vs Lucros)',
+      'Calendário de Obrigações Acessórias (DAS, DCTF, etc.)',
+      'Equipe de até 5 usuários',
+    ],
   },
   {
     id: 'enterprise',
     nome: 'Enterprise',
+    subtitulo: 'Ilimitado + Inteligência Avançada',
     preco: 299,
     precoTexto: 'R$ 299/mês',
     limiteEmpresas: null,
     limiteClientes: null,
-    features: ['Ilimitado', 'Chat IA', 'CSV'],
+    features: [
+      'Empresas PJ e Clientes PF Ilimitados',
+      'Módulo PF + PJ completo',
+      'Usuários e acessos ilimitados',
+      'Assistente de Inteligência Artificial Fiscal',
+      'Exportação e Importação em Lote (CSV/OFX)',
+      'Suporte prioritário e onboarding dedicado',
+    ],
   },
 ]
 

@@ -13,6 +13,10 @@ interface AuthContextType {
   isVisualizador: boolean
   isCliente: boolean
   isSuperAdmin: boolean
+  /** Indica se o escritório tem plano starter ativo (restrito a apenas PF). Trial equivale ao Pro (não é starter PF only). */
+  isStarterPFOnly: boolean
+  /** Indica se o usuário pode acessar e gerenciar o módulo PJ (empresas, comparador, planejador, etc). */
+  podeAcessarPJ: boolean
   /** Registro legado (mantido para compatibilidade com a tela de /registro). */
   signUp: (
     email: string,
@@ -161,6 +165,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isVisualizador = cargo === 'visualizador'
   const isCliente = cargo === 'cliente'
 
+  // Regra central do plano Starter (apenas PF):
+  // Quando o escritório tem plano 'starter' E assinatura_status != 'trial'.
+  // Super admin sempre tem acesso completo.
+  // Trial (14 dias) continua com tudo liberado (equivale ao Pro).
+  const isTrial = escritorio?.assinatura_status === 'trial'
+  const isPlanoStarter = (escritorio?.plano || '').toLowerCase() === 'starter'
+  const isStarterPFOnly = !isSuperAdmin && isPlanoStarter && !isTrial
+  const podeAcessarPJ = isSuperAdmin || !isStarterPFOnly
+
   return (
     <AuthContext.Provider
       value={{
@@ -172,6 +185,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isVisualizador,
         isCliente,
         isSuperAdmin,
+        isStarterPFOnly,
+        podeAcessarPJ,
         signUp,
         cadastrarEscritorio,
         signIn,

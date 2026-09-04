@@ -36,7 +36,7 @@ import type {
 } from '@/types'
 
 export default function Dashboard() {
-  const { user, escritorio, isAdmin } = useAuth()
+  const { user, escritorio, isAdmin, podeAcessarPJ } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
@@ -80,7 +80,7 @@ export default function Dashboard() {
     try {
       const [cliRes, empRes, decs, res] = await Promise.all([
         getClientes('', 1, 500),
-        getAllEmpresas(),
+        podeAcessarPJ ? getAllEmpresas() : Promise.resolve([]),
         getDeclaracoes(),
         getAllResultados(),
       ])
@@ -89,8 +89,12 @@ export default function Dashboard() {
       setDeclaracoes(decs)
       setResultados(res)
 
-      // Carrega os alertas globais com a lista de empresas
-      loadAlertas(empRes, user?.escritorio_id)
+      if (podeAcessarPJ) {
+        // Carrega os alertas globais com a lista de empresas
+        loadAlertas(empRes, user?.escritorio_id)
+      } else {
+        setAlertasGlobais([])
+      }
     } catch {
       toast({
         title: 'Falha ao carregar dashboard',
@@ -107,12 +111,20 @@ export default function Dashboard() {
   }, [])
   useRealtime('declaracoes', () => loadData())
   useRealtime('clientes', () => loadData())
-  useRealtime('empresas', () => loadData())
-  useRealtime('empresas_faturamentos', () => loadAlertas(empresas, user?.escritorio_id))
-  useRealtime('empresas_socios', () => loadAlertas(empresas, user?.escritorio_id))
-  useRealtime('empresas_obrigacoes', () => loadAlertas(empresas, user?.escritorio_id))
+  useRealtime('empresas', () => {
+    if (podeAcessarPJ) loadData()
+  })
+  useRealtime('empresas_faturamentos', () => {
+    if (podeAcessarPJ) loadAlertas(empresas, user?.escritorio_id)
+  })
+  useRealtime('empresas_socios', () => {
+    if (podeAcessarPJ) loadAlertas(empresas, user?.escritorio_id)
+  })
+  useRealtime('empresas_obrigacoes', () => {
+    if (podeAcessarPJ) loadAlertas(empresas, user?.escritorio_id)
+  })
   useRealtime('alertas_config', () => {
-    if (user?.escritorio_id) {
+    if (podeAcessarPJ && user?.escritorio_id) {
       getAlertasConfig(user.escritorio_id).then((cfg) => cfg && setAlertasConfig(cfg))
     }
   })
@@ -296,22 +308,34 @@ export default function Dashboard() {
         <KpiCarousel kpis={kpis} />
       </div>
 
-      {/* BLOCO DE ALERTAS AUTOMÁTICOS GLOBAIS DAS EMPRESAS */}
-      <BlocoAlertasEmpresas
-        alertas={alertasGlobais}
-        loading={loadingAlertas}
-        escritorioId={user?.escritorio_id}
-        config={alertasConfig}
-        proprietarioEmail={user?.email}
-        onRefresh={() => loadAlertas(empresas, user?.escritorio_id)}
-        onConfigUpdated={(cfg) => setAlertasConfig(cfg)}
-      />
+      {/* BLOCO DE ALERTAS AUTOMÁTICOS GLOBAIS DAS EMPRESAS (apenas Pro/Enterprise ou Trial) */}
+      {podeAcessarPJ && (
+        <BlocoAlertasEmpresas
+          alertas={alertasGlobais}
+          loading={loadingAlertas}
+          escritorioId={user?.escritorio_id}
+          config={alertasConfig}
+          proprietarioEmail={user?.email}
+          onRefresh={() => loadAlertas(empresas, user?.escritorio_id)}
+          onConfigUpdated={(cfg) => setAlertasConfig(cfg)}
+        />
+      )}
 
-      {/* Card de Destaque Módulo Pessoa Jurídica (PJ) */}
-      <Card className="p-4 sm:p-5 border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white shadow-subtle">
+      {/* Card de Destaque Módulo Pessoa Jurídica (PJ) — para Starter sugere upgrade para o Pro */}
+      <Card
+        className={`p-4 sm:p-5 border shadow-subtle ${
+          podeAcessarPJ
+            ? 'border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white'
+            : 'border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50/30 to-white'
+        }`}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                podeAcessarPJ ? 'bg-blue-600 text-white' : 'bg-slate-700 text-white'
+              }`}
+            >
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -319,35 +343,55 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-slate-900">
                   Módulo Pessoa Jurídica (PJ & Sócios)
                 </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
-                  {empresas.length} empresa(s) cadastrada(s)
-                </span>
+                {podeAcessarPJ ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                    {empresas.length} empresa(s) cadastrada(s)
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
+                    Disponível no Plano Pro
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-600 mt-0.5">
-                Apure o Simples Nacional e Lucro Presumido e sincronize automaticamente Pró-Labore,
-                Lucros Isentos e Dividendos no IRPF dos Sócios.
+                {podeAcessarPJ
+                  ? 'Apure o Simples Nacional e Lucro Presumido e sincronize automaticamente Pró-Labore, Lucros Isentos e Dividendos no IRPF dos Sócios.'
+                  : 'Seu plano Starter inclui 100% dos recursos PF (IRPF). Faça upgrade para o Pro para apurar Simples Nacional, Lucro Presumido, Planejador de Retiradas e Obrigações Acessórias.'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/app/empresas')}
-              className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50 gap-1.5"
-            >
-              <span>Ver Empresas</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => navigate('/app/empresas/nova')}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nova Empresa</span>
-            </Button>
+            {podeAcessarPJ ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/app/empresas')}
+                  className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50 gap-1.5"
+                >
+                  <span>Ver Empresas</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate('/app/empresas/nova')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nova Empresa</span>
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => navigate('/app/planos')}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 shadow-sm font-semibold"
+              >
+                <span>Conhecer Plano Pro</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
         </div>
       </Card>

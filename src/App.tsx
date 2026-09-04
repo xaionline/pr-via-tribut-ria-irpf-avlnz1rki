@@ -33,6 +33,7 @@ import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 import AdminEscritorios from '@/pages/Admin'
 import { SuperAdminRouteGuard } from '@/components/SuperAdminRouteGuard'
+import { PjRouteGuard } from '@/components/PjRouteGuard'
 
 const App = () => (
   <BrowserRouter>
@@ -52,15 +53,71 @@ const App = () => (
             <Route path="/app/clientes/novo" element={<ClienteForm />} />
             <Route path="/app/clientes/:id" element={<ClienteDetail />} />
             <Route path="/app/clientes/:id/editar" element={<ClienteForm />} />
-            {/* Empresas (Pessoa Jurídica) */}
-            <Route path="/app/empresas" element={<EmpresasList />} />
-            <Route path="/app/empresas/nova" element={<EmpresaForm />} />
-            <Route path="/app/empresas/:id" element={<EmpresaDetail />} />
-            <Route path="/app/empresas/:id/obrigacoes" element={<EmpresaDetail />} />
-            <Route path="/app/empresas/:id/planejador" element={<PlanejadorRetiradas />} />
-            <Route path="/app/empresas/:id/editar" element={<EmpresaForm />} />
-            <Route path="/app/obrigacoes" element={<CalendarioObrigacoesGlobal />} />
-            <Route path="/app/planejador-retiradas" element={<PlanejadorRetiradas />} />
+            {/* Empresas (Pessoa Jurídica) — protegido por PjRouteGuard para planos Starter */}
+            <Route
+              path="/app/empresas"
+              element={
+                <PjRouteGuard>
+                  <EmpresasList />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/empresas/nova"
+              element={
+                <PjRouteGuard>
+                  <EmpresaForm />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/empresas/:id"
+              element={
+                <PjRouteGuard>
+                  <EmpresaDetail />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/empresas/:id/obrigacoes"
+              element={
+                <PjRouteGuard>
+                  <EmpresaDetail />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/empresas/:id/planejador"
+              element={
+                <PjRouteGuard>
+                  <PlanejadorRetiradas />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/empresas/:id/editar"
+              element={
+                <PjRouteGuard>
+                  <EmpresaForm />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/obrigacoes"
+              element={
+                <PjRouteGuard>
+                  <CalendarioObrigacoesGlobal />
+                </PjRouteGuard>
+              }
+            />
+            <Route
+              path="/app/planejador-retiradas"
+              element={
+                <PjRouteGuard>
+                  <PlanejadorRetiradas />
+                </PjRouteGuard>
+              }
+            />
             <Route path="/app/declaracoes" element={<DeclaracoesList />} />
             <Route path="/app/declaracoes/nova" element={<DeclaracaoForm />} />
             <Route path="/app/declaracoes/:id/editar" element={<DeclaracaoForm />} />

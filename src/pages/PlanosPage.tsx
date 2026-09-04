@@ -271,8 +271,26 @@ export default function PlanosPage() {
                     <Icone className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-lg text-slate-900">{plano.nome}</h3>
-                    <p className="text-2xl font-black text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-lg text-slate-900">{plano.nome}</h3>
+                      {plano.id === 'starter' && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] bg-slate-100 text-slate-700 border-slate-300 font-bold py-0"
+                        >
+                          Apenas PF
+                        </Badge>
+                      )}
+                      {plano.id === 'pro' && (
+                        <Badge className="text-[10px] bg-blue-100 text-blue-800 border-0 font-bold py-0">
+                          PF + PJ
+                        </Badge>
+                      )}
+                    </div>
+                    {plano.subtitulo && (
+                      <p className="text-[11px] font-semibold text-slate-500">{plano.subtitulo}</p>
+                    )}
+                    <p className="text-2xl font-black text-slate-900 mt-0.5">
                       {plano.precoTexto}
                       <span className="text-xs font-medium text-slate-400"> /mês</span>
                     </p>
@@ -280,16 +298,28 @@ export default function PlanosPage() {
                 </div>
 
                 <ul className="space-y-2.5">
-                  {plano.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                      <Check
-                        className={`w-4 h-4 mt-0.5 shrink-0 ${
-                          isDestaque ? 'text-blue-600' : 'text-emerald-600'
+                  {plano.features.map((f) => {
+                    const isNegativo = f.startsWith('Sem módulo')
+                    return (
+                      <li
+                        key={f}
+                        className={`flex items-start gap-2 text-xs sm:text-sm ${
+                          isNegativo ? 'text-slate-400 line-through' : 'text-slate-700'
                         }`}
-                      />
-                      {f}
-                    </li>
-                  ))}
+                      >
+                        <Check
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${
+                            isNegativo
+                              ? 'text-slate-300'
+                              : isDestaque
+                                ? 'text-blue-600 font-bold'
+                                : 'text-emerald-600'
+                          }`}
+                        />
+                        <span>{f}</span>
+                      </li>
+                    )
+                  })}
                 </ul>
 
                 <Button

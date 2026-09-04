@@ -29,7 +29,7 @@ export function Header() {
   const [navOpen, setNavOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, isAdmin, isSuperAdmin, signOut } = useAuth()
+  const { user, isAdmin, isSuperAdmin, podeAcessarPJ, signOut } = useAuth()
 
   useEffect(() => {
     setSearch(searchParams.get('q') || '')
@@ -54,7 +54,7 @@ export function Header() {
     ...(isSuperAdmin ? [{ label: 'Administração', path: '/app/admin', icon: ShieldCheck }] : []),
     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
     { label: 'Clientes PF', path: '/app/clientes', icon: Users },
-    { label: 'Empresas PJ', path: '/app/empresas', icon: Users },
+    ...(podeAcessarPJ ? [{ label: 'Empresas PJ', path: '/app/empresas', icon: Users }] : []),
     { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
     ...(isAdmin || isSuperAdmin
       ? [{ label: 'Tabela Progressiva', path: '/app/tabela-progressiva', icon: TableProperties }]

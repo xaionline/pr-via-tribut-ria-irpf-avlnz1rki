@@ -29,6 +29,11 @@ import DeclaracaoIbsCbsPage from '@/pages/declaracoes/DeclaracaoIbsCbs'
 import ResumoDashboard from '@/pages/declaracoes/ResumoDashboard'
 import TabelaProgressiva from '@/pages/TabelaProgressiva'
 import Configuracoes from '@/pages/configuracoes/Configuracoes'
+import RelatoriosPage from '@/pages/relatorios/RelatoriosPage'
+import { RelatorioClientes } from '@/pages/relatorios/RelatorioClientes'
+import { RelatorioEmpresas } from '@/pages/relatorios/RelatorioEmpresas'
+import { RelatorioAlertas } from '@/pages/relatorios/RelatorioAlertas'
+import { PainelGerencial } from '@/pages/relatorios/PainelGerencial'
 import ClienteDashboard from '@/pages/cliente/ClienteDashboard'
 import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 import AdminEscritorios from '@/pages/Admin'
@@ -127,6 +132,21 @@ const App = () => (
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />
             <Route path="/app/declaracoes/:id/ibs-cbs" element={<DeclaracaoIbsCbsPage />} />
             <Route path="/app/tabela-progressiva" element={<TabelaProgressiva />} />
+
+            {/* Menu RELATÓRIOS (4 relatórios + índice unificado) */}
+            <Route path="/app/relatorios" element={<RelatoriosPage />} />
+            <Route path="/app/relatorios/clientes" element={<RelatorioClientes />} />
+            <Route
+              path="/app/relatorios/empresas"
+              element={
+                <PjRouteGuard>
+                  <RelatorioEmpresas />
+                </PjRouteGuard>
+              }
+            />
+            <Route path="/app/relatorios/alertas" element={<RelatorioAlertas />} />
+            <Route path="/app/relatorios/gerencial" element={<PainelGerencial />} />
+
             <Route path="/app/configuracoes" element={<Configuracoes />} />
             <Route path="/app/configuracoes/:tab" element={<Configuracoes />} />
             {/* Administração (apenas super_admin) */}

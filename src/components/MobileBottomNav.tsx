@@ -68,6 +68,14 @@ export function MobileBottomNav() {
             <SheetTitle className="text-base font-semibold text-slate-900">Mais Opções</SheetTitle>
           </SheetHeader>
           <div className="space-y-2">
+            <Link
+              to="/app/relatorios"
+              onClick={() => setDrawerOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
+            >
+              <BarChart3 className="w-5 h-5 text-purple-600" />
+              <span>Menu Relatórios</span>
+            </Link>
             {(isAdmin || user?.cargo === 'super_admin') && (
               <Link
                 to="/app/tabela-progressiva"

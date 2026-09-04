@@ -14,6 +14,8 @@ export function Breadcrumbs() {
     tabelas: 'Tabelas IRPF',
     'tabela-progressiva': 'Tabela Progressiva',
     relatorios: 'Relatórios',
+    alertas: 'Alertas',
+    gerencial: 'Painel Gerencial',
     configuracoes: 'Configurações',
     perfil: 'Perfil',
     escritorio: 'Escritório',

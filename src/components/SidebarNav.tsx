@@ -167,7 +167,7 @@ export function SidebarNav() {
         },
         {
           id: 'analise_relatorios',
-          title: 'ANÁLISE & RELATÓRIOS',
+          title: 'ANÁLISE',
           iconEmoji: '📈',
           items: [
             ...(podeAcessarPJ
@@ -180,7 +180,32 @@ export function SidebarNav() {
                   },
                 ]
               : []),
-            { label: 'Relatórios', path: '/app/relatorios', icon: BarChart3 },
+          ],
+        },
+        {
+          id: 'relatorios_menu',
+          title: 'RELATÓRIOS',
+          iconEmoji: '📑',
+          items: [
+            {
+              label: 'Visão Geral dos Relatórios',
+              path: '/app/relatorios',
+              icon: BarChart3,
+              exact: true,
+            },
+            { label: 'Relatório de Clientes', path: '/app/relatorios/clientes', icon: Users },
+            ...(podeAcessarPJ
+              ? [
+                  {
+                    label: 'Relatório de Empresas',
+                    path: '/app/relatorios/empresas',
+                    icon: Building2,
+                    pjOnly: true,
+                  },
+                ]
+              : []),
+            { label: 'Relatório de Alertas', path: '/app/relatorios/alertas', icon: TrendingUp },
+            { label: 'Painel Gerencial', path: '/app/relatorios/gerencial', icon: LayoutDashboard },
           ],
         },
         {

@@ -10,6 +10,7 @@ import Layout from './components/Layout'
 import Login from '@/pages/Login'
 import Registro from '@/pages/Registro'
 import Cadastro from '@/pages/Cadastro'
+import LandingPage from '@/pages/LandingPage'
 import Dashboard from '@/pages/Dashboard'
 import PlanosPage from '@/pages/PlanosPage'
 import ClientesList from '@/pages/clientes/ClientesList'
@@ -48,11 +49,13 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
+            <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/planos" element={<PlanosPage />} />
             <Route path="/app/clientes" element={<ClientesList />} />

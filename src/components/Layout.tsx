@@ -4,6 +4,7 @@ import { SidebarNav } from '@/components/SidebarNav'
 import { Header } from '@/components/Header'
 import { MobileBottomNav } from '@/components/MobileBottomNav'
 import { Fab } from '@/components/Fab'
+import { TribbyFloatingButton } from '@/components/TribbyFloatingButton'
 import { ClienteRouteGuard } from '@/components/ClienteRouteGuard'
 import { AssinaturaRouteGuard } from '@/components/AssinaturaRouteGuard'
 
@@ -41,6 +42,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <TribbyFloatingButton />
       <Fab />
       <MobileBottomNav />
     </div>

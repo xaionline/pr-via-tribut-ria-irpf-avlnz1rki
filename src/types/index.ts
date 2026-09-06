@@ -168,10 +168,10 @@ export const PLANOS_ASSINATURA: {
     limiteEmpresas: null,
     limiteClientes: null,
     features: [
+      'Assistente IA Tributário Nativo (Tribby)',
       'Empresas PJ e Clientes PF Ilimitados',
       'Módulo PF + PJ completo',
       'Usuários e acessos ilimitados',
-      'Assistente de Inteligência Artificial Fiscal',
       'Exportação e Importação em Lote (CSV/OFX)',
       'Suporte prioritário e onboarding dedicado',
     ],

@@ -17,6 +17,12 @@ interface AuthContextType {
   isStarterPFOnly: boolean
   /** Indica se o usuário pode acessar e gerenciar o módulo PJ (empresas, comparador, planejador, etc). */
   podeAcessarPJ: boolean
+  /** Indica se o usuário tem acesso ao Assistente IA (Plano Enterprise ativo OU trial de 14 dias ativo). */
+  podeAcessarIA: boolean
+  /** Indica se o plano do escritório é enterprise. */
+  isEnterprise: boolean
+  /** Indica se o escritório está em período de trial. */
+  isTrial: boolean
   /** Registro legado (mantido para compatibilidade com a tela de /registro). */
   signUp: (
     email: string,
@@ -171,8 +177,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Trial (14 dias) continua com tudo liberado (equivale ao Pro).
   const isTrial = escritorio?.assinatura_status === 'trial'
   const isPlanoStarter = (escritorio?.plano || '').toLowerCase() === 'starter'
+  const isEnterprisePlano = (escritorio?.plano || '').toLowerCase() === 'enterprise'
   const isStarterPFOnly = !isSuperAdmin && isPlanoStarter && !isTrial
   const podeAcessarPJ = isSuperAdmin || !isStarterPFOnly
+
+  // Regra do Assistente IA: liberado apenas para Enterprise ativo OU trial (qualquer plano no trial).
+  // Super admin tem acesso irrestrito.
+  const podeAcessarIA =
+    isSuperAdmin || isTrial || (isEnterprisePlano && escritorio?.assinatura_status === 'ativo')
 
   return (
     <AuthContext.Provider
@@ -187,6 +199,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isSuperAdmin,
         isStarterPFOnly,
         podeAcessarPJ,
+        podeAcessarIA,
+        isEnterprise: isEnterprisePlano,
+        isTrial: !!isTrial,
         signUp,
         cadastrarEscritorio,
         signIn,

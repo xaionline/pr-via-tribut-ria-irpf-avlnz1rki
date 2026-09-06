@@ -19,6 +19,8 @@ import {
   Sliders,
   CalendarDays,
   CreditCard,
+  Bot,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -39,6 +41,8 @@ interface NavItem {
   icon: LucideIcon
   exact?: boolean
   pjOnly?: boolean
+  badge?: string
+  badgeVariant?: 'enterprise' | 'trial' | 'default'
 }
 
 interface NavGroup {
@@ -56,7 +60,18 @@ const STORAGE_KEY = 'sidebar_nav_collapsed_groups_v1'
 
 export function SidebarNav() {
   const location = useLocation()
-  const { user, escritorio, isAdmin, isCliente, isSuperAdmin, podeAcessarPJ, signOut } = useAuth()
+  const {
+    user,
+    escritorio,
+    isAdmin,
+    isCliente,
+    isSuperAdmin,
+    podeAcessarPJ,
+    podeAcessarIA,
+    isEnterprise,
+    isTrial,
+    signOut,
+  } = useAuth()
   const [hovered, setHovered] = useState(false)
 
   // Estado dos grupos abertos/fechados persistido em localStorage
@@ -104,6 +119,13 @@ export function SidebarNav() {
           iconEmoji: '📊',
           items: [
             { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, exact: true },
+            {
+              label: 'Assistente IA',
+              path: '/app/assistente-ia',
+              icon: Bot,
+              badge: podeAcessarIA ? (isTrial ? 'Trial' : 'IA') : 'Enterprise',
+              badgeVariant: podeAcessarIA ? (isTrial ? 'trial' : 'default') : 'enterprise',
+            },
           ],
         },
         {
@@ -372,13 +394,29 @@ export function SidebarNav() {
                         />
                         <span
                           className={cn(
-                            'truncate transition-opacity duration-200',
+                            'truncate transition-opacity duration-200 flex-1',
                             'opacity-0 lg:opacity-100',
                             hovered && 'opacity-100',
                           )}
                         >
                           {item.label}
                         </span>
+                        {item.badge && (
+                          <span
+                            className={cn(
+                              'text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase transition-opacity duration-200 shrink-0',
+                              'opacity-0 lg:opacity-100',
+                              hovered && 'opacity-100',
+                              item.badgeVariant === 'enterprise'
+                                ? 'bg-amber-400 text-slate-900'
+                                : item.badgeVariant === 'trial'
+                                  ? 'bg-blue-400 text-slate-900'
+                                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30',
+                            )}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
                       </Link>
                     )
                   })}

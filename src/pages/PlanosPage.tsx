@@ -10,6 +10,7 @@ import {
   Zap,
   AlertCircle,
   Settings2,
+  Bot,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -286,6 +287,12 @@ export default function PlanosPage() {
                           PF + PJ
                         </Badge>
                       )}
+                      {plano.id === 'enterprise' && (
+                        <Badge className="text-[10px] bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-0 font-bold py-0 gap-1">
+                          <Bot className="w-3 h-3" />
+                          Assistente IA
+                        </Badge>
+                      )}
                     </div>
                     {plano.subtitulo && (
                       <p className="text-[11px] font-semibold text-slate-500">{plano.subtitulo}</p>
@@ -300,23 +307,42 @@ export default function PlanosPage() {
                 <ul className="space-y-2.5">
                   {plano.features.map((f) => {
                     const isNegativo = f.startsWith('Sem módulo')
+                    const isAiFeature =
+                      f.toLowerCase().includes('assistente ia') ||
+                      f.toLowerCase().includes('tribby')
+
                     return (
                       <li
                         key={f}
                         className={`flex items-start gap-2 text-xs sm:text-sm ${
-                          isNegativo ? 'text-slate-400 line-through' : 'text-slate-700'
+                          isNegativo
+                            ? 'text-slate-400 line-through'
+                            : isAiFeature
+                              ? 'text-indigo-950 font-bold bg-indigo-50/80 -mx-2 px-2 py-1.5 rounded-lg border border-indigo-200/60'
+                              : 'text-slate-700'
                         }`}
                       >
-                        <Check
-                          className={`w-4 h-4 mt-0.5 shrink-0 ${
-                            isNegativo
-                              ? 'text-slate-300'
-                              : isDestaque
-                                ? 'text-blue-600 font-bold'
-                                : 'text-emerald-600'
-                          }`}
-                        />
-                        <span>{f}</span>
+                        {isAiFeature ? (
+                          <Bot className="w-4 h-4 mt-0.5 shrink-0 text-indigo-600 font-bold animate-pulse" />
+                        ) : (
+                          <Check
+                            className={`w-4 h-4 mt-0.5 shrink-0 ${
+                              isNegativo
+                                ? 'text-slate-300'
+                                : isDestaque
+                                  ? 'text-blue-600 font-bold'
+                                  : 'text-emerald-600'
+                            }`}
+                          />
+                        )}
+                        <span className="flex items-center gap-1.5">
+                          {f}
+                          {isAiFeature && (
+                            <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-0 text-[9px] font-black uppercase px-1.5 py-0">
+                              Novo
+                            </Badge>
+                          )}
+                        </span>
                       </li>
                     )
                   })}
@@ -352,14 +378,20 @@ export default function PlanosPage() {
 
       {/* Trial + portal */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Card className="border-blue-200 bg-blue-50/50">
+        <Card className="border-indigo-200 bg-indigo-50/50">
           <CardContent className="p-4 flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <Bot className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-bold text-blue-900">14 dias de teste grátis</p>
-              <p className="text-xs text-blue-800 mt-0.5">
-                Todo novo escritório começa com trial de 14 dias. Sem compromisso — assine quando
-                quiser continuar.
+              <p className="font-bold text-indigo-900 flex items-center gap-1.5">
+                <span>14 dias de teste grátis com Tribby liberado</span>
+                <Badge className="bg-amber-400 text-slate-900 border-0 text-[9px] font-black uppercase">
+                  Trial
+                </Badge>
+              </p>
+              <p className="text-xs text-indigo-800 mt-0.5 leading-relaxed">
+                Todo novo escritório começa com trial de 14 dias incluindo acesso total ao{' '}
+                <strong>Assistente IA Tribby</strong> para tirar dúvidas tributárias e testar o
+                sistema.
               </p>
             </div>
           </CardContent>

@@ -39,6 +39,7 @@ import { ClienteDemonstrativo } from '@/pages/cliente/ClienteDemonstrativo'
 import AdminEscritorios from '@/pages/Admin'
 import { SuperAdminRouteGuard } from '@/components/SuperAdminRouteGuard'
 import { PjRouteGuard } from '@/components/PjRouteGuard'
+import AssistenteIaPage from '@/pages/AssistenteIaPage'
 
 const App = () => (
   <BrowserRouter>
@@ -132,6 +133,9 @@ const App = () => (
             <Route path="/app/declaracoes/:id/demonstrativo" element={<DemonstrativoCalculo />} />
             <Route path="/app/declaracoes/:id/ibs-cbs" element={<DeclaracaoIbsCbsPage />} />
             <Route path="/app/tabela-progressiva" element={<TabelaProgressiva />} />
+
+            {/* Assistente IA Nativo (Tribby) */}
+            <Route path="/app/assistente-ia" element={<AssistenteIaPage />} />
 
             {/* Menu RELATÓRIOS (4 relatórios + índice unificado) */}
             <Route path="/app/relatorios" element={<RelatoriosPage />} />

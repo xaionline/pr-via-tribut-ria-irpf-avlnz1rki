@@ -13,6 +13,7 @@ import {
   Settings,
   ShieldCheck,
   LogOut,
+  Bot,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -101,6 +102,8 @@ export function Header() {
   const currentTitle =
     navItems.find((n) => location.pathname.startsWith(n.path))?.label || 'Prévia Tributária'
 
+  const { podeAcessarIA, isTrial } = useAuth()
+
   return (
     <>
       <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200 px-3 sm:px-4 lg:px-8 h-12 lg:h-auto lg:py-2.5 flex items-center gap-2 lg:gap-3">
@@ -142,6 +145,30 @@ export function Header() {
         </button>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hidden md:flex text-slate-700 hover:text-indigo-700 hover:bg-indigo-50 text-xs gap-1.5 h-8 px-2.5"
+            title="Abrir Assistente IA Tribby"
+          >
+            <Link to="/app/assistente-ia">
+              <Bot className="w-4 h-4 text-indigo-600" />
+              <span>Tribby IA</span>
+              <span
+                className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
+                  podeAcessarIA
+                    ? isTrial
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-indigo-100 text-indigo-700'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {podeAcessarIA ? (isTrial ? 'Trial' : 'Enterprise') : 'Enterprise'}
+              </span>
+            </Link>
+          </Button>
+
           <button
             className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors touch-target flex items-center justify-center"
             title="Notificações"

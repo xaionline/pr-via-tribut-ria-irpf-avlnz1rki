@@ -154,7 +154,7 @@ export function Header() {
           >
             <Link to="/app/assistente-ia">
               <Bot className="w-4 h-4 text-indigo-600" />
-              <span>Tribby IA</span>
+              <span>Inteligência</span>
               <span
                 className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
                   podeAcessarIA

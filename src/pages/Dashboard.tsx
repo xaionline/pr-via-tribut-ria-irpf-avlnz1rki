@@ -15,6 +15,7 @@ import { getAllEmpresas } from '@/services/empresas'
 import type { EmpresaRecord } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCard, KpiCarousel, type KpiCardProps } from '@/components/dashboard/KpiCard'
+import { TickerNoticias } from '@/components/TickerNoticias'
 import { DeclarationsTable } from '@/components/dashboard/DeclarationsTable'
 import { AlertsSidebar } from '@/components/dashboard/AlertsSidebar'
 import { BlocoAlertasEmpresas } from '@/components/dashboard/BlocoAlertasEmpresas'
@@ -266,6 +267,9 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
+        {/* Ticker de Notícias da Receita Federal */}
+        <TickerNoticias />
+
         {/* ALERTA MENSALIDADE/ASSINATURA (apenas proprietário/admin) */}
         {isAdmin && (
           <BlocoAlertaMensalidade
@@ -299,6 +303,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Ticker de Notícias da Receita Federal (disponível para todos os planos) */}
+      <TickerNoticias />
+
       <div className="hidden lg:grid lg:grid-cols-4 gap-4">
         {kpis.map((kpi, i) => (
           <KpiCard key={i} {...kpi} />

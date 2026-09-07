@@ -98,8 +98,16 @@ export async function consultarCnpjBrasilApi(cnpj: string): Promise<ConsultaCnpj
       }
     }
 
-    const ddd = data.ddd_telefone_1 ? String(data.ddd_telefone_1).replace(/\D/g, '') : ''
-    const telefone = ddd ? ddd : ''
+    const ddd1 = data.ddd_telefone_1 ? String(data.ddd_telefone_1).replace(/\D/g, '') : ''
+    const tel1 = data.telefone_1 ? String(data.telefone_1).replace(/\D/g, '') : ''
+    let telefone = ''
+    if (ddd1 && tel1) {
+      telefone = `${ddd1}${tel1}`
+    } else if (ddd1 && ddd1.length >= 10) {
+      telefone = ddd1
+    } else if (tel1 && tel1.length >= 8) {
+      telefone = ddd1 ? `${ddd1}${tel1}` : tel1
+    }
 
     return {
       sucesso: true,

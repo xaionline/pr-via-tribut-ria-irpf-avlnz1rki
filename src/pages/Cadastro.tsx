@@ -47,21 +47,38 @@ export default function Cadastro() {
   useEffect(() => {
     const digitos = cnpj.replace(/\D/g, '')
 
-    if (digitos.length !== 14) {
+    // Se o campo ainda não atingiu 14 dígitos
+    if (digitos.length === 0) {
+      setCnpjSuccessInfo(null)
+      lastCheckedCnpj.current = ''
+      setFieldErrors((prev) => {
+        if (!prev.cnpj) return prev
+        const next = { ...prev }
+        delete next.cnpj
+        return next
+      })
+      return
+    }
+
+    if (digitos.length < 14) {
       setCnpjSuccessInfo(null)
       lastCheckedCnpj.current = ''
       return
     }
 
-    // Se já checou este mesmo CNPJ, não repete
-    if (lastCheckedCnpj.current === digitos) return
-
-    // Valida dígito verificador primeiro
+    // Atingiu 14 dígitos: valida dígito verificador primeiro
     if (!validateCnpj(digitos)) {
-      setFieldErrors((prev) => ({ ...prev, cnpj: 'CNPJ inválido.' }))
+      setFieldErrors((prev) => ({
+        ...prev,
+        cnpj: 'CNPJ inválido (dígitos verificadores incorretos).',
+      }))
       setCnpjSuccessInfo(null)
+      lastCheckedCnpj.current = digitos
       return
     }
+
+    // Se já checou com sucesso ou erro este mesmo CNPJ válido, não repete
+    if (lastCheckedCnpj.current === digitos) return
 
     let isMounted = true
     setCheckingCnpj(true)
@@ -77,11 +94,11 @@ export default function Cadastro() {
         if (res.razaoSocial) {
           setNomeEscritorio((prev) => (prev.trim() === '' ? res.razaoSocial! : prev))
         }
-        // Pré-preenche telefone se disponível
+        // Pré-preenche telefone se retornado pela Receita Federal
         if (res.telefone) {
           setTelefone((prev) => (prev.trim() === '' ? maskTelefone(res.telefone!) : prev))
         }
-        // Pré-preenche e-mail se disponível
+        // Pré-preenche e-mail se retornado pela Receita Federal
         if (res.email) {
           setEmailEscritorio((prev) => (prev.trim() === '' ? res.email!.toLowerCase() : prev))
         }
@@ -97,7 +114,9 @@ export default function Cadastro() {
       } else if (res.erro === 'situacao_irregular') {
         setFieldErrors((prev) => ({
           ...prev,
-          cnpj: res.mensagemErro || 'Este CNPJ está com situação cadastral irregular.',
+          cnpj:
+            res.mensagemErro ||
+            'Este CNPJ está com situação cadastral irregular na Receita Federal.',
         }))
         setCnpjSuccessInfo(null)
       } else if (res.erro === 'nao_encontrado') {
@@ -113,13 +132,15 @@ export default function Cadastro() {
         }))
         setCnpjSuccessInfo(null)
       } else {
-        // Falha de rede/CORS: não bloqueia o fluxo, limpa erro se passou na validação matemática
+        // Falha de rede/CORS: não bloqueia o fluxo, aceita CNPJ válido matematicamente
         setFieldErrors((prev) => {
           const next = { ...prev }
           delete next.cnpj
           return next
         })
-        setCnpjSuccessInfo('CNPJ com dígitos verificadores válidos.')
+        setCnpjSuccessInfo(
+          'CNPJ com dígitos verificadores válidos (consulta externa indisponível).',
+        )
       }
     }, 400)
 
@@ -138,13 +159,13 @@ export default function Cadastro() {
       errs.nome_escritorio = 'O nome deve ter ao menos 3 caracteres.'
     }
 
-    const cnpjDigitos = cnpj.replace(/\D/g, '')
-    if (!cnpjDigitos) {
+    const cleanCnpj = cnpj.replace(/\D/g, '')
+    if (!cleanCnpj) {
       errs.cnpj = 'Informe o CNPJ.'
-    } else if (cnpjDigitos.length !== 14) {
+    } else if (cleanCnpj.length !== 14) {
       errs.cnpj = 'CNPJ deve conter 14 dígitos.'
-    } else if (!validateCnpj(cnpjDigitos)) {
-      errs.cnpj = 'CNPJ inválido.'
+    } else if (!validateCnpj(cleanCnpj)) {
+      errs.cnpj = 'CNPJ inválido (dígitos verificadores incorretos).'
     }
 
     const telDigitos = telefone.replace(/\D/g, '')
@@ -187,11 +208,29 @@ export default function Cadastro() {
     return errs
   }
 
+  const cnpjDigitos = cnpj.replace(/\D/g, '')
+  const cnpjIsMathValid = cnpjDigitos.length === 14 && validateCnpj(cnpjDigitos)
+  const isCnpjBlocked =
+    checkingCnpj || (cnpjDigitos.length === 14 && !cnpjIsMathValid) || Boolean(fieldErrors.cnpj)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Se já havia erro de situação irregular do CNPJ na checagem client-side, preserva
-    if (fieldErrors.cnpj && fieldErrors.cnpj.includes('situação cadastral')) {
+    // Bloqueia se a checagem estiver em andamento ou se houver erro conhecido no CNPJ
+    if (checkingCnpj) {
+      toast({
+        title: 'Aguarde a validação do CNPJ',
+        description: 'Estamos consultando os dados cadastrais na Receita Federal.',
+      })
+      return
+    }
+
+    if (fieldErrors.cnpj) {
+      toast({
+        title: 'CNPJ inválido ou irregular',
+        description: fieldErrors.cnpj,
+        variant: 'destructive',
+      })
       return
     }
 
@@ -201,7 +240,7 @@ export default function Cadastro() {
 
     const payload: CadastroPayload = {
       nome_escritorio: nomeEscritorio.trim(),
-      cnpj: cnpj.replace(/\D/g, ''),
+      cnpj: cnpjDigitos,
       telefone,
       email_escritorio: emailEscritorio.trim().toLowerCase(),
       nome_admin: nomeAdmin.trim(),
@@ -217,13 +256,14 @@ export default function Cadastro() {
     if (error) {
       const serverErrors = (error as any)?.fieldErrors
       if (serverErrors && typeof serverErrors === 'object') {
-        setFieldErrors(serverErrors)
+        setFieldErrors((prev) => ({ ...prev, ...serverErrors }))
       }
       toast({
         title: 'Não foi possível concluir o cadastro',
         description:
-          (error as any)?.message ||
+          serverErrors?.cnpj ||
           serverErrors?._global ||
+          (error as any)?.message ||
           'Verifique os campos e tente novamente.',
         variant: 'destructive',
       })
@@ -500,11 +540,19 @@ export default function Cadastro() {
 
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium h-11 gap-2 shadow-md"
+              disabled={loading || isCnpjBlocked}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium h-11 gap-2 shadow-md"
             >
               {loading ? (
-                'Criando escritório...'
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Criando escritório...</span>
+                </>
+              ) : checkingCnpj ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verificando CNPJ na Receita Federal...</span>
+                </>
               ) : (
                 <>
                   <span>Criar escritório e iniciar teste grátis</span>
@@ -512,6 +560,11 @@ export default function Cadastro() {
                 </>
               )}
             </Button>
+            {fieldErrors.cnpj && (
+              <p className="text-center text-xs text-red-600 -mt-3">
+                Corrija o CNPJ informado para prosseguir com o cadastro do teste grátis.
+              </p>
+            )}
 
             <div className="text-center pt-2 border-t border-slate-100">
               <p className="text-xs text-slate-500">

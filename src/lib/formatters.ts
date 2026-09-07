@@ -41,21 +41,21 @@ export function maskCpf(cpf?: string): string {
 
 export function maskCnpj(cnpj?: string): string {
   if (!cnpj) return ''
-  const clean = cnpj.replace(/\D/g, '')
-  if (clean.length !== 14) return cnpj
-  return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  const clean = cnpj.replace(/\D/g, '').slice(0, 14)
+  if (clean.length <= 2) return clean
+  if (clean.length <= 5) return clean.replace(/(\d{2})(\d+)/, '$1.$2')
+  if (clean.length <= 8) return clean.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3')
+  if (clean.length <= 12) return clean.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4')
+  return clean.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5')
 }
 
 export function maskTelefone(tel?: string): string {
   if (!tel) return ''
-  const clean = tel.replace(/\D/g, '')
-  if (clean.length === 11) {
-    return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
-  }
-  if (clean.length === 10) {
-    return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
-  }
-  return tel
+  const clean = tel.replace(/\D/g, '').slice(0, 11)
+  if (clean.length <= 2) return clean ? `(${clean}` : ''
+  if (clean.length <= 6) return clean.replace(/(\d{2})(\d+)/, '($1) $2')
+  if (clean.length <= 10) return clean.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3')
+  return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
 }
 
 export function maskCep(cep?: string): string {

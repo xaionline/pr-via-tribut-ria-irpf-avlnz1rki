@@ -107,7 +107,7 @@ export function TickerNoticias() {
         <div
           className="flex items-center whitespace-nowrap text-[12px] text-slate-300 font-normal leading-none"
           style={{
-            animation: 'rfb-marquee 42s linear infinite',
+            animation: 'rfb-marquee 84s linear infinite',
             animationPlayState: isPaused ? 'paused' : 'running',
             willChange: 'transform',
           }}

@@ -12,11 +12,19 @@ export function TribbyFloatingButton() {
 
   return (
     <>
-      {/* Botão Flutuante (desktop e mobile) */}
-      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center">
+      {/* Botão Flutuante centralizado horizontalmente na parte inferior (bottom-center) */}
+      <div
+        className={cn(
+          'fixed z-40 left-1/2 -translate-x-1/2 pointer-events-none',
+          // Mobile: fica acima da MobileBottomNav (h-14 ~ 56px) com folga segura de 20px (bottom-[76px])
+          // Desktop: sem barra inferior, centralizado a 20px da borda (bottom-5 sm:bottom-6)
+          'bottom-[76px] lg:bottom-6',
+        )}
+      >
         <button
           onClick={() => setOpen(true)}
           className={cn(
+            'pointer-events-auto',
             'group relative flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl transition-all duration-200 active:scale-95',
             'bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white hover:from-purple-700 hover:to-indigo-700 hover:shadow-indigo-500/25',
             'border border-white/20',

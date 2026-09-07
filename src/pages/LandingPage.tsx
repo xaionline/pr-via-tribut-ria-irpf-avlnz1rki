@@ -931,7 +931,7 @@ export default function LandingPage() {
             <p className="flex items-center gap-2">
               <span>Feito para contadores e consultores tributários</span>
               <span>•</span>
-              <span className="font-mono">v0.0.110</span>
+              <span className="font-mono">v0.0.111</span>
             </p>
           </div>
         </div>

@@ -13,8 +13,9 @@ import {
   getLogoUrl,
   uploadLogoEscritorio,
 } from '@/services/configuracoes'
-import { maskCnpj, maskTelefone, maskCep } from '@/lib/formatters'
+import { maskCnpj, maskTelefone, maskCep, validateCnpj } from '@/lib/formatters'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import pb from '@/lib/pocketbase/client'
 import type { EscritorioRecord } from '@/types'
 
 export function EscritorioTab() {
@@ -27,6 +28,10 @@ export function EscritorioTab() {
   const [erro, setErro] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+
+  // Erros locais de validação
+  const [cnpjErro, setCnpjErro] = useState<string | null>(null)
+  const [cnpjVerificando, setCnpjVerificando] = useState(false)
 
   // Campos do formulário.
   const [nome, setNome] = useState('')
@@ -83,13 +88,90 @@ export function EscritorioTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escId])
 
+  // Validação em tempo real do CNPJ na edição do escritório
+  useEffect(() => {
+    const digitos = cnpj.replace(/\D/g, '')
+
+    // Se estiver vazio, não acusa erro de digito
+    if (!digitos) {
+      setCnpjErro(null)
+      return
+    }
+
+    if (digitos.length < 14) {
+      setCnpjErro('CNPJ deve conter 14 dígitos.')
+      return
+    }
+
+    if (!validateCnpj(digitos)) {
+      setCnpjErro('CNPJ inválido.')
+      return
+    }
+
+    // Se o CNPJ for o mesmo já salvo neste escritório, não precisa checar duplicidade
+    const cnpjSalvo = (dados?.cnpj || '').replace(/\D/g, '')
+    if (digitos === cnpjSalvo) {
+      setCnpjErro(null)
+      return
+    }
+
+    // Checagem assíncrona de duplicidade no backend
+    let isMounted = true
+    setCnpjVerificando(true)
+    const timer = setTimeout(async () => {
+      try {
+        const registros = await pb.collection('escritorios').getList(1, 1, {
+          filter: `cnpj = '${digitos}' && id != '${escId}'`,
+        })
+        if (!isMounted) return
+        if (registros.totalItems > 0) {
+          setCnpjErro('Este CNPJ já possui um cadastro no sistema.')
+        } else {
+          setCnpjErro(null)
+        }
+      } catch (_) {
+        if (isMounted) setCnpjErro(null)
+      } finally {
+        if (isMounted) setCnpjVerificando(false)
+      }
+    }, 400)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [cnpj, dados?.cnpj, escId])
+
   const salvar = async () => {
     if (!escId) return
+
+    const digitosCnpj = cnpj.replace(/\D/g, '')
+    if (digitosCnpj) {
+      if (digitosCnpj.length !== 14 || !validateCnpj(digitosCnpj)) {
+        setCnpjErro('CNPJ inválido.')
+        toast({
+          title: 'CNPJ inválido',
+          description: 'Corrija o CNPJ antes de salvar as alterações.',
+          variant: 'destructive',
+        })
+        return
+      }
+    }
+
+    if (cnpjErro) {
+      toast({
+        title: 'Atenção aos dados informados',
+        description: cnpjErro,
+        variant: 'destructive',
+      })
+      return
+    }
+
     setSaving(true)
     try {
       const payload: Partial<EscritorioRecord> = {
         nome,
-        cnpj: cnpj.replace(/\D/g, ''),
+        cnpj: digitosCnpj,
         telefone: telefone.replace(/\D/g, ''),
         email,
         logradouro,
@@ -103,10 +185,16 @@ export function EscritorioTab() {
       const atualizado = await atualizarEscritorio(escId, payload)
       setDados(atualizado)
       toast({ title: 'Configurações salvas' })
-    } catch (err) {
+    } catch (err: any) {
+      const msg = getErrorMessage(err)
+      if (msg.includes('já possui um cadastro') || msg.includes('UNIQUE constraint failed')) {
+        setCnpjErro('Este CNPJ já possui um cadastro no sistema.')
+      } else if (msg.includes('CNPJ inválido')) {
+        setCnpjErro('CNPJ inválido.')
+      }
       toast({
         title: 'Falha ao salvar configurações',
-        description: getErrorMessage(err),
+        description: msg,
         variant: 'destructive',
       })
     } finally {
@@ -257,13 +345,19 @@ export function EscritorioTab() {
             />
           </Field>
           <Field label="CNPJ">
-            <Input
-              value={maskCnpj(cnpj)}
-              onChange={(e) => setCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
-              placeholder="00.000.000/0000-00"
-              inputMode="numeric"
-              className="h-10 text-xs font-mono tabular-nums"
-            />
+            <div className="relative">
+              <Input
+                value={maskCnpj(cnpj)}
+                onChange={(e) => setCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                placeholder="00.000.000/0000-00"
+                inputMode="numeric"
+                className={`h-10 text-xs font-mono tabular-nums ${cnpjErro ? 'border-red-500 focus-visible:ring-red-400' : ''}`}
+              />
+              {cnpjVerificando && (
+                <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin absolute right-3 top-3.5" />
+              )}
+            </div>
+            {cnpjErro && <p className="text-[11px] text-red-600 mt-1">{cnpjErro}</p>}
           </Field>
           <Field label="Telefone">
             <Input
@@ -349,7 +443,7 @@ export function EscritorioTab() {
       <div className="flex justify-end">
         <Button
           onClick={salvar}
-          disabled={saving || !dirty}
+          disabled={saving || !dirty || !!cnpjErro || cnpjVerificando}
           className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
         >
           {saving ? (

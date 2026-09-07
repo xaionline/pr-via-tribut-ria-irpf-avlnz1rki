@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Building2,
@@ -10,32 +10,17 @@ import {
   Phone,
   FileText,
   CheckCircle2,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
+import { maskCnpj, maskTelefone, validateCnpj } from '@/lib/formatters'
+import { consultarCnpjBrasilApi } from '@/services/cnpj'
 import type { CadastroPayload } from '@/services/cadastro'
-
-/** Máscara CNPJ: 00.000.000/0000-00 */
-function maskCnpj(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 14)
-  return d
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2')
-}
-
-/** Máscara telefone: (00) 0000-0000 / (00) 00000-0000 */
-function maskTelefone(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 11)
-  if (d.length <= 10) {
-    return d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
-  }
-  return d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
-}
 
 export default function Cadastro() {
   const [nomeEscritorio, setNomeEscritorio] = useState('')
@@ -49,9 +34,100 @@ export default function Cadastro() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
+  // Estado da checagem client-side do CNPJ
+  const [checkingCnpj, setCheckingCnpj] = useState(false)
+  const [cnpjSuccessInfo, setCnpjSuccessInfo] = useState<string | null>(null)
+  const lastCheckedCnpj = useRef<string>('')
+
   const { cadastrarEscritorio } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  // Consulta client-side à BrasilAPI com debounce quando o CNPJ atinge 14 dígitos
+  useEffect(() => {
+    const digitos = cnpj.replace(/\D/g, '')
+
+    if (digitos.length !== 14) {
+      setCnpjSuccessInfo(null)
+      lastCheckedCnpj.current = ''
+      return
+    }
+
+    // Se já checou este mesmo CNPJ, não repete
+    if (lastCheckedCnpj.current === digitos) return
+
+    // Valida dígito verificador primeiro
+    if (!validateCnpj(digitos)) {
+      setFieldErrors((prev) => ({ ...prev, cnpj: 'CNPJ inválido.' }))
+      setCnpjSuccessInfo(null)
+      return
+    }
+
+    let isMounted = true
+    setCheckingCnpj(true)
+
+    const timer = setTimeout(async () => {
+      const res = await consultarCnpjBrasilApi(digitos)
+      if (!isMounted) return
+      setCheckingCnpj(false)
+      lastCheckedCnpj.current = digitos
+
+      if (res.sucesso) {
+        // Pré-preenche razão social caso o usuário ainda não tenha digitado
+        if (res.razaoSocial) {
+          setNomeEscritorio((prev) => (prev.trim() === '' ? res.razaoSocial! : prev))
+        }
+        // Pré-preenche telefone se disponível
+        if (res.telefone) {
+          setTelefone((prev) => (prev.trim() === '' ? maskTelefone(res.telefone!) : prev))
+        }
+        // Pré-preenche e-mail se disponível
+        if (res.email) {
+          setEmailEscritorio((prev) => (prev.trim() === '' ? res.email!.toLowerCase() : prev))
+        }
+
+        setCnpjSuccessInfo(
+          `CNPJ Ativo na Receita Federal${res.razaoSocial ? ` • ${res.razaoSocial}` : ''}`,
+        )
+        setFieldErrors((prev) => {
+          const next = { ...prev }
+          delete next.cnpj
+          return next
+        })
+      } else if (res.erro === 'situacao_irregular') {
+        setFieldErrors((prev) => ({
+          ...prev,
+          cnpj: res.mensagemErro || 'Este CNPJ está com situação cadastral irregular.',
+        }))
+        setCnpjSuccessInfo(null)
+      } else if (res.erro === 'nao_encontrado') {
+        setFieldErrors((prev) => ({
+          ...prev,
+          cnpj: 'CNPJ não encontrado na Receita Federal.',
+        }))
+        setCnpjSuccessInfo(null)
+      } else if (res.erro === 'invalido') {
+        setFieldErrors((prev) => ({
+          ...prev,
+          cnpj: 'CNPJ inválido.',
+        }))
+        setCnpjSuccessInfo(null)
+      } else {
+        // Falha de rede/CORS: não bloqueia o fluxo, limpa erro se passou na validação matemática
+        setFieldErrors((prev) => {
+          const next = { ...prev }
+          delete next.cnpj
+          return next
+        })
+        setCnpjSuccessInfo('CNPJ com dígitos verificadores válidos.')
+      }
+    }, 400)
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [cnpj])
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {}
@@ -67,6 +143,8 @@ export default function Cadastro() {
       errs.cnpj = 'Informe o CNPJ.'
     } else if (cnpjDigitos.length !== 14) {
       errs.cnpj = 'CNPJ deve conter 14 dígitos.'
+    } else if (!validateCnpj(cnpjDigitos)) {
+      errs.cnpj = 'CNPJ inválido.'
     }
 
     const telDigitos = telefone.replace(/\D/g, '')
@@ -111,8 +189,14 @@ export default function Cadastro() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Se já havia erro de situação irregular do CNPJ na checagem client-side, preserva
+    if (fieldErrors.cnpj && fieldErrors.cnpj.includes('situação cadastral')) {
+      return
+    }
+
     const errs = validate()
-    setFieldErrors(errs)
+    setFieldErrors((prev) => ({ ...prev, ...errs }))
     if (Object.keys(errs).length > 0) return
 
     const payload: CadastroPayload = {
@@ -259,11 +343,25 @@ export default function Cadastro() {
                       placeholder="00.000.000/0000-00"
                       value={cnpj}
                       onChange={(e) => setCnpj(maskCnpj(e.target.value))}
-                      className="pl-9 text-sm h-10"
+                      className="pl-9 pr-8 text-sm h-10 font-mono"
                       aria-invalid={!!fieldErrors.cnpj}
                     />
+                    {checkingCnpj && (
+                      <Loader2 className="w-4 h-4 text-emerald-600 animate-spin absolute right-3 top-3" />
+                    )}
                   </div>
-                  {fieldErrors.cnpj && <p className="text-xs text-red-600">{fieldErrors.cnpj}</p>}
+                  {fieldErrors.cnpj && (
+                    <div className="flex items-start gap-1 text-xs text-red-600">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                      <span>{fieldErrors.cnpj}</span>
+                    </div>
+                  )}
+                  {!fieldErrors.cnpj && cnpjSuccessInfo && (
+                    <div className="flex items-start gap-1 text-[11px] text-emerald-700 font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-emerald-600" />
+                      <span className="line-clamp-2">{cnpjSuccessInfo}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

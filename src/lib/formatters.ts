@@ -112,4 +112,45 @@ export function validateCpf(cpf: string): boolean {
   return rev === parseInt(clean.charAt(10))
 }
 
+/**
+ * Validação oficial dos dígitos verificadores do CNPJ (14 dígitos).
+ * Rejeita CNPJs com todos os dígitos iguais (ex: 11.111.111/1111-11).
+ */
+export function validateCnpj(cnpj: string): boolean {
+  const clean = cnpj.replace(/\D/g, '')
+  if (clean.length !== 14) return false
+  if (/^(\d)\1{13}$/.test(clean)) return false
+
+  // Primeiro dígito verificador
+  let tamanho = 12
+  let numeros = clean.substring(0, tamanho)
+  const digitos = clean.substring(tamanho)
+  let soma = 0
+  let pos = tamanho - 7
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--
+    if (pos < 2) pos = 9
+  }
+
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+  if (resultado !== parseInt(digitos.charAt(0), 10)) return false
+
+  // Segundo dígito verificador
+  tamanho = 13
+  numeros = clean.substring(0, tamanho)
+  soma = 0
+  pos = tamanho - 7
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i), 10) * pos--
+    if (pos < 2) pos = 9
+  }
+
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11)
+  if (resultado !== parseInt(digitos.charAt(1), 10)) return false
+
+  return true
+}
+
 export const currencyClassName = 'font-mono tabular-nums'

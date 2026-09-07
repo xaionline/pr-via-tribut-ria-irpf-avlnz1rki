@@ -35,6 +35,37 @@ routerAdd('POST', '/backend/v1/cadastro', (e) => {
     erros.cnpj = 'Informe o CNPJ.'
   } else if (cnpjDigitos.length !== 14) {
     erros.cnpj = 'CNPJ deve conter 14 dígitos.'
+  } else {
+    // Validação matemática oficial dos dígitos verificadores do CNPJ
+    if (/^(\d)\1{13}$/.test(cnpjDigitos)) {
+      erros.cnpj = 'CNPJ inválido.'
+    } else {
+      var t1 = 12
+      var n1 = cnpjDigitos.substring(0, t1)
+      var s1 = 0
+      var p1 = t1 - 7
+      for (var i1 = t1; i1 >= 1; i1--) {
+        s1 += parseInt(n1.charAt(t1 - i1), 10) * p1--
+        if (p1 < 2) p1 = 9
+      }
+      var r1 = s1 % 11 < 2 ? 0 : 11 - (s1 % 11)
+      if (r1 !== parseInt(cnpjDigitos.charAt(12), 10)) {
+        erros.cnpj = 'CNPJ inválido.'
+      } else {
+        var t2 = 13
+        var n2 = cnpjDigitos.substring(0, t2)
+        var s2 = 0
+        var p2 = t2 - 7
+        for (var i2 = t2; i2 >= 1; i2--) {
+          s2 += parseInt(n2.charAt(t2 - i2), 10) * p2--
+          if (p2 < 2) p2 = 9
+        }
+        var r2 = s2 % 11 < 2 ? 0 : 11 - (s2 % 11)
+        if (r2 !== parseInt(cnpjDigitos.charAt(13), 10)) {
+          erros.cnpj = 'CNPJ inválido.'
+        }
+      }
+    }
   }
 
   if (!telefone) {
@@ -75,12 +106,24 @@ routerAdd('POST', '/backend/v1/cadastro', (e) => {
     return e.json(400, { success: false, errors: erros })
   }
 
-  // ---- Verifica duplicidade de CNPJ e e-mail --------------------------
+  // ---- Verifica duplicidade de CNPJ e e-mail e histórico de trials -----
+  // 1. Escritório existente com este CNPJ
   try {
     $app.findFirstRecordByData('escritorios', 'cnpj', cnpjDigitos)
     return e.json(409, {
       success: false,
-      errors: { cnpj: 'Já existe um escritório cadastrado com este CNPJ.' },
+      errors: { cnpj: 'Este CNPJ já possui um cadastro no sistema.' },
+    })
+  } catch (_) {}
+
+  // 2. Histórico permanente de trials já consumidos por este CNPJ
+  try {
+    $app.findFirstRecordByData('historico_trials_cnpj', 'cnpj', cnpjDigitos)
+    return e.json(409, {
+      success: false,
+      errors: {
+        cnpj: 'Este CNPJ já utilizou o período de teste grátis de 14 dias.',
+      },
     })
   } catch (_) {}
 
@@ -131,7 +174,21 @@ routerAdd('POST', '/backend/v1/cadastro', (e) => {
       throw adminErr
     }
 
-    // 3. Auditoria (best-effort)
+    // 3. Registro no histórico permanente de trials (anti-fraude)
+    try {
+      var histCol = $app.findCollectionByNameOrId('historico_trials_cnpj')
+      var histRec = new Record(histCol)
+      histRec.set('cnpj', cnpjDigitos)
+      histRec.set('nome_escritorio', nomeEscritorio)
+      histRec.set('escritorio_id', esc.id)
+      histRec.set('trial_iniciado_em', new Date().toISOString().replace('T', ' '))
+      histRec.set('trial_expira_em', trialAte.toISOString().replace('T', ' '))
+      $app.save(histRec)
+    } catch (histErr) {
+      $app.logger().warn('falha ao registrar historico_trials_cnpj', 'error', String(histErr))
+    }
+
+    // 4. Auditoria (best-effort)
     try {
       var auditCol = $app.findCollectionByNameOrId('audit_logs')
       var auditRec = new Record(auditCol)

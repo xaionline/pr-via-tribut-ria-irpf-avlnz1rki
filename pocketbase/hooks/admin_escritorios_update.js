@@ -67,6 +67,37 @@ routerAdd(
 
       if (cnpjDigitos && cnpjDigitos.length !== 14) {
         erros.cnpj = 'CNPJ deve conter 14 dígitos.'
+      } else if (cnpjDigitos) {
+        // Validação de dígitos verificadores do CNPJ
+        if (/^(\d)\1{13}$/.test(cnpjDigitos)) {
+          erros.cnpj = 'CNPJ inválido.'
+        } else {
+          var t1 = 12
+          var n1 = cnpjDigitos.substring(0, t1)
+          var s1 = 0
+          var p1 = t1 - 7
+          for (var i1 = t1; i1 >= 1; i1--) {
+            s1 += parseInt(n1.charAt(t1 - i1), 10) * p1--
+            if (p1 < 2) p1 = 9
+          }
+          var r1 = s1 % 11 < 2 ? 0 : 11 - (s1 % 11)
+          if (r1 !== parseInt(cnpjDigitos.charAt(12), 10)) {
+            erros.cnpj = 'CNPJ inválido.'
+          } else {
+            var t2 = 13
+            var n2 = cnpjDigitos.substring(0, t2)
+            var s2 = 0
+            var p2 = t2 - 7
+            for (var i2 = t2; i2 >= 1; i2--) {
+              s2 += parseInt(n2.charAt(t2 - i2), 10) * p2--
+              if (p2 < 2) p2 = 9
+            }
+            var r2 = s2 % 11 < 2 ? 0 : 11 - (s2 % 11)
+            if (r2 !== parseInt(cnpjDigitos.charAt(13), 10)) {
+              erros.cnpj = 'CNPJ inválido.'
+            }
+          }
+        }
       }
 
       if (email && email.indexOf('@') < 0) {
@@ -96,7 +127,7 @@ routerAdd(
           if (escExistente && escExistente.id !== id) {
             return e.json(409, {
               success: false,
-              errors: { cnpj: 'Já existe outro escritório cadastrado com este CNPJ.' },
+              errors: { cnpj: 'Este CNPJ já possui um cadastro no sistema.' },
             })
           }
         } catch (_) {}

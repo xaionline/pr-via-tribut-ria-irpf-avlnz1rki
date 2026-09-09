@@ -41,6 +41,9 @@ import AdminEscritorios from '@/pages/Admin'
 import { SuperAdminRouteGuard } from '@/components/SuperAdminRouteGuard'
 import { PjRouteGuard } from '@/components/PjRouteGuard'
 import AssistenteIaPage from '@/pages/AssistenteIaPage'
+import ImportacaoLotePage from '@/pages/ImportacaoLotePage'
+import { EnterpriseRouteGuard } from '@/components/EnterpriseRouteGuard'
+import { UploadCloud } from 'lucide-react'
 
 const App = () => (
   <BrowserRouter>
@@ -139,6 +142,20 @@ const App = () => (
 
             {/* Assistente IA Nativo (Tribby) */}
             <Route path="/app/assistente-ia" element={<AssistenteIaPage />} />
+
+            {/* Importação em Lote (Exclusivo Enterprise / Trial liberado) */}
+            <Route
+              path="/app/importacao"
+              element={
+                <EnterpriseRouteGuard
+                  titulo="Importação em Lote"
+                  descricao="O módulo de Importação em Lote permite carregar planilhas CSV com informes de rendimentos, despesas deduções e faturamentos de empresas PJ, com validação inteligente, prévia e reversão em um clique."
+                  icone={UploadCloud}
+                >
+                  <ImportacaoLotePage />
+                </EnterpriseRouteGuard>
+              }
+            />
 
             {/* Menu RELATÓRIOS (4 relatórios + índice unificado) */}
             <Route path="/app/relatorios" element={<RelatoriosPage />} />

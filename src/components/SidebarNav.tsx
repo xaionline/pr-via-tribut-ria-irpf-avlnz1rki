@@ -7,6 +7,7 @@ import {
   Calculator,
   BarChart3,
   Settings,
+  UploadCloud,
   ShieldCheck,
   Building2,
   LogOut,
@@ -146,6 +147,13 @@ export function SidebarNav() {
                 ]
               : []),
             { label: 'Declarações', path: '/app/declaracoes', icon: FileText },
+            {
+              label: 'Importação em Lote',
+              path: '/app/importacao',
+              icon: UploadCloud,
+              badge: podeAcessarIA ? (isTrial ? 'Trial' : 'Lote') : 'Enterprise',
+              badgeVariant: podeAcessarIA ? (isTrial ? 'trial' : 'default') : 'enterprise',
+            },
           ],
         },
         {

@@ -11,6 +11,7 @@ import {
   LogOut,
   Building2,
   Bot,
+  UploadCloud,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -78,6 +79,27 @@ export function MobileBottomNav() {
               <div className="flex items-center gap-3">
                 <Bot className="w-5 h-5 text-indigo-600" />
                 <span>Assistente IA Tribby</span>
+              </div>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                  podeAcessarIA
+                    ? isTrial
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {podeAcessarIA ? (isTrial ? 'Trial' : 'Enterprise') : 'Recurso Enterprise'}
+              </span>
+            </Link>
+            <Link
+              to="/app/importacao"
+              onClick={() => setDrawerOpen(false)}
+              className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-100 text-sm font-medium text-slate-800"
+            >
+              <div className="flex items-center gap-3">
+                <UploadCloud className="w-5 h-5 text-purple-600" />
+                <span>Importação em Lote</span>
               </div>
               <span
                 className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${

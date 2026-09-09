@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-07T01:39:57.272Z",
+  "generatedAt": "2026-09-09T15:30:15.040Z",
   "collections": [
     {
       "name": "users",
@@ -613,9 +613,16 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "importacao_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "importacoes_informes"
         }
       ],
-      "indexes": []
+      "indexes": ["CREATE INDEX `idx_despesas_importacao` ON `despesas_dedutiveis` (importacao_id)"]
     },
     {
       "name": "dependentes",
@@ -1519,10 +1526,18 @@
           "type": "json",
           "required": false,
           "system": false
+        },
+        {
+          "name": "importacao_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "importacoes_informes"
         }
       ],
       "indexes": [
-        "CREATE INDEX idx_faturamentos_empresa_ano ON empresas_faturamentos (empresa_id, ano_calendario)"
+        "CREATE INDEX idx_faturamentos_empresa_ano ON empresas_faturamentos (empresa_id, ano_calendario)",
+        "CREATE INDEX `idx_faturamentos_importacao` ON `empresas_faturamentos` (importacao_id)"
       ]
     },
     {

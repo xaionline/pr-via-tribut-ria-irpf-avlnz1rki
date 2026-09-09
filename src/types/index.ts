@@ -267,6 +267,7 @@ export interface DespesaDedutivelRecord {
   categoria: 'saude' | 'educacao' | 'previdencia' | 'pensao' | 'dependentes' | 'outras'
   descricao: string
   valor: number
+  importacao_id?: string
   created: string
   updated: string
 }
@@ -567,6 +568,7 @@ export interface EmpresaFaturamentoRecord {
   compras_insumos?: number
   outros_creditos_pis_cofins?: number
   insumos_detalhados?: InsumosDetalhadosMes
+  importacao_id?: string
   created: string
   updated: string
 }
@@ -1070,4 +1072,62 @@ export interface ResumoObrigacoesAno {
   venceEmBreve: number
   emDia: number
   taxaConformidade: number // %
+}
+
+// ==========================================
+// MÓDULO IMPORTAÇÃO EM LOTE
+// ==========================================
+
+export type StatusImportacao = 'processando' | 'concluida' | 'falhou' | 'cancelada'
+export type TipoImportacaoLote = 'informes_rendimentos' | 'faturamentos_mensais'
+
+export interface DetalhesImportacao {
+  tipo: TipoImportacaoLote
+  totalLinhas: number
+  linhasValidas: number
+  linhasComErro: number
+  rendimentosCriados?: number
+  despesasCriadas?: number
+  faturamentosCriados?: number
+  idsCriados?: {
+    rendimentos?: string[]
+    despesas?: string[]
+    faturamentos?: string[]
+    fontesPagadoras?: string[]
+  }
+  mensagensErro?: string[]
+  clienteNome?: string
+  clienteCpf?: string
+  empresaRazaoSocial?: string
+  empresaCnpj?: string
+  anoCalendario?: number
+}
+
+export interface ReversaoImportacao {
+  revertidoEm: string
+  revertidoPor?: string
+  rendimentosRemovidos: number
+  despesasRemovidas: number
+  faturamentosRemovidos: number
+  fontesRemovidas?: number
+  motivo?: string
+}
+
+export interface ImportacaoInformeRecord {
+  id: string
+  declaracao_id?: string
+  cliente_id?: string
+  arquivo_original?: string
+  nome_arquivo: string
+  importado_por?: string
+  status: StatusImportacao
+  detalhes?: DetalhesImportacao
+  reversao?: ReversaoImportacao
+  created: string
+  updated: string
+  expand?: {
+    declaracao_id?: DeclaracaoRecord
+    cliente_id?: ClienteRecord
+    importado_por?: UserRecord
+  }
 }

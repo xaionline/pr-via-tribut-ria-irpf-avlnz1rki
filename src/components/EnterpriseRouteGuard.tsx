@@ -8,14 +8,23 @@ import { useAuth } from '@/hooks/use-auth'
 
 interface EnterpriseRouteGuardProps {
   children: ReactNode
+  titulo?: string
+  descricao?: string
+  icone?: React.ElementType
 }
 
 /**
- * Guarda de rotas e tela de bloqueio para o Assistente IA Tribby.
+ * Guarda de rotas e tela de bloqueio para recursos exclusivos do Plano Enterprise
+ * (Assistente IA Tribby, Importação em Lote, etc).
  * Se o escritório NÃO tiver plano Enterprise ativo NEM estiver em período de trial (14 dias),
- * exibe o selo "Recurso Enterprise" com explicações, vantagens e link para /app/planos.
+ * exibe a tela de upgrade com vantagens e link para /app/planos.
  */
-export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
+export function EnterpriseRouteGuard({
+  children,
+  titulo = 'Assistente IA Nativo (Tribby)',
+  descricao,
+  icone: Icone = Bot,
+}: EnterpriseRouteGuardProps) {
   const { podeAcessarIA, escritorio, loading } = useAuth()
 
   if (loading) {
@@ -33,12 +42,12 @@ export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
       <Card className="w-full max-w-lg border-2 border-indigo-200 shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 p-6 text-white text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto shadow-md">
-            <Bot className="w-7 h-7 text-white" />
+            <Icone className="w-7 h-7 text-white" />
           </div>
           <Badge className="bg-amber-400 text-slate-900 font-bold hover:bg-amber-400 border-0 text-[10px] uppercase tracking-wider">
             Exclusivo Plano Enterprise
           </Badge>
-          <h2 className="text-xl sm:text-2xl font-black">Assistente IA Nativo (Tribby)</h2>
+          <h2 className="text-xl sm:text-2xl font-black">{titulo}</h2>
           <p className="text-xs text-indigo-100 max-w-sm mx-auto">
             Seu plano atual é o <strong>{planoAtualNome}</strong>.
           </p>
@@ -46,16 +55,20 @@ export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
 
         <CardContent className="p-6 sm:p-8 space-y-6 text-center">
           <div className="space-y-2 text-slate-600 text-xs sm:text-sm leading-relaxed">
-            <p>
-              O <strong>Tribby</strong> é o consultor tributário e suporte inteligente do
-              escritório, treinado na legislação tributária brasileira e com acesso seguro aos dados
-              dos seus clientes PF, empresas PJ, declarações e obrigações.
-            </p>
-            <p>
-              Para liberar o <strong>Assistente IA</strong> e respostas em tempo real sobre Fator R,
-              planejamento tributário, deduções e prazos fiscais, faça o upgrade para o{' '}
-              <strong>Plano Enterprise</strong>.
-            </p>
+            {descricao ? (
+              <p>{descricao}</p>
+            ) : (
+              <>
+                <p>
+                  O <strong>{titulo}</strong> é um recurso avançado do escritório voltado para
+                  automação, ganho de escala e suporte estratégico de inteligência tributária.
+                </p>
+                <p>
+                  Para desbloquear acesso completo, faça o upgrade para o{' '}
+                  <strong>Plano Enterprise</strong>.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 text-left space-y-2 text-xs text-slate-700">
@@ -64,6 +77,10 @@ export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
               O que você ganha com o Plano Enterprise:
             </p>
             <ul className="space-y-1.5 pl-5 list-disc text-slate-600">
+              <li>
+                <strong>Importação em Lote via CSV</strong> de Informes de Rendimentos, Despesas e
+                Faturamentos de Empresas PJ com reversão em um clique
+              </li>
               <li>
                 <strong>Assistente IA Tribby nativo</strong> no app com histórico de conversas e
                 botão flutuante
@@ -74,9 +91,6 @@ export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
               <li>
                 Consultoria sobre <strong>comparador de regimes</strong> (Simples vs Presumido vs
                 Real)
-              </li>
-              <li>
-                Auditoria de deduções legais e cruzamento de dados IRPF com informes de rendimentos
               </li>
               <li>
                 <strong>Empresas PJ e clientes PF ilimitados</strong> para todo o seu escritório
@@ -105,8 +119,8 @@ export function EnterpriseRouteGuard({ children }: EnterpriseRouteGuardProps) {
           </div>
 
           <p className="text-[11px] text-slate-400">
-            Durante o período de <strong>14 dias de teste grátis</strong>, o Tribby fica 100%
-            liberado para novos escritórios experimentarem.
+            Durante o período de <strong>14 dias de teste grátis</strong>, todos os recursos
+            Enterprise ficam 100% liberados para novos escritórios experimentarem.
           </p>
         </CardContent>
       </Card>
